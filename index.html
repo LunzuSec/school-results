@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Results Viewer - Lunzu Secondary School</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #1a3c6e;
+            --secondary-color: #3b82f6;
+            --accent-color: #7c3aed;
+            --light-color: #f8fafc;
+            --dark-color: #2d3748;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --white: #fff;
+            --gray-light: #e2e8f0;
+            --border-radius: 0.75rem;
+            --box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        *, *:before, *:after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            height: 100%;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, var(--light-color), var(--gray-light));
+            color: var(--dark-color);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        #root {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Font sizes */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Roboto Slab', serif;
+            font-weight: 500;
+            line-height: 1.3;
+            margin-bottom: 0;
+            letter-spacing: 0.02em;
+        }
+
+        h1 { font-size: clamp(32px, 4vw, 40px); }
+        h2 { font-size: clamp(24px, 3vw, 32px); }
+        h3 { font-size: clamp(20px, 2.5vw, 28px); }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--primary-color), #4b6cb7);
+            color: var(--white);
+            text-align: center;
+            padding: 1rem 0;
+            position: relative;
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            border-bottom-left-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+        }
+
+        .header-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+        }
+
+        .header-content {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .school-logo {
+            height: clamp(4rem, 10vw, 5rem);
+            margin-bottom: 0.75rem;
+            max-width: 100%;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-section {
+            flex: 1;
+            padding: 1rem 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            margin-bottom: 0;
+        }
+
+        .container-fluid {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            height: 100%;
+        }
+
+        .separator {
+            border: none;
+            height: 3px;
+            background: linear-gradient(to right, transparent, var(--primary-color) 50%, transparent);
+            margin: 1rem 0;
+            width: 100%;
+        }
+
+        .form-section {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            width: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid var(--gray-light);
+            position: relative;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+
+        .form-section .form-title {
+            text-align: center;
+            color: var(--primary-color);
+            margin: 0 0 1rem;
+            font-size: clamp(20px, 2.5vw, 28px);
+            font-weight: 600;
+        }
+
+        .form-section .form-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            padding-top: 0.5rem;
+            justify-content: space-between;
+        }
+
+        .form-section .form-group {
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .form-section .form-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            font-size: clamp(20px, 2.5vw, 24px) !important;
+            width: 100%;
+        }
+
+        .form-section .form-control {
+            width: 100%;
+            padding: 1.5rem;
+            font-size: clamp(20px, 2.5vw, 24px) !important;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            height: clamp(4.5rem, 9vw, 6rem);
+            background-color: #f9fafb;
+        }
+
+        .form-section select.form-control {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%232d3748' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 20px 16px;
+        }
+
+        .form-section .form-control:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.3);
+            transform: scale(1.01);
+        }
+
+        .form-section .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: var(--white);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            margin-top: 0.5rem;
+            box-shadow: var(--box-shadow);
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
+
+        .form-section .search-result-item {
+            padding: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 1px solid var(--gray-light);
+            font-size: clamp(20px, 2.5vw, 24px) !important;
+        }
+
+        .form-section .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .form-section .search-result-item:hover {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .form-section .btn {
+            padding: 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: clamp(20px, 2.5vw, 24px) !important;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .form-section .btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-section .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            color: var(--white);
+        }
+
+        .form-section .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #6d28d9);
+        }
+
+        .form-section .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: var(--white);
+        }
+
+        .form-section .btn-secondary:hover {
+            background: linear-gradient(135deg, #4b5563, #374151);
+        }
+
+        .form-section .btn-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .form-section .progress-container {
+            display: none;
+            background-color: var(--gray-light);
+            border-radius: var(--border-radius);
+            margin: 0.5rem 0;
+            height: 1.5rem;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .form-section .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+            border-radius: var(--border-radius);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: clamp(16px, 2vw, 20px) !important;
+            font-weight: 500;
+        }
+
+        .form-section .progress-text {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0.5rem;
+            font-weight: 500;
+            font-size: clamp(20px, 2.5vw, 24px) !important;
+        }
+
+        .form-section .error-message {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin: 0.5rem 0;
+            border-left: 4px solid var(--danger-color);
+            text-align: center;
+            font-weight: 500;
+            font-size: clamp(20px, 2.5vw, 24px) !important;
+        }
+
+        .footer-section {
+            background: linear-gradient(135deg, var(--primary-color), #4b6cb7);
+            color: var(--white);
+            text-align: center;
+            padding: 1rem 0;
+            position: relative;
+            width: 100%;
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+
+        .footer-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+        }
+
+        .footer-section .footer-content {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .footer-section .footer-content p {
+            margin: 0.5rem 0;
+            font-size: clamp(20px, 2.5vw, 24px) !important;
+            font-weight: 400;
+        }
+
+        .footer-section .footer-content a {
+            color: #93c5fd;
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: clamp(20px, 2.5vw, 24px) !important;
+        }
+
+        .footer-section .footer-content a:hover {
+            color: var(--white);
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animated {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-4 { margin-bottom: 1.5rem; }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+            
+            .header-content {
+                padding: 0 0.5rem;
+            }
+            
+            .school-logo {
+                height: clamp(3rem, 8vw, 4rem);
+            }
+            
+            .main-section {
+                padding: 0.5rem 0;
+            }
+            
+            .container-fluid {
+                padding: 0 0.5rem;
+            }
+            
+            .form-section {
+                padding: 1rem;
+            }
+            
+            .form-section .form-control {
+                padding: 1.25rem;
+                height: clamp(3.75rem, 7.5vw, 5rem);
+                font-size: clamp(18px, 2.25vw, 22px) !important;
+            }
+            
+            .form-section .btn {
+                padding: 0.75rem;
+                font-size: clamp(18px, 2.25vw, 22px) !important;
+            }
+            
+            .form-section .btn-group {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .footer-section {
+                padding: 0.75rem 0;
+            }
+            
+            .footer-section .footer-content p,
+            .footer-section .footer-content a {
+                font-size: clamp(18px, 2.25vw, 22px) !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+            
+            .form-section {
+                padding: 0.75rem;
+            }
+            
+            .form-section .form-control {
+                padding: 1rem;
+                height: clamp(3rem, 6vw, 4rem);
+                font-size: clamp(16px, 2vw, 20px) !important;
+            }
+            
+            .form-section .search-result-item {
+                padding: 0.75rem;
+                font-size: clamp(16px, 2vw, 20px) !important;
+            }
+            
+            .form-section .btn {
+                padding: 0.75rem;
+                font-size: clamp(16px, 2vw, 20px) !important;
+            }
+            
+            .footer-section .footer-content p,
+            .footer-section .footer-content a {
+                margin: 0.3rem 0;
+                font-size: clamp(16px, 2vw, 20px) !important;
+            }
+        }
+
+        /* Fix for mobile viewport units */
+        @media (max-width: 768px) {
+            html, body {
+                height: -webkit-fill-available;
+            }
+            
+            #root {
+                min-height: -webkit-fill-available;
+            }
+        }
+
+        /* Input zoom prevention on iOS */
+        @media (max-width: 767px) {
+            .form-section input,
+            .form-section select,
+            .form-section textarea {
+                font-size: 16px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <header class="header-section">
+            <div class="header-content">
+                <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" alt="Malawi Government Logo" class="school-logo">
+                <h1>LUNZU SECONDARY SCHOOL</h1>
+                <h2>2025-2026 END OF TERM 1 RESULTS</h2>
+            </div>
+        </header>
+
+        <main class="main-section">
+            <div class="container-fluid">
+                <hr class="separator">
+                
+                <div class="form-section animated">
+                    <h3 class="form-title">
+                        <i class="fas fa-user-graduate"></i> Student Results Portal
+                    </h3>
+                    
+                    <div class="form-content">
+                        <form id="studentForm" autocomplete="off">
+                            <div class="form-group">
+                                <label for="studentClass" class="form-label">
+                                    <i class="fas fa-users"></i> Class:
+                                </label>
+                                <select id="studentClass" class="form-control" required onchange="handleClassChange()">
+                                    <option value="" disabled selected>Select Class</option>
+                                    <option value="Form 1">Form 1</option>
+                                    <option value="Form 2">Form 2</option>
+                                    <option value="Form 3">Form 3</option>
+                                    <option value="Form 4">Form 4</option>
+                                    <option value="Form 1 ODL">Form 1 ODL</option>
+                                    <option value="Form 2 ODL">Form 2 ODL</option>
+                                    <option value="Form 3 ODL">Form 3 ODL</option>
+                                    <option value="Form 4 ODL">Form 4 ODL</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="studentSearch" class="form-label">
+                                    <i class="fas fa-search"></i> Search Student:
+                                </label>
+                                <input type="text" id="studentSearch" class="form-control" 
+                                       placeholder="Type student name to search..." 
+                                       oninput="handleSearchInput()" disabled autocomplete="off">
+                                <div id="searchResults" class="search-results hidden"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="studentName" class="form-label">
+                                    <i class="fas fa-user"></i> Student Name:
+                                </label>
+                                <select id="studentName" class="form-control" required>
+                                    <option value="" disabled selected>Select Student</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="dateOfBirth" class="form-label">
+                                    <i class="fas fa-calendar-alt"></i> Date of Birth:
+                                </label>
+                                <input type="date" id="dateOfBirth" class="form-control" required autocomplete="off">
+                            </div>
+
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="getResults()">
+                                    <i class="fas fa-eye"></i> View Results
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="downloadResultsAsPDF()">
+                                    <i class="fas fa-download"></i> Download PDF
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="progress-container" id="loadingProgressContainer">
+                            <div class="progress-bar" id="loadingProgressBar" style="width: 0%;">0%</div>
+                        </div>
+                        <p class="progress-text hidden" id="loadingMessage">Loading results, please wait...</p>
+
+                        <div id="resultsContainer" class="mb-2"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer-section text-center">
+            <div class="footer-content">
+                <p>© <span id="current-year"></span> Lunzu Secondary School - Examination Department. All rights reserved.</p>
+                <p>For technical support, contact: <a href="https://wa.me/265888866269" target="_blank">Developer WhatsApp</a></p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        
+        // IMPORTANT: Replace with your Google Apps Script Web App URL
+        // After deploying your GAS as web app, copy the URL and paste it here
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+        
+        // ============================================
+        // API CALL FUNCTION
+        // ============================================
+        
+        async function callGAS(action, params = {}) {
+            try {
+                console.log(`Calling GAS API: ${action}`, params);
+                
+                const payload = {
+                    action: action,
+                    ...params
+                };
+                
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log(`API Response for ${action}:`, result);
+                return result;
+                
+            } catch (error) {
+                console.error(`Error calling GAS API ${action}:`, error);
+                throw error;
+            }
+        }
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        // Set Current Year in Footer
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("loadingProgressContainer").classList.add("hidden");
+            document.getElementById("loadingMessage").classList.add("hidden");
+            // Reset form to prevent stale data
+            document.getElementById("studentForm").reset();
+        });
+
+        // ============================================
+        // STUDENT DATA HANDLING
+        // ============================================
+        
+        let allStudentNames = [];
+
+        function handleClassChange() {
+            const studentClass = document.getElementById("studentClass").value;
+            const studentSearch = document.getElementById("studentSearch");
+            const studentNameSelect = document.getElementById("studentName");
+            const dateOfBirth = document.getElementById("dateOfBirth");
+            
+            // Reset form fields when class changes
+            studentSearch.value = '';
+            studentNameSelect.value = '';
+            dateOfBirth.value = '';
+            studentSearch.disabled = true;
+            studentNameSelect.disabled = true;
+            document.getElementById("searchResults").innerHTML = '';
+            allStudentNames = [];
+
+            if (studentClass) {
+                studentSearch.disabled = false;
+                studentNameSelect.disabled = false;
+                updateStudentNames();
+            }
+        }
+
+        function updateStudentNames() {
+            const studentClass = document.getElementById("studentClass").value;
+            console.log(`Fetching student names for class: ${studentClass}`);
+            
+            callGAS('getStudentNames', { studentClass })
+                .then(names => {
+                    console.log(`Received student names: ${names}`);
+                    populateStudentDropdown(names);
+                    handleSearchInput();
+                })
+                .catch(error => {
+                    console.error(`Error fetching student names: ${error.message}`);
+                    displayError("Failed to load student names. Please try again.");
+                });
+        }
+
+        function populateStudentDropdown(studentNames) {
+            allStudentNames = studentNames;
+            const studentNameSelect = document.getElementById("studentName");
+            const searchResultsContainer = document.getElementById("searchResults");
+            
+            studentNameSelect.innerHTML = '<option value="" disabled selected>Select Student</option>';
+            searchResultsContainer.innerHTML = '';
+
+            studentNames.forEach(name => {
+                const option = document.createElement("option");
+                option.value = name;
+                option.textContent = name;
+                studentNameSelect.appendChild(option);
+                
+                const resultItem = document.createElement("div");
+                resultItem.className = 'search-result-item';
+                resultItem.textContent = name;
+                resultItem.onclick = function() {
+                    studentNameSelect.value = name;
+                    searchResultsContainer.classList.add("hidden");
+                    document.getElementById("studentSearch").value = name;
+                    studentNameSelect.disabled = true;
+                };
+                searchResultsContainer.appendChild(resultItem);
+            });
+        }
+
+        function handleSearchInput() {
+            const searchQuery = document.getElementById("studentSearch").value.toLowerCase().replace(/\s/g, '');
+            const studentNameSelect = document.getElementById("studentName");
+            const searchResultsContainer = document.getElementById("searchResults");
+            
+            if (searchQuery) {
+                studentNameSelect.disabled = true;
+                searchResultsContainer.classList.remove("hidden");
+            } else {
+                studentNameSelect.disabled = false;
+                searchResultsContainer.classList.add("hidden");
+            }
+
+            searchResultsContainer.innerHTML = '';
+            const filteredNames = allStudentNames.filter(name => 
+                name.toLowerCase().replace(/\s/g, '').includes(searchQuery))
+                .slice(0, 5);
+            
+            if (filteredNames.length === 0 && searchQuery) {
+                const noResults = document.createElement("div");
+                noResults.className = 'search-result-item';
+                noResults.textContent = 'No students found';
+                searchResultsContainer.appendChild(noResults);
+            } else {
+                filteredNames.forEach(name => {
+                    const resultItem = document.createElement("div");
+                    resultItem.className = 'search-result-item';
+                    resultItem.textContent = name;
+                    resultItem.onclick = function() {
+                        studentNameSelect.value = name;
+                        searchResultsContainer.classList.add("hidden");
+                        document.getElementById("studentSearch").value = name;
+                        studentNameSelect.disabled = true;
+                    };
+                    searchResultsContainer.appendChild(resultItem);
+                });
+            }
+        }
+
+        // ============================================
+        // ERROR HANDLING
+        // ============================================
+        
+        function displayError(errorMessage) {
+            const resultsContainer = document.getElementById("resultsContainer");
+            resultsContainer.innerHTML = `
+                <div class="error-message animated">
+                    <i class="fas fa-exclamation-circle"></i> ${errorMessage}
+                </div>
+            `;
+        }
+
+        function clearError() {
+            const resultsContainer = document.getElementById("resultsContainer");
+            resultsContainer.innerHTML = "";
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        
+        function formatDateForServer(dateString) {
+            if (!dateString) {
+                console.error("Date string is empty or invalid");
+                return "";
+            }
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(dateString)) {
+                console.error(`Invalid date format: ${dateString}`);
+                return "";
+            }
+            console.log(`Raw date string passed to server: ${dateString}`);
+            return dateString;
+        }
+
+        // ============================================
+        // MAIN FUNCTIONS
+        // ============================================
+        
+        function getResults() {
+            clearError();
+
+            const studentName = document.getElementById("studentName").value.trim();
+            const studentClass = document.getElementById("studentClass").value;
+            const dateOfBirthInput = document.getElementById("dateOfBirth").value;
+
+            console.log(`getResults called with: studentName=${studentName}, studentClass=${studentClass}, dateOfBirth=${dateOfBirthInput}`);
+
+            if (!studentName || !studentClass || !dateOfBirthInput) {
+                displayError("Please fill out all required fields: Class, Student Name, and Date of Birth.");
+                return;
+            }
+
+            const dateOfBirth = formatDateForServer(dateOfBirthInput);
+            if (!dateOfBirth) {
+                displayError("Invalid date of birth format. Please select a valid date.");
+                return;
+            }
+
+            // Show loading animation
+            document.getElementById("loadingProgressContainer").classList.remove("hidden");
+            document.getElementById("loadingMessage").classList.remove("hidden");
+            
+            let progress = 0;
+            const progressBar = document.getElementById("loadingProgressBar");
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = `${progress}%`;
+                progressBar.textContent = `${progress}%`;
+                if (progress >= 100) clearInterval(progressInterval);
+            }, 200);
+
+            // Call the API
+            callGAS('getStudentResults', {
+                studentName,
+                studentClass,
+                dateOfBirth
+            })
+            .then(result => {
+                clearInterval(progressInterval);
+                document.getElementById("loadingProgressContainer").classList.add("hidden");
+                document.getElementById("loadingMessage").classList.add("hidden");
+
+                console.log("Received result:", result);
+
+                if (result.error) {
+                    console.error("Error in result:", result.error);
+                    displayError(result.error);
+                } else {
+                    // Get the results window HTML
+                    return callGAS('getResultsWindowHTML', {
+                        studentName,
+                        studentClass,
+                        dateOfBirth
+                    });
+                }
+            })
+            .then(htmlContent => {
+                if (htmlContent) {
+                    console.log("Received HTML content for results window");
+                    const resultWindow = window.open("", "_blank");
+                    resultWindow.document.write(htmlContent);
+                    resultWindow.document.close();
+                    document.getElementById("studentForm").reset();
+                    handleClassChange();
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error.message);
+                displayError("Failed to retrieve results. Please try again.");
+                clearInterval(progressInterval);
+                document.getElementById("loadingProgressContainer").classList.add("hidden");
+                document.getElementById("loadingMessage").classList.add("hidden");
+            });
+        }
+
+        async function downloadResultsAsPDF() {
+            clearError();
+
+            const studentName = document.getElementById("studentName").value.trim();
+            const studentClass = document.getElementById("studentClass").value;
+            const dateOfBirthInput = document.getElementById("dateOfBirth").value;
+
+            console.log(`downloadResultsAsPDF called with: studentName=${studentName}, studentClass=${studentClass}, dateOfBirth=${dateOfBirthInput}`);
+
+            if (!studentName || !studentClass || !dateOfBirthInput) {
+                displayError("Please fill out all required fields: Class, Student Name, and Date of Birth.");
+                return;
+            }
+
+            const dateOfBirth = formatDateForServer(dateOfBirthInput);
+            if (!dateOfBirth) {
+                displayError("Invalid date of birth format. Please select a valid date.");
+                return;
+            }
+
+            // Show loading animation
+            document.getElementById("loadingProgressContainer").classList.remove("hidden");
+            document.getElementById("loadingMessage").classList.remove("hidden");
+            
+            let progress = 0;
+            const progressBar = document.getElementById("loadingProgressBar");
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = `${progress}%`;
+                progressBar.textContent = `${progress}%`;
+                if (progress >= 100) clearInterval(progressInterval);
+            }, 200);
+
+            try {
+                const result = await callGAS('generatePDF', {
+                    studentName,
+                    studentClass,
+                    dateOfBirth
+                });
+                
+                clearInterval(progressInterval);
+                document.getElementById("loadingProgressContainer").classList.add("hidden");
+                document.getElementById("loadingMessage").classList.add("hidden");
+
+                // Handle PDF download
+                const byteCharacters = atob(result);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${studentName}_${studentClass}_Results.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                document.getElementById("studentForm").reset();
+                handleClassChange();
+                
+            } catch (error) {
+                console.error("Error in generatePDF:", error.message);
+                displayError(error.message || "Failed to generate PDF");
+                clearInterval(progressInterval);
+                document.getElementById("loadingProgressContainer").classList.add("hidden");
+                document.getElementById("loadingMessage").classList.add("hidden");
+            }
+        }
+        
+        // ============================================
+        // DEBUG FUNCTIONS (Optional)
+        // ============================================
+        
+        // Optional: Test API connection
+        function testConnection() {
+            callGAS('getStudentNames', { studentClass: 'Form 1' })
+                .then(result => {
+                    console.log('Connection test successful:', result);
+                    alert('API Connection Successful!');
+                })
+                .catch(error => {
+                    console.error('Connection test failed:', error);
+                    alert('API Connection Failed: ' + error.message);
+                });
+        }
+    </script>
+</body>
+</html>
