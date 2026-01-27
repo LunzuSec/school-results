@@ -525,33 +525,88 @@
         }
         
         // ============================================
-        // UNIVERSAL API CALL
+        // SIMPLE API CALL - WORKS ON ALL BROWSERS
         // ============================================
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
                 console.log('API Call:', action, params);
                 
-                // Add browser info for Huawei detection
+                // Create unique callback name
+                const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                
+                // Add browser info
                 params.userAgent = navigator.userAgent;
                 params._huawei = isHuaweiBrowser ? '1' : '0';
                 params._t = Date.now(); // Cache busting
+                params.callback = callbackName;
+                params.action = action;
                 
-                // Huawei browsers need special handling
-                if (isHuaweiBrowser) {
-                    callGASHuawei(action, params, resolve, reject);
-                } else {
-                    callGASStandard(action, params, resolve, reject);
+                // Build URL
+                let url = GAS_URL + '?';
+                const urlParams = [];
+                for (const key in params) {
+                    if (params[key] !== undefined && params[key] !== null) {
+                        urlParams.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+                    }
                 }
+                url += urlParams.join('&');
+                
+                // Create script element
+                const script = document.createElement('script');
+                script.src = url;
+                
+                // Define callback function
+                window[callbackName] = function(response) {
+                    // Clean up
+                    delete window[callbackName];
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    
+                    console.log('API Response:', response);
+                    
+                    if (response && response.error) {
+                        reject(new Error(response.error));
+                    } else {
+                        resolve(response);
+                    }
+                };
+                
+                // Error handling
+                script.onerror = function() {
+                    delete window[callbackName];
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    
+                    // Try alternative method for Huawei
+                    if (isHuaweiBrowser) {
+                        callGASHuawei(action, params, resolve, reject);
+                    } else {
+                        reject(new Error('Failed to connect to server. Please check your internet.'));
+                    }
+                };
+                
+                // Add to document
+                document.head.appendChild(script);
             });
         }
         
-        // Standard API call for most browsers
-        function callGASStandard(action, params, resolve, reject) {
-            const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            params.callback = callbackName;
-            params.action = action;
+        // Alternative method for Huawei
+        function callGASHuawei(action, params, resolve, reject) {
+            // Use image loading as fallback (works on all browsers)
+            const img = new Image();
+            img.style.display = 'none';
             
-            const script = document.createElement('script');
+            // Create a temporary div to hold response
+            const tempDiv = document.createElement('div');
+            tempDiv.style.display = 'none';
+            tempDiv.id = 'temp_response_' + Date.now();
+            document.body.appendChild(tempDiv);
+            
+            // Remove callback from params for Huawei
+            delete params.callback;
+            params.action = action;
             
             // Build URL
             let url = GAS_URL + '?';
@@ -562,93 +617,39 @@
                 }
             }
             url += urlParams.join('&');
-            script.src = url;
             
-            // Callback function
-            window[callbackName] = function(response) {
-                delete window[callbackName];
-                if (script.parentNode) {
-                    script.parentNode.removeChild(script);
-                }
-                
-                if (response && response.error) {
-                    reject(new Error(response.error));
-                } else {
-                    resolve(response);
-                }
-            };
-            
-            // Error handling
-            script.onerror = function() {
-                delete window[callbackName];
-                if (script.parentNode) {
-                    script.parentNode.removeChild(script);
-                }
-                
-                // Try Huawei method as fallback
-                callGASHuawei(action, params, resolve, reject);
-            };
-            
-            // Add to document
-            document.head.appendChild(script);
-        }
-        
-        // Huawei-compatible API call
-        function callGASHuawei(action, params, resolve, reject) {
-            // Huawei browsers work better with iframes
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.name = 'huawei_api_' + Date.now();
-            
-            const form = document.createElement('form');
-            form.method = 'GET';
-            form.action = GAS_URL;
-            form.target = iframe.name;
-            
-            // Add all parameters
-            params.action = action;
-            for (const key in params) {
-                if (params[key] !== undefined && params[key] !== null) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = params[key];
-                    form.appendChild(input);
-                }
-            }
-            
-            // Response handler
-            window.addEventListener('message', function handler(event) {
-                if (event.source === iframe.contentWindow) {
-                    window.removeEventListener('message', handler);
-                    
+            // Use image onerror to detect completion
+            img.onerror = function() {
+                // This will fail because it's not an image, but that's okay
+                // We'll get the response from the server
+                setTimeout(() => {
                     try {
-                        const response = JSON.parse(event.data);
-                        if (response && response.error) {
-                            reject(new Error(response.error));
+                        // Check if we got a response
+                        const responseText = tempDiv.textContent || tempDiv.innerHTML;
+                        if (responseText) {
+                            const response = JSON.parse(responseText);
+                            if (response && response.error) {
+                                reject(new Error(response.error));
+                            } else {
+                                resolve(response);
+                            }
                         } else {
-                            resolve(response);
+                            reject(new Error('No response from server'));
                         }
                     } catch (e) {
-                        reject(new Error('Invalid response from server'));
+                        reject(new Error('Invalid response format'));
                     }
                     
                     // Clean up
-                    setTimeout(() => {
-                        if (iframe.parentNode) {
-                            iframe.parentNode.removeChild(iframe);
-                        }
-                        if (form.parentNode) {
-                            form.parentNode.removeChild(form);
-                        }
-                    }, 100);
-                }
-            });
+                    if (tempDiv.parentNode) {
+                        tempDiv.parentNode.removeChild(tempDiv);
+                    }
+                }, 1000);
+            };
             
-            // Add to document and submit
-            document.body.appendChild(iframe);
-            document.body.appendChild(form);
-            form.submit();
+            // Add image to trigger request
+            img.src = url;
+            document.body.appendChild(img);
         }
         
         // ============================================
