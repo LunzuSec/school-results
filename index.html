@@ -5,18 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lunzu Secondary School - Results Portal</title>
     
-    <!-- Simple CSS - No external dependencies -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -36,17 +29,6 @@
             color: white;
             padding: 25px;
             text-align: center;
-            position: relative;
-        }
-        
-        .header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%);
         }
         
         .logo {
@@ -55,33 +37,14 @@
             background: white;
             padding: 8px;
             border-radius: 8px;
-            display: inline-block;
         }
         
-        h1 {
-            font-size: 24px;
-            margin-bottom: 8px;
-            color: white;
-        }
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        h2 { font-size: 18px; color: #ffd700; margin-bottom: 5px; }
+        h3 { font-size: 16px; color: #cbd5e0; }
         
-        h2 {
-            font-size: 18px;
-            color: #ffd700;
-            margin-bottom: 5px;
-        }
-        
-        h3 {
-            font-size: 16px;
-            color: #cbd5e0;
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
+        .content { padding: 30px; }
+        .form-group { margin-bottom: 25px; }
         
         label {
             display: block;
@@ -97,7 +60,6 @@
             border: 2px solid #e2e8f0;
             border-radius: 8px;
             font-size: 16px;
-            transition: border-color 0.3s;
         }
         
         select:focus, input:focus {
@@ -106,9 +68,7 @@
             box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
         }
         
-        .search-container {
-            position: relative;
-        }
+        .search-container { position: relative; }
         
         .search-results {
             position: absolute;
@@ -123,23 +83,15 @@
             overflow-y: auto;
             z-index: 1000;
             display: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         .search-item {
             padding: 12px;
             border-bottom: 1px solid #e2e8f0;
             cursor: pointer;
-            transition: background 0.2s;
         }
         
-        .search-item:hover {
-            background: #f7fafc;
-        }
-        
-        .search-item:last-child {
-            border-bottom: none;
-        }
+        .search-item:hover { background: #f7fafc; }
         
         .buttons {
             display: flex;
@@ -157,7 +109,6 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -169,21 +120,9 @@
             color: white;
         }
         
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(49, 130, 206, 0.3);
-        }
-        
         .btn-secondary {
             background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
             color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(74, 85, 104, 0.3);
         }
         
         .loading {
@@ -248,91 +187,19 @@
             text-decoration: none;
         }
         
-        .footer a:hover {
-            text-decoration: underline;
-        }
-        
-        .connection-status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .connection-online {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 2px solid #38a169;
-        }
-        
-        .connection-offline {
-            background: #fed7d7;
-            color: #742a2a;
-            border: 2px solid #e53e3e;
-        }
-        
-        .api-test {
-            text-align: center;
-            margin: 10px 0;
-            padding: 10px;
-            background: #f7fafc;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        
         @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                border-radius: 10px;
-            }
-            
-            .header {
-                padding: 20px 15px;
-            }
-            
-            .content {
-                padding: 20px;
-            }
-            
-            .btn {
-                min-width: 100%;
-            }
-            
-            .buttons {
-                flex-direction: column;
-            }
-            
-            h1 {
-                font-size: 20px;
-            }
-            
-            h2 {
-                font-size: 16px;
-            }
-            
-            .connection-status {
-                top: 10px;
-                right: 10px;
-                left: 10px;
-                text-align: center;
-            }
+            body { padding: 10px; }
+            .container { border-radius: 10px; }
+            .header { padding: 20px 15px; }
+            .content { padding: 20px; }
+            .btn { min-width: 100%; }
+            .buttons { flex-direction: column; }
+            h1 { font-size: 20px; }
+            h2 { font-size: 16px; }
         }
     </style>
 </head>
 <body>
-    <!-- Connection Status -->
-    <div id="connectionStatus" class="connection-status connection-online" style="display: none;">
-        <span id="statusText">Connected</span>
-    </div>
-    
     <!-- Main Container -->
     <div class="container">
         <!-- Header -->
@@ -348,7 +215,7 @@
         <!-- Content -->
         <div class="content">
             <!-- API Test -->
-            <div class="api-test">
+            <div style="text-align:center;margin:10px 0;padding:10px;background:#f7fafc;border-radius:8px;">
                 <span id="apiStatus">Checking connection...</span>
             </div>
             
@@ -434,9 +301,6 @@
                     WhatsApp: +265 888 866 269
                 </a>
             </p>
-            <p style="margin-top: 10px; font-size: 12px;">
-                Compatible with all browsers including Huawei devices
-            </p>
         </div>
     </div>
     
@@ -451,8 +315,6 @@
         // GLOBAL VARIABLES
         // ============================================
         let allStudentNames = [];
-        let connectionOnline = true;
-        let isEdgeBrowser = false;
         
         // ============================================
         // INITIALIZATION
@@ -461,76 +323,24 @@
             // Set current year
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
-            // Detect Edge browser
-            detectBrowser();
-            
             // Test API connection
             testAPIConnection();
-            
-            // Setup offline detection
-            setupConnectionMonitoring();
             
             // Setup form
             setupForm();
         };
         
         // ============================================
-        // BROWSER DETECTION
-        // ============================================
-        function detectBrowser() {
-            const userAgent = navigator.userAgent.toLowerCase();
-            isEdgeBrowser = userAgent.includes('edg') || userAgent.includes('edge');
-            console.log('Browser detected:', navigator.userAgent, 'Edge:', isEdgeBrowser);
-        }
-        
-        // ============================================
-        // CONNECTION MONITORING
-        // ============================================
-        function setupConnectionMonitoring() {
-            window.addEventListener('online', function() {
-                connectionOnline = true;
-                updateConnectionStatus('Connected', true);
-                // Retry if we were loading
-                if (document.getElementById('studentClass').value) {
-                    handleClassChange();
-                }
-            });
-            
-            window.addEventListener('offline', function() {
-                connectionOnline = false;
-                updateConnectionStatus('Offline - Please check internet', false);
-            });
-            
-            // Initial status
-            updateConnectionStatus(navigator.onLine ? 'Connected' : 'Offline', navigator.onLine);
-        }
-        
-        function updateConnectionStatus(message, isOnline) {
-            const statusDiv = document.getElementById('connectionStatus');
-            const statusText = document.getElementById('statusText');
-            
-            if (statusDiv) {
-                statusDiv.style.display = 'block';
-                statusDiv.className = isOnline ? 'connection-status connection-online' : 
-                                                'connection-status connection-offline';
-                statusText.textContent = message;
-            }
-        }
-        
-        // ============================================
         // SIMPLE JSONP API CALL - WORKS ON ALL BROWSERS
         // ============================================
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
-                console.log('API Call:', action, params);
-                
                 // Create unique callback name
-                const callbackName = 'gas_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 
                 // Build URL with parameters
                 params.callback = callbackName;
                 params.action = action;
-                params._t = Date.now(); // Cache busting
                 
                 let url = GAS_URL + '?';
                 const urlParams = [];
@@ -553,8 +363,6 @@
                         script.parentNode.removeChild(script);
                     }
                     
-                    console.log('API Response:', response);
-                    
                     if (response && response.error) {
                         reject(new Error(response.error));
                     } else {
@@ -564,94 +372,27 @@
                 
                 // Handle script loading errors
                 script.onerror = function() {
-                    console.error('Script loading failed for URL:', url);
                     delete window[callbackName];
                     if (script.parentNode) {
                         script.parentNode.removeChild(script);
                     }
-                    
-                    // Try alternative method for Edge
-                    if (isEdgeBrowser) {
-                        callGASEdge(action, params, resolve, reject);
-                    } else {
-                        reject(new Error('Failed to connect. Please try again.'));
-                    }
+                    reject(new Error('Failed to connect to server. Please try again.'));
                 };
                 
                 // Timeout handling
-                const timeoutId = setTimeout(() => {
+                setTimeout(() => {
                     if (window[callbackName]) {
                         delete window[callbackName];
                         if (script.parentNode) {
                             script.parentNode.removeChild(script);
                         }
-                        reject(new Error('Request timeout. Server may be busy.'));
+                        reject(new Error('Request timeout. Please try again.'));
                     }
                 }, 15000);
-                
-                // Store original callback
-                const originalCallback = window[callbackName];
-                window[callbackName] = function(response) {
-                    clearTimeout(timeoutId);
-                    originalCallback(response);
-                };
                 
                 // Add to document
                 document.head.appendChild(script);
             });
-        }
-        
-        // Alternative method for Edge browser
-        function callGASEdge(action, params, resolve, reject) {
-            console.log('Using Edge-compatible method for:', action);
-            
-            // Use XMLHttpRequest as fallback
-            const xhr = new XMLHttpRequest();
-            
-            // Build URL
-            params.action = action;
-            let url = GAS_URL + '?';
-            const urlParams = [];
-            for (const key in params) {
-                if (params[key] !== undefined && params[key] !== null) {
-                    urlParams.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
-                }
-            }
-            url += urlParams.join('&');
-            
-            xhr.open('GET', url, true);
-            xhr.timeout = 15000;
-            
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response && response.error) {
-                            reject(new Error(response.error));
-                        } else {
-                            resolve(response);
-                        }
-                    } catch (e) {
-                        reject(new Error('Invalid response from server.'));
-                    }
-                } else {
-                    reject(new Error('Server error: ' + xhr.status));
-                }
-            };
-            
-            xhr.onerror = function() {
-                reject(new Error('Network error. Please check connection.'));
-            };
-            
-            xhr.ontimeout = function() {
-                reject(new Error('Request timeout.'));
-            };
-            
-            try {
-                xhr.send();
-            } catch (e) {
-                reject(new Error('Failed to send request.'));
-            }
         }
         
         // ============================================
@@ -660,11 +401,6 @@
         function setupForm() {
             // Reset form state
             resetForm();
-            
-            // Save form data to localStorage
-            document.getElementById('studentForm').addEventListener('change', function() {
-                saveFormData();
-            });
             
             // Load saved data
             loadFormData();
@@ -716,11 +452,6 @@
         // STUDENT DATA
         // ============================================
         async function loadStudentNames(studentClass) {
-            if (!connectionOnline) {
-                showError('No internet connection. Please check your network.');
-                return;
-            }
-            
             showLoading('Loading students...');
             
             try {
@@ -729,8 +460,6 @@
                 if (Array.isArray(names) && names.length > 0) {
                     allStudentNames = names;
                     populateStudentDropdown(names);
-                    console.log(`Loaded ${names.length} students for ${studentClass}`);
-                    showSuccess(`Loaded ${names.length} students`);
                 } else {
                     allStudentNames = [];
                     showInfo('No students found for this class');
@@ -924,9 +653,6 @@
                     <strong>Error:</strong> ${message}
                 </div>
             `;
-            
-            // Scroll to error
-            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
         function showSuccess(message) {
@@ -1018,19 +744,6 @@
         // ============================================
         // DATA PERSISTENCE
         // ============================================
-        function saveFormData() {
-            try {
-                const data = {
-                    studentClass: document.getElementById('studentClass').value,
-                    studentName: document.getElementById('studentName').value,
-                    dateOfBirth: document.getElementById('dateOfBirth').value
-                };
-                localStorage.setItem('lunzu_form_data', JSON.stringify(data));
-            } catch (e) {
-                // Ignore errors
-            }
-        }
-        
         function loadFormData() {
             try {
                 const saved = localStorage.getItem('lunzu_form_data');
@@ -1064,39 +777,11 @@
                 const result = await callGAS('test', {});
                 document.getElementById('apiStatus').textContent = '✅ Connected to server';
                 document.getElementById('apiStatus').style.color = '#38a169';
-                console.log('API Test Success:', result);
             } catch (error) {
                 document.getElementById('apiStatus').textContent = '❌ Cannot connect to server';
                 document.getElementById('apiStatus').style.color = '#e53e3e';
-                console.error('API Test failed:', error);
-                
-                // Show more specific error
-                if (error.message.includes('timeout')) {
-                    showInfo('Server is taking too long to respond. Please try again.');
-                } else if (error.message.includes('Network')) {
-                    showInfo('Network error. Please check your connection.');
-                }
             }
         }
-        
-        // ============================================
-        // KEYBOARD SHORTCUTS
-        // ============================================
-        document.addEventListener('keydown', function(event) {
-            // Ctrl+Enter to submit
-            if (event.ctrlKey && event.key === 'Enter') {
-                event.preventDefault();
-                getResults();
-            }
-            
-            // Escape to close search
-            if (event.key === 'Escape') {
-                const searchResults = document.getElementById('searchResults');
-                if (searchResults.style.display === 'block') {
-                    searchResults.style.display = 'none';
-                }
-            }
-        });
     </script>
 </body>
 </html>
