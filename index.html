@@ -451,8 +451,8 @@
         // GLOBAL VARIABLES
         // ============================================
         let allStudentNames = [];
-        let isHuaweiBrowser = false;
         let connectionOnline = true;
+        let isEdgeBrowser = false;
         
         // ============================================
         // INITIALIZATION
@@ -461,7 +461,7 @@
             // Set current year
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
-            // Detect Huawei browser
+            // Detect Edge browser
             detectBrowser();
             
             // Test API connection
@@ -479,15 +479,8 @@
         // ============================================
         function detectBrowser() {
             const userAgent = navigator.userAgent.toLowerCase();
-            isHuaweiBrowser = userAgent.includes('huawei') || 
-                             userAgent.includes('harmony') ||
-                             userAgent.includes('emui');
-            
-            console.log('Browser detected:', {
-                userAgent: navigator.userAgent,
-                isHuawei: isHuaweiBrowser,
-                online: navigator.onLine
-            });
+            isEdgeBrowser = userAgent.includes('edg') || userAgent.includes('edge');
+            console.log('Browser detected:', navigator.userAgent, 'Edge:', isEdgeBrowser);
         }
         
         // ============================================
@@ -525,23 +518,20 @@
         }
         
         // ============================================
-        // SIMPLE API CALL - WORKS ON ALL BROWSERS
+        // SIMPLE JSONP API CALL - WORKS ON ALL BROWSERS
         // ============================================
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
                 console.log('API Call:', action, params);
                 
                 // Create unique callback name
-                const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const callbackName = 'gas_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 
-                // Add browser info
-                params.userAgent = navigator.userAgent;
-                params._huawei = isHuaweiBrowser ? '1' : '0';
-                params._t = Date.now(); // Cache busting
+                // Build URL with parameters
                 params.callback = callbackName;
                 params.action = action;
+                params._t = Date.now(); // Cache busting
                 
-                // Build URL
                 let url = GAS_URL + '?';
                 const urlParams = [];
                 for (const key in params) {
@@ -572,19 +562,38 @@
                     }
                 };
                 
-                // Error handling
+                // Handle script loading errors
                 script.onerror = function() {
+                    console.error('Script loading failed for URL:', url);
                     delete window[callbackName];
                     if (script.parentNode) {
                         script.parentNode.removeChild(script);
                     }
                     
-                    // Try alternative method for Huawei
-                    if (isHuaweiBrowser) {
-                        callGASHuawei(action, params, resolve, reject);
+                    // Try alternative method for Edge
+                    if (isEdgeBrowser) {
+                        callGASEdge(action, params, resolve, reject);
                     } else {
-                        reject(new Error('Failed to connect to server. Please check your internet.'));
+                        reject(new Error('Failed to connect. Please try again.'));
                     }
+                };
+                
+                // Timeout handling
+                const timeoutId = setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        if (script.parentNode) {
+                            script.parentNode.removeChild(script);
+                        }
+                        reject(new Error('Request timeout. Server may be busy.'));
+                    }
+                }, 15000);
+                
+                // Store original callback
+                const originalCallback = window[callbackName];
+                window[callbackName] = function(response) {
+                    clearTimeout(timeoutId);
+                    originalCallback(response);
                 };
                 
                 // Add to document
@@ -592,23 +601,15 @@
             });
         }
         
-        // Alternative method for Huawei
-        function callGASHuawei(action, params, resolve, reject) {
-            // Use image loading as fallback (works on all browsers)
-            const img = new Image();
-            img.style.display = 'none';
+        // Alternative method for Edge browser
+        function callGASEdge(action, params, resolve, reject) {
+            console.log('Using Edge-compatible method for:', action);
             
-            // Create a temporary div to hold response
-            const tempDiv = document.createElement('div');
-            tempDiv.style.display = 'none';
-            tempDiv.id = 'temp_response_' + Date.now();
-            document.body.appendChild(tempDiv);
-            
-            // Remove callback from params for Huawei
-            delete params.callback;
-            params.action = action;
+            // Use XMLHttpRequest as fallback
+            const xhr = new XMLHttpRequest();
             
             // Build URL
+            params.action = action;
             let url = GAS_URL + '?';
             const urlParams = [];
             for (const key in params) {
@@ -618,38 +619,39 @@
             }
             url += urlParams.join('&');
             
-            // Use image onerror to detect completion
-            img.onerror = function() {
-                // This will fail because it's not an image, but that's okay
-                // We'll get the response from the server
-                setTimeout(() => {
+            xhr.open('GET', url, true);
+            xhr.timeout = 15000;
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
                     try {
-                        // Check if we got a response
-                        const responseText = tempDiv.textContent || tempDiv.innerHTML;
-                        if (responseText) {
-                            const response = JSON.parse(responseText);
-                            if (response && response.error) {
-                                reject(new Error(response.error));
-                            } else {
-                                resolve(response);
-                            }
+                        const response = JSON.parse(xhr.responseText);
+                        if (response && response.error) {
+                            reject(new Error(response.error));
                         } else {
-                            reject(new Error('No response from server'));
+                            resolve(response);
                         }
                     } catch (e) {
-                        reject(new Error('Invalid response format'));
+                        reject(new Error('Invalid response from server.'));
                     }
-                    
-                    // Clean up
-                    if (tempDiv.parentNode) {
-                        tempDiv.parentNode.removeChild(tempDiv);
-                    }
-                }, 1000);
+                } else {
+                    reject(new Error('Server error: ' + xhr.status));
+                }
             };
             
-            // Add image to trigger request
-            img.src = url;
-            document.body.appendChild(img);
+            xhr.onerror = function() {
+                reject(new Error('Network error. Please check connection.'));
+            };
+            
+            xhr.ontimeout = function() {
+                reject(new Error('Request timeout.'));
+            };
+            
+            try {
+                xhr.send();
+            } catch (e) {
+                reject(new Error('Failed to send request.'));
+            }
         }
         
         // ============================================
@@ -1062,11 +1064,18 @@
                 const result = await callGAS('test', {});
                 document.getElementById('apiStatus').textContent = '✅ Connected to server';
                 document.getElementById('apiStatus').style.color = '#38a169';
-                console.log('API Test:', result);
+                console.log('API Test Success:', result);
             } catch (error) {
                 document.getElementById('apiStatus').textContent = '❌ Cannot connect to server';
                 document.getElementById('apiStatus').style.color = '#e53e3e';
                 console.error('API Test failed:', error);
+                
+                // Show more specific error
+                if (error.message.includes('timeout')) {
+                    showInfo('Server is taking too long to respond. Please try again.');
+                } else if (error.message.includes('Network')) {
+                    showInfo('Network error. Please check your connection.');
+                }
             }
         }
         
