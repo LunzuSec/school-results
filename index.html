@@ -2,488 +2,364 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lunzu Secondary School - Results Viewer</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunzu Secondary School - Results Portal</title>
+    
+    <!-- Simple CSS - No external dependencies -->
     <style>
-        :root {
-            --primary-color: #1a3c6e;
-            --secondary-color: #3b82f6;
-            --accent-color: #7c3aed;
-            --light-color: #f8fafc;
-            --dark-color: #2d3748;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --warning-color: #ffc107;
-            --white: #fff;
-            --gray-light: #e2e8f0;
-            --border-radius: 0.75rem;
-            --box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-        }
-
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
-
-        html {
-            font-size: 16px;
-            height: 100%;
-            -webkit-text-size-adjust: 100%;
-        }
-
+        
         body {
-            min-height: 100vh;
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: var(--dark-color);
+            font-family: Arial, sans-serif;
             line-height: 1.6;
-            display: flex;
-            flex-direction: column;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
-
+        
         .container {
-            flex: 1;
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: 1rem;
-        }
-
-        /* Header */
-        .header-section {
-            background: linear-gradient(135deg, var(--primary-color), #4b6cb7);
-            color: var(--white);
-            text-align: center;
-            padding: 1rem 0;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            border-bottom-left-radius: var(--border-radius);
-            border-bottom-right-radius: var(--border-radius);
-            position: relative;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             overflow: hidden;
         }
-
-        .header-section::before {
+        
+        .header {
+            background: linear-gradient(135deg, #1a3c6e 0%, #2c5282 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::after {
             content: '';
             position: absolute;
-            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
-            height: 6px;
-            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+            height: 4px;
+            background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%);
         }
-
-        .school-logo {
-            height: clamp(4rem, 10vw, 5rem);
-            margin-bottom: 0.75rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        
+        .logo {
+            max-width: 120px;
+            margin-bottom: 15px;
             background: white;
-            padding: 5px;
+            padding: 8px;
+            border-radius: 8px;
+            display: inline-block;
         }
-
-        h1, h2, h3, h4, h5 {
-            font-family: 'Roboto Slab', serif;
-            font-weight: 500;
-            line-height: 1.3;
-            margin-bottom: 0.5rem;
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: white;
         }
-
-        h1 { 
-            font-size: clamp(28px, 4vw, 36px); 
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        h2 { 
-            font-size: clamp(22px, 3vw, 28px); 
+        
+        h2 {
+            font-size: 18px;
             color: #ffd700;
+            margin-bottom: 5px;
         }
-        h3 { 
-            font-size: clamp(18px, 2.5vw, 24px); 
-            margin-top: 0.5rem;
+        
+        h3 {
+            font-size: 16px;
+            color: #cbd5e0;
         }
-
-        /* Main Card */
-        .main-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 2rem;
-            margin: 2rem auto;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            animation: fadeIn 0.8s ease-out;
-            max-width: 800px;
+        
+        .content {
+            padding: 30px;
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        
+        .form-group {
+            margin-bottom: 25px;
         }
-
-        /* Form Styles */
-        .form-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2d3748;
+            font-size: 16px;
         }
-
-        .form-control {
+        
+        select, input {
             width: 100%;
-            padding: 0.875rem 1rem;
-            font-size: 1rem;
-            border: 2px solid var(--gray-light);
-            border-radius: var(--border-radius);
-            transition: var(--transition);
-            background: var(--white);
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
         }
-
-        .form-control:focus {
+        
+        select:focus, input:focus {
             outline: none;
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-            transform: translateY(-2px);
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
         }
-
-        .form-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%232d3748' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 16px 12px;
+        
+        .search-container {
+            position: relative;
         }
-
-        /* Search Results */
+        
         .search-results {
             position: absolute;
-            width: 100%;
-            max-height: 250px;
-            overflow-y: auto;
+            top: 100%;
+            left: 0;
+            right: 0;
             background: white;
-            border: 2px solid var(--secondary-color);
-            border-radius: var(--border-radius);
-            margin-top: 0.25rem;
-            box-shadow: var(--box-shadow);
+            border: 2px solid #4299e1;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
             z-index: 1000;
             display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-
-        .search-result-item {
-            padding: 0.75rem 1rem;
+        
+        .search-item {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
             cursor: pointer;
-            transition: var(--transition);
-            border-bottom: 1px solid var(--gray-light);
+            transition: background 0.2s;
         }
-
-        .search-result-item:last-child {
+        
+        .search-item:hover {
+            background: #f7fafc;
+        }
+        
+        .search-item:last-child {
             border-bottom: none;
         }
-
-        .search-result-item:hover {
-            background: linear-gradient(135deg, var(--light-color), #e3f2fd);
-            color: var(--primary-color);
-            padding-left: 1.5rem;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 0.875rem 1.75rem;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            min-width: 180px;
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn:active {
-            transform: translateY(-1px);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #2563eb, #6d28d9);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: linear-gradient(135deg, #4b5563, #374151);
-        }
-
-        .btn-group {
+        
+        .buttons {
             display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin-top: 2.5rem;
+            gap: 15px;
+            margin-top: 30px;
             flex-wrap: wrap;
         }
-
-        /* Loading */
-        .loading-container {
+        
+        .btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(49, 130, 206, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 85, 104, 0.3);
+        }
+        
+        .loading {
             display: none;
             text-align: center;
-            margin: 1.5rem 0;
+            margin: 30px 0;
         }
-
+        
         .spinner {
-            width: 3rem;
-            height: 3rem;
-            border: 4px solid var(--gray-light);
-            border-top: 4px solid var(--secondary-color);
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #4299e1;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
+            margin: 0 auto 15px;
         }
-
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .loading-text {
-            color: var(--primary-color);
-            font-weight: 500;
-            font-size: 1.1rem;
-        }
-
-        /* Progress Bar */
-        .progress-container {
-            display: none;
-            width: 100%;
-            height: 0.5rem;
-            background: var(--gray-light);
-            border-radius: 1rem;
-            margin: 1rem 0;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
-            border-radius: 1rem;
-            transition: width 0.3s ease;
-            width: 0%;
-        }
-
-        /* Alerts */
+        
         .alert {
-            padding: 1rem 1.25rem;
-            border-radius: var(--border-radius);
-            margin: 1rem 0;
-            font-weight: 500;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            animation: slideIn 0.3s ease-out;
+            gap: 10px;
         }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
+        
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #e53e3e;
         }
-
-        .alert-danger {
-            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-            border-left: 4px solid var(--danger-color);
-            color: #721c24;
-        }
-
+        
         .alert-success {
-            background: linear-gradient(135deg, #d4edda, #c3e6cb);
-            border-left: 4px solid var(--success-color);
-            color: #155724;
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #38a169;
         }
-
+        
         .alert-info {
-            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
-            border-left: 4px solid #17a2b8;
-            color: #0c5460;
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
         }
-
-        .alert-warning {
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-            border-left: 4px solid var(--warning-color);
-            color: #856404;
-        }
-
-        /* Footer */
-        .footer-section {
-            background: linear-gradient(135deg, var(--primary-color), #4b6cb7);
-            color: var(--white);
+        
+        .footer {
             text-align: center;
-            padding: 1.5rem 0;
-            margin-top: 3rem;
-            border-top-left-radius: var(--border-radius);
-            border-top-right-radius: var(--border-radius);
-            position: relative;
+            padding: 20px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 14px;
         }
-
-        .footer-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
-        }
-
-        .footer-content {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .footer-content p {
-            margin: 0.5rem 0;
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-
-        .footer-content a {
-            color: #93c5fd;
+        
+        .footer a {
+            color: #4299e1;
             text-decoration: none;
-            transition: var(--transition);
-            font-weight: 500;
         }
-
-        .footer-content a:hover {
-            color: var(--white);
+        
+        .footer a:hover {
             text-decoration: underline;
         }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
+        
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .connection-online {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #38a169;
+        }
+        
+        .connection-offline {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #e53e3e;
+        }
+        
+        .api-test {
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
             .container {
-                padding: 0.75rem;
+                border-radius: 10px;
             }
             
-            .main-card {
-                padding: 1.5rem;
-                margin: 1rem auto;
+            .header {
+                padding: 20px 15px;
             }
             
-            .btn-group {
-                flex-direction: column;
-                gap: 0.75rem;
+            .content {
+                padding: 20px;
             }
             
             .btn {
                 min-width: 100%;
-                padding: 0.75rem;
+            }
+            
+            .buttons {
+                flex-direction: column;
             }
             
             h1 {
-                font-size: clamp(24px, 5vw, 28px);
+                font-size: 20px;
             }
             
             h2 {
-                font-size: clamp(18px, 4vw, 22px);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .main-card {
-                padding: 1rem;
+                font-size: 16px;
             }
             
-            .form-control {
-                padding: 0.75rem;
-            }
-            
-            .form-label {
-                font-size: 1rem;
-            }
-        }
-
-        /* Accessibility */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-
-        /* Focus styles for keyboard navigation */
-        button:focus, input:focus, select:focus {
-            outline: 3px solid var(--secondary-color);
-            outline-offset: 2px;
-        }
-
-        /* Print styles */
-        @media print {
-            .no-print {
-                display: none !important;
+            .connection-status {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                text-align: center;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header-section">
-        <div class="container">
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="connection-status connection-online" style="display: none;">
+        <span id="statusText">Connected</span>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
             <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" 
                  alt="Malawi Government Logo" 
-                 class="school-logo">
+                 class="logo">
             <h1>LUNZU SECONDARY SCHOOL</h1>
             <h2>2025-2026 END OF TERM 1 RESULTS</h2>
             <h3>Student Results Portal</h3>
         </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="container">
-        <div class="main-card">
-            <h4 class="text-center mb-4">
-                <i class="fas fa-user-graduate text-primary"></i> 
-                Enter Student Details
-            </h4>
-
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- API Test -->
+            <div class="api-test">
+                <span id="apiStatus">Checking connection...</span>
+            </div>
+            
             <!-- Form -->
-            <form id="studentForm" autocomplete="off" novalidate>
+            <form id="studentForm">
                 <!-- Class Selection -->
-                <div class="mb-4">
-                    <label for="studentClass" class="form-label">
-                        <i class="fas fa-users text-primary"></i> 
-                        Class:
+                <div class="form-group">
+                    <label for="studentClass">
+                        <span style="color: #e53e3e;">*</span> Class:
                     </label>
-                    <select id="studentClass" class="form-control form-select" required 
-                            onchange="handleClassChange()">
+                    <select id="studentClass" required onchange="handleClassChange()">
                         <option value="" disabled selected>Select Class</option>
                         <option value="Form 1">Form 1</option>
                         <option value="Form 2">Form 2</option>
@@ -494,345 +370,313 @@
                         <option value="Form 3 ODL">Form 3 ODL</option>
                         <option value="Form 4 ODL">Form 4 ODL</option>
                     </select>
-                    <div class="form-text text-muted">
-                        Select the student's class from the list
-                    </div>
                 </div>
-
+                
                 <!-- Student Search -->
-                <div class="mb-4 position-relative">
-                    <label for="studentSearch" class="form-label">
-                        <i class="fas fa-search text-primary"></i> 
+                <div class="form-group">
+                    <label for="studentSearch">
                         Search Student:
                     </label>
-                    <input type="text" id="studentSearch" class="form-control" 
-                           placeholder="Type student name to search..." 
-                           oninput="handleSearchInput()" 
-                           disabled 
-                           autocomplete="off">
-                    <div id="searchResults" class="search-results"></div>
-                    <div class="form-text text-muted">
-                        Start typing to search for a student
+                    <div class="search-container">
+                        <input type="text" 
+                               id="studentSearch" 
+                               placeholder="Type to search students..." 
+                               oninput="handleSearchInput()" 
+                               disabled>
+                        <div id="searchResults" class="search-results"></div>
                     </div>
                 </div>
-
-                <!-- Student Name Selection -->
-                <div class="mb-4">
-                    <label for="studentName" class="form-label">
-                        <i class="fas fa-user text-primary"></i> 
-                        Student Name:
+                
+                <!-- Student Name -->
+                <div class="form-group">
+                    <label for="studentName">
+                        <span style="color: #e53e3e;">*</span> Student Name:
                     </label>
-                    <select id="studentName" class="form-control form-select" required>
+                    <select id="studentName" required>
                         <option value="" disabled selected>Select Student</option>
                     </select>
-                    <div class="form-text text-muted">
-                        Or select a student from the dropdown
-                    </div>
                 </div>
-
+                
                 <!-- Date of Birth -->
-                <div class="mb-4">
-                    <label for="dateOfBirth" class="form-label">
-                        <i class="fas fa-calendar-alt text-primary"></i> 
-                        Date of Birth:
+                <div class="form-group">
+                    <label for="dateOfBirth">
+                        <span style="color: #e53e3e;">*</span> Date of Birth:
                     </label>
-                    <input type="date" id="dateOfBirth" class="form-control" required>
-                    <div class="form-text text-muted">
-                        Enter student's date of birth (YYYY-MM-DD)
-                    </div>
+                    <input type="date" id="dateOfBirth" required>
                 </div>
-
-                <!-- Action Buttons -->
-                <div class="btn-group">
+                
+                <!-- Buttons -->
+                <div class="buttons">
                     <button type="button" class="btn btn-primary" onclick="getResults()">
-                        <i class="fas fa-eye"></i> View Results
+                        <span>👁️</span> View Results
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="downloadResultsAsPDF()">
-                        <i class="fas fa-download"></i> Download PDF
+                        <span>📥</span> Download PDF
                     </button>
                 </div>
             </form>
-
-            <!-- Loading Indicator -->
-            <div class="loading-container" id="loadingContainer">
+            
+            <!-- Loading -->
+            <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p class="loading-text" id="loadingText">Loading...</p>
+                <p id="loadingText">Processing...</p>
             </div>
-
-            <!-- Progress Bar -->
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-
+            
             <!-- Results/Error Container -->
             <div id="resultsContainer"></div>
-
-            <!-- Connection Status -->
-            <div id="connectionStatus" class="mt-3"></div>
         </div>
-
-        <!-- API Status -->
-        <div class="text-center mt-3">
-            <small class="text-white">
-                <i class="fas fa-server"></i> API Status: 
-                <span id="apiStatus" class="badge bg-success">Connected</span>
-            </small>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer-section">
-        <div class="footer-content">
-            <p>© <span id="current-year"></span> Lunzu Secondary School - Examination Department</p>
-            <p>For technical support: 
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>© <span id="currentYear"></span> Lunzu Secondary School - Examination Department</p>
+            <p>For support: 
                 <a href="https://wa.me/265888866269" target="_blank">
-                    <i class="fab fa-whatsapp"></i> WhatsApp: +265 888 866 269
+                    WhatsApp: +265 888 866 269
                 </a>
             </p>
-            <p class="mt-2">
-                <small>
-                    <i class="fas fa-shield-alt"></i> 
-                    Secure System | 
-                    <i class="fas fa-mobile-alt"></i> 
-                    Mobile Friendly
-                </small>
+            <p style="margin-top: 10px; font-size: 12px;">
+                Compatible with all browsers including Huawei devices
             </p>
         </div>
-    </footer>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Main JavaScript -->
+    </div>
+    
+    <!-- JavaScript -->
     <script>
         // ============================================
         // CONFIGURATION
         // ============================================
-        
-        // IMPORTANT: Replace with your actual Google Apps Script Web App URL
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwqF45Il1QuX-Kp0hnI11P1QlpUq9hIs288P9LaNVzGgP4XXs-3yDnVXnVnt4lGWHmA/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwqF45Il1QuX-Kp0hnI11P1QlpUq9hIs288P9LaNVzGgP4XXs-3yDnVXnVnt4lGWHmA/exec';
         
         // ============================================
         // GLOBAL VARIABLES
         // ============================================
-        
         let allStudentNames = [];
-        let currentStudentClass = '';
-        let isOnline = navigator.onLine;
-        
-        // ============================================
-        // UNIVERSAL API CALL FUNCTION
-        // ============================================
-        
-        function callGAS(action, params = {}) {
-            return new Promise((resolve, reject) => {
-                console.log(`Calling GAS API: ${action}`, params);
-                
-                // Create unique callback name for JSONP
-                const callbackName = 'gas_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                
-                // Prepare parameters
-                const requestParams = {
-                    ...params,
-                    action: action,
-                    callback: callbackName,
-                    _: Date.now() // Cache busting
-                };
-                
-                // Build URL for JSONP
-                const urlParams = new URLSearchParams();
-                for (const key in requestParams) {
-                    if (requestParams[key] !== undefined && requestParams[key] !== null) {
-                        urlParams.append(key, requestParams[key]);
-                    }
-                }
-                
-                const url = GAS_WEB_APP_URL + '?' + urlParams.toString();
-                
-                // Try JSONP first (works on all browsers)
-                const script = document.createElement('script');
-                script.src = url;
-                
-                // Define callback function
-                window[callbackName] = function(response) {
-                    // Clean up
-                    delete window[callbackName];
-                    if (script.parentNode) {
-                        script.parentNode.removeChild(script);
-                    }
-                    
-                    console.log(`API Response for ${action}:`, response);
-                    
-                    if (response && response.error) {
-                        reject(new Error(response.error));
-                    } else {
-                        resolve(response);
-                    }
-                };
-                
-                // Error handling
-                script.onerror = function() {
-                    delete window[callbackName];
-                    if (script.parentNode) {
-                        script.parentNode.removeChild(script);
-                    }
-                    
-                    // Try fetch as fallback (for modern browsers)
-                    if (typeof fetch === 'function') {
-                        tryFetch(action, params)
-                            .then(resolve)
-                            .catch(reject);
-                    } else {
-                        reject(new Error('Failed to load API. Please check your internet connection.'));
-                    }
-                };
-                
-                // Timeout handling
-                const timeoutId = setTimeout(() => {
-                    if (window[callbackName]) {
-                        delete window[callbackName];
-                        if (script.parentNode) {
-                            script.parentNode.removeChild(script);
-                        }
-                        reject(new Error('Request timeout. Please try again.'));
-                    }
-                }, 30000); // 30 second timeout
-                
-                // Clean up timeout on success/error
-                const originalCallback = window[callbackName];
-                window[callbackName] = function(response) {
-                    clearTimeout(timeoutId);
-                    originalCallback(response);
-                };
-                
-                // Add script to document
-                document.head.appendChild(script);
-            });
-        }
-        
-        // Fallback fetch function for modern browsers
-        async function tryFetch(action, params) {
-            try {
-                const formData = new FormData();
-                formData.append('action', action);
-                
-                for (const key in params) {
-                    if (params[key] !== undefined && params[key] !== null) {
-                        formData.append(key, params[key]);
-                    }
-                }
-                
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'no-cors' // Try no-cors mode
-                });
-                
-                // Note: With no-cors mode, we can't read the response
-                // This is just a backup attempt
-                throw new Error('Fetch fallback not available for this endpoint');
-            } catch (error) {
-                throw error;
-            }
-        }
+        let isHuaweiBrowser = false;
+        let connectionOnline = true;
         
         // ============================================
         // INITIALIZATION
         // ============================================
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Lunzu Results System Initialized');
-            
+        window.onload = function() {
             // Set current year
-            document.getElementById('current-year').textContent = new Date().getFullYear();
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
             
-            // Initialize form
-            resetForm();
+            // Detect Huawei browser
+            detectBrowser();
             
             // Test API connection
             testAPIConnection();
             
-            // Setup offline/online detection
+            // Setup offline detection
             setupConnectionMonitoring();
             
-            // Setup form validation
-            setupFormValidation();
+            // Setup form
+            setupForm();
+        };
+        
+        // ============================================
+        // BROWSER DETECTION
+        // ============================================
+        function detectBrowser() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            isHuaweiBrowser = userAgent.includes('huawei') || 
+                             userAgent.includes('harmony') ||
+                             userAgent.includes('emui');
             
-            // Hide loading indicators
-            hideLoading();
-        });
+            console.log('Browser detected:', {
+                userAgent: navigator.userAgent,
+                isHuawei: isHuaweiBrowser,
+                online: navigator.onLine
+            });
+        }
         
         // ============================================
         // CONNECTION MONITORING
         // ============================================
-        
         function setupConnectionMonitoring() {
-            // Monitor online/offline status
             window.addEventListener('online', function() {
-                isOnline = true;
-                updateConnectionStatus('You are back online', 'success');
-                // Retry if we were trying to load names
-                if (currentStudentClass) {
-                    loadStudentNames(currentStudentClass);
+                connectionOnline = true;
+                updateConnectionStatus('Connected', true);
+                // Retry if we were loading
+                if (document.getElementById('studentClass').value) {
+                    handleClassChange();
                 }
             });
             
             window.addEventListener('offline', function() {
-                isOnline = false;
-                updateConnectionStatus('You are offline. Some features may not work.', 'warning');
+                connectionOnline = false;
+                updateConnectionStatus('Offline - Please check internet', false);
             });
             
-            // Initial check
-            updateConnectionStatus(isOnline ? 'Online' : 'Offline', isOnline ? 'success' : 'warning');
+            // Initial status
+            updateConnectionStatus(navigator.onLine ? 'Connected' : 'Offline', navigator.onLine);
         }
         
-        function updateConnectionStatus(message, type) {
+        function updateConnectionStatus(message, isOnline) {
             const statusDiv = document.getElementById('connectionStatus');
-            if (!statusDiv) return;
+            const statusText = document.getElementById('statusText');
             
-            const alertClass = `alert-${type}`;
-            statusDiv.innerHTML = `
-                <div class="alert ${alertClass}">
-                    <i class="fas fa-${type === 'success' ? 'wifi' : 'exclamation-triangle'}"></i>
-                    ${message}
-                </div>
-            `;
-            
-            // Update API status indicator
-            const apiStatus = document.getElementById('apiStatus');
-            if (apiStatus) {
-                apiStatus.textContent = type === 'success' ? 'Connected' : 'Offline';
-                apiStatus.className = `badge bg-${type}`;
+            if (statusDiv) {
+                statusDiv.style.display = 'block';
+                statusDiv.className = isOnline ? 'connection-status connection-online' : 
+                                                'connection-status connection-offline';
+                statusText.textContent = message;
             }
+        }
+        
+        // ============================================
+        // UNIVERSAL API CALL
+        // ============================================
+        function callGAS(action, params = {}) {
+            return new Promise((resolve, reject) => {
+                console.log('API Call:', action, params);
+                
+                // Add browser info for Huawei detection
+                params.userAgent = navigator.userAgent;
+                params._huawei = isHuaweiBrowser ? '1' : '0';
+                params._t = Date.now(); // Cache busting
+                
+                // Huawei browsers need special handling
+                if (isHuaweiBrowser) {
+                    callGASHuawei(action, params, resolve, reject);
+                } else {
+                    callGASStandard(action, params, resolve, reject);
+                }
+            });
+        }
+        
+        // Standard API call for most browsers
+        function callGASStandard(action, params, resolve, reject) {
+            const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            params.callback = callbackName;
+            params.action = action;
+            
+            const script = document.createElement('script');
+            
+            // Build URL
+            let url = GAS_URL + '?';
+            const urlParams = [];
+            for (const key in params) {
+                if (params[key] !== undefined && params[key] !== null) {
+                    urlParams.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+                }
+            }
+            url += urlParams.join('&');
+            script.src = url;
+            
+            // Callback function
+            window[callbackName] = function(response) {
+                delete window[callbackName];
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+                
+                if (response && response.error) {
+                    reject(new Error(response.error));
+                } else {
+                    resolve(response);
+                }
+            };
+            
+            // Error handling
+            script.onerror = function() {
+                delete window[callbackName];
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+                
+                // Try Huawei method as fallback
+                callGASHuawei(action, params, resolve, reject);
+            };
+            
+            // Add to document
+            document.head.appendChild(script);
+        }
+        
+        // Huawei-compatible API call
+        function callGASHuawei(action, params, resolve, reject) {
+            // Huawei browsers work better with iframes
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'huawei_api_' + Date.now();
+            
+            const form = document.createElement('form');
+            form.method = 'GET';
+            form.action = GAS_URL;
+            form.target = iframe.name;
+            
+            // Add all parameters
+            params.action = action;
+            for (const key in params) {
+                if (params[key] !== undefined && params[key] !== null) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = params[key];
+                    form.appendChild(input);
+                }
+            }
+            
+            // Response handler
+            window.addEventListener('message', function handler(event) {
+                if (event.source === iframe.contentWindow) {
+                    window.removeEventListener('message', handler);
+                    
+                    try {
+                        const response = JSON.parse(event.data);
+                        if (response && response.error) {
+                            reject(new Error(response.error));
+                        } else {
+                            resolve(response);
+                        }
+                    } catch (e) {
+                        reject(new Error('Invalid response from server'));
+                    }
+                    
+                    // Clean up
+                    setTimeout(() => {
+                        if (iframe.parentNode) {
+                            iframe.parentNode.removeChild(iframe);
+                        }
+                        if (form.parentNode) {
+                            form.parentNode.removeChild(form);
+                        }
+                    }, 100);
+                }
+            });
+            
+            // Add to document and submit
+            document.body.appendChild(iframe);
+            document.body.appendChild(form);
+            form.submit();
         }
         
         // ============================================
         // FORM HANDLING
         // ============================================
-        
-        function setupFormValidation() {
-            const form = document.getElementById('studentForm');
+        function setupForm() {
+            // Reset form state
+            resetForm();
             
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-                getResults();
+            // Save form data to localStorage
+            document.getElementById('studentForm').addEventListener('change', function() {
+                saveFormData();
             });
             
-            // Real-time validation
-            document.getElementById('studentName').addEventListener('change', validateForm);
-            document.getElementById('dateOfBirth').addEventListener('change', validateForm);
-        }
-        
-        function validateForm() {
-            const studentName = document.getElementById('studentName').value;
-            const studentClass = document.getElementById('studentClass').value;
-            const dateOfBirth = document.getElementById('dateOfBirth').value;
+            // Load saved data
+            loadFormData();
             
-            return studentName && studentClass && dateOfBirth;
+            // Close search on outside click
+            document.addEventListener('click', function(event) {
+                const searchResults = document.getElementById('searchResults');
+                if (searchResults.style.display === 'block' && 
+                    !event.target.closest('.search-container')) {
+                    searchResults.style.display = 'none';
+                }
+            });
         }
         
         function resetForm() {
-            document.getElementById('studentForm').reset();
             document.getElementById('studentSearch').disabled = true;
             document.getElementById('studentName').disabled = true;
             document.getElementById('searchResults').style.display = 'none';
@@ -840,49 +684,41 @@
             document.getElementById('resultsContainer').innerHTML = '';
             hideLoading();
             allStudentNames = [];
-            currentStudentClass = '';
         }
-        
-        // ============================================
-        // CLASS AND STUDENT HANDLING
-        // ============================================
         
         function handleClassChange() {
             const studentClass = document.getElementById('studentClass').value;
             const studentSearch = document.getElementById('studentSearch');
             const studentNameSelect = document.getElementById('studentName');
-            const searchResults = document.getElementById('searchResults');
             
-            // Reset related fields
+            // Reset
             studentSearch.value = '';
             studentNameSelect.innerHTML = '<option value="" disabled selected>Select Student</option>';
             document.getElementById('dateOfBirth').value = '';
-            searchResults.style.display = 'none';
-            searchResults.innerHTML = '';
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('searchResults').innerHTML = '';
             clearError();
             
             if (studentClass) {
-                // Enable fields
                 studentSearch.disabled = false;
                 studentNameSelect.disabled = false;
-                currentStudentClass = studentClass;
-                
-                // Load student names
                 loadStudentNames(studentClass);
             } else {
                 studentSearch.disabled = true;
                 studentNameSelect.disabled = true;
-                currentStudentClass = '';
             }
         }
         
+        // ============================================
+        // STUDENT DATA
+        // ============================================
         async function loadStudentNames(studentClass) {
-            if (!isOnline) {
-                showError('Cannot load student names while offline. Please check your internet connection.');
+            if (!connectionOnline) {
+                showError('No internet connection. Please check your network.');
                 return;
             }
             
-            showLoading('Loading student list...');
+            showLoading('Loading students...');
             
             try {
                 const names = await callGAS('getStudentNames', { studentClass: studentClass });
@@ -890,200 +726,143 @@
                 if (Array.isArray(names) && names.length > 0) {
                     allStudentNames = names;
                     populateStudentDropdown(names);
-                    console.log(`Loaded ${names.length} student names for ${studentClass}`);
-                    showSuccess(`Loaded ${names.length} students for ${studentClass}`);
-                } else if (Array.isArray(names)) {
-                    allStudentNames = [];
-                    showInfo(`No students found for ${studentClass}`);
+                    console.log(`Loaded ${names.length} students for ${studentClass}`);
+                    showSuccess(`Loaded ${names.length} students`);
                 } else {
-                    throw new Error('Invalid response format');
+                    allStudentNames = [];
+                    showInfo('No students found for this class');
                 }
                 
                 hideLoading();
             } catch (error) {
-                console.error('Error loading student names:', error);
-                showError(`Failed to load student names: ${error.message}`);
+                console.error('Error loading names:', error);
+                showError('Failed to load students. Please try again.');
                 hideLoading();
             }
         }
         
-        function populateStudentDropdown(studentNames) {
-            const studentNameSelect = document.getElementById('studentName');
+        function populateStudentDropdown(names) {
+            const select = document.getElementById('studentName');
             
-            // Clear existing options except the first one
-            while (studentNameSelect.options.length > 1) {
-                studentNameSelect.remove(1);
+            // Clear existing options
+            while (select.options.length > 1) {
+                select.remove(1);
             }
             
-            // Add student names to dropdown
-            studentNames.forEach(name => {
+            // Add names
+            names.forEach(name => {
                 const option = document.createElement('option');
                 option.value = name;
                 option.textContent = name;
-                studentNameSelect.appendChild(option);
-            });
-            
-            // Also update the search functionality
-            setupSearchFunctionality();
-        }
-        
-        function setupSearchFunctionality() {
-            const studentSearch = document.getElementById('studentSearch');
-            const searchResults = document.getElementById('searchResults');
-            
-            studentSearch.addEventListener('focus', function() {
-                if (allStudentNames.length > 0 && this.value === '') {
-                    handleSearchInput();
-                }
+                select.appendChild(option);
             });
         }
         
         function handleSearchInput() {
-            const searchQuery = document.getElementById('studentSearch').value.toLowerCase().trim();
-            const searchResults = document.getElementById('searchResults');
+            const query = document.getElementById('studentSearch').value.toLowerCase().trim();
+            const resultsDiv = document.getElementById('searchResults');
             
-            if (!searchQuery) {
-                searchResults.style.display = 'none';
+            if (!query) {
+                resultsDiv.style.display = 'none';
                 return;
             }
             
-            // Filter student names
-            const filteredNames = allStudentNames.filter(name => 
-                name.toLowerCase().includes(searchQuery)
-            ).slice(0, 8); // Limit to 8 results
+            const filtered = allStudentNames.filter(name => 
+                name.toLowerCase().includes(query)
+            ).slice(0, 10);
             
-            // Display results
-            if (filteredNames.length > 0) {
-                searchResults.innerHTML = '';
-                filteredNames.forEach(name => {
+            if (filtered.length > 0) {
+                resultsDiv.innerHTML = '';
+                filtered.forEach(name => {
                     const div = document.createElement('div');
-                    div.className = 'search-result-item';
+                    div.className = 'search-item';
                     div.textContent = name;
                     div.onclick = function() {
                         document.getElementById('studentName').value = name;
                         document.getElementById('studentSearch').value = name;
-                        searchResults.style.display = 'none';
-                        // Scroll to show the selected name
-                        document.getElementById('studentName').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        resultsDiv.style.display = 'none';
                     };
-                    div.onkeydown = function(event) {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                            this.click();
-                        }
-                    };
-                    div.tabIndex = 0;
-                    searchResults.appendChild(div);
+                    resultsDiv.appendChild(div);
                 });
-                searchResults.style.display = 'block';
+                resultsDiv.style.display = 'block';
             } else {
-                searchResults.innerHTML = '<div class="search-result-item">No students found</div>';
-                searchResults.style.display = 'block';
+                resultsDiv.innerHTML = '<div class="search-item">No students found</div>';
+                resultsDiv.style.display = 'block';
             }
         }
-        
-        // Close search results when clicking outside
-        document.addEventListener('click', function(event) {
-            const searchResults = document.getElementById('searchResults');
-            const studentSearch = document.getElementById('studentSearch');
-            
-            if (searchResults.style.display === 'block' && 
-                !searchResults.contains(event.target) && 
-                event.target !== studentSearch) {
-                searchResults.style.display = 'none';
-            }
-        });
         
         // ============================================
         // MAIN ACTIONS
         // ============================================
-        
         async function getResults() {
-            // Validate form
+            // Validate
             if (!validateForm()) {
-                showError('Please fill in all required fields: Class, Student Name, and Date of Birth.');
+                showError('Please fill in all required fields.');
                 return;
             }
             
-            // Get form values
             const studentName = document.getElementById('studentName').value.trim();
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             
-            // Validate date format
             if (!isValidDate(dateOfBirth)) {
-                showError('Please enter a valid date of birth in YYYY-MM-DD format.');
+                showError('Please enter a valid date (YYYY-MM-DD).');
                 return;
             }
             
-            // Clear previous errors
             clearError();
-            
-            // Show loading
-            showLoading('Fetching student results...');
-            startProgressAnimation();
+            showLoading('Fetching results...');
             
             try {
-                // Call API
                 const result = await callGAS('getStudentResults', {
                     studentName: studentName,
                     studentClass: studentClass,
                     dateOfBirth: dateOfBirth
                 });
                 
-                // Check for errors
                 if (result.error) {
                     throw new Error(result.error);
                 }
                 
-                // Get HTML for results window
+                // Get HTML for results
                 const htmlContent = await callGAS('getResultsWindowHTML', {
                     studentName: studentName,
                     studentClass: studentClass,
                     dateOfBirth: dateOfBirth
                 });
                 
-                // Open results in new window
-                openResultsWindow(htmlContent, `${studentName} - ${studentClass} Results`);
+                // Open in new window
+                openResultsWindow(htmlContent, studentName + ' - Results');
                 
                 // Reset form
                 resetForm();
                 
             } catch (error) {
-                console.error('Error getting results:', error);
-                showError(error.message || 'Failed to retrieve results. Please try again.');
+                showError(error.message || 'Failed to get results.');
             } finally {
                 hideLoading();
-                stopProgressAnimation();
             }
         }
         
         async function downloadResultsAsPDF() {
-            // Validate form
             if (!validateForm()) {
-                showError('Please fill in all required fields: Class, Student Name, and Date of Birth.');
+                showError('Please fill in all required fields.');
                 return;
             }
             
-            // Get form values
             const studentName = document.getElementById('studentName').value.trim();
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             
-            // Validate date format
             if (!isValidDate(dateOfBirth)) {
-                showError('Please enter a valid date of birth in YYYY-MM-DD format.');
+                showError('Please enter a valid date (YYYY-MM-DD).');
                 return;
             }
             
-            // Clear previous errors
             clearError();
-            
-            // Show loading
-            showLoading('Generating PDF document...');
-            startProgressAnimation();
+            showLoading('Generating PDF...');
             
             try {
-                // Call API
                 const pdfBase64 = await callGAS('generatePDF', {
                     studentName: studentName,
                     studentClass: studentClass,
@@ -1097,17 +876,22 @@
                 resetForm();
                 
             } catch (error) {
-                console.error('Error generating PDF:', error);
-                showError(error.message || 'Failed to generate PDF. Please try again.');
+                showError(error.message || 'Failed to generate PDF.');
             } finally {
                 hideLoading();
-                stopProgressAnimation();
             }
         }
         
         // ============================================
         // HELPER FUNCTIONS
         // ============================================
+        function validateForm() {
+            const studentName = document.getElementById('studentName').value;
+            const studentClass = document.getElementById('studentClass').value;
+            const dateOfBirth = document.getElementById('dateOfBirth').value;
+            
+            return studentName && studentClass && dateOfBirth;
+        }
         
         function isValidDate(dateString) {
             const regex = /^\d{4}-\d{2}-\d{2}$/;
@@ -1118,55 +902,22 @@
         }
         
         function showLoading(message) {
-            const container = document.getElementById('loadingContainer');
-            const text = document.getElementById('loadingText');
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
             
-            text.textContent = message;
-            container.style.display = 'block';
-            document.getElementById('progressContainer').style.display = 'block';
+            loadingText.textContent = message;
+            loading.style.display = 'block';
         }
         
         function hideLoading() {
-            document.getElementById('loadingContainer').style.display = 'none';
-            document.getElementById('progressContainer').style.display = 'none';
-        }
-        
-        function startProgressAnimation() {
-            const progressBar = document.getElementById('progressBar');
-            let width = 0;
-            
-            const interval = setInterval(() => {
-                if (width >= 90) {
-                    clearInterval(interval);
-                } else {
-                    width += 2;
-                    progressBar.style.width = width + '%';
-                }
-            }, 100);
-            
-            // Store interval ID for stopping
-            window.progressInterval = interval;
-        }
-        
-        function stopProgressAnimation() {
-            if (window.progressInterval) {
-                clearInterval(window.progressInterval);
-            }
-            
-            const progressBar = document.getElementById('progressBar');
-            progressBar.style.width = '100%';
-            
-            // Reset after a delay
-            setTimeout(() => {
-                progressBar.style.width = '0%';
-            }, 500);
+            document.getElementById('loading').style.display = 'none';
         }
         
         function showError(message) {
             const container = document.getElementById('resultsContainer');
             container.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
+                <div class="alert alert-error">
+                    <span>❌</span>
                     <strong>Error:</strong> ${message}
                 </div>
             `;
@@ -1179,12 +930,12 @@
             const container = document.getElementById('resultsContainer');
             container.innerHTML = `
                 <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
+                    <span>✅</span>
                     ${message}
                 </div>
             `;
             
-            // Auto-hide success messages after 3 seconds
+            // Auto-hide after 3 seconds
             setTimeout(() => {
                 if (container.innerHTML.includes('alert-success')) {
                     container.innerHTML = '';
@@ -1196,7 +947,7 @@
             const container = document.getElementById('resultsContainer');
             container.innerHTML = `
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
+                    <span>ℹ️</span>
                     ${message}
                 </div>
             `;
@@ -1208,31 +959,25 @@
         
         function openResultsWindow(htmlContent, title) {
             try {
-                // Open new window
                 const newWindow = window.open('', '_blank');
                 
                 if (!newWindow) {
-                    showError('Please allow pop-ups for this site to view results.');
+                    showError('Please allow pop-ups to view results.');
                     return;
                 }
                 
-                // Set title and write content
-                newWindow.document.title = title;
                 newWindow.document.write(htmlContent);
                 newWindow.document.close();
-                
-                // Focus the new window
                 newWindow.focus();
                 
             } catch (error) {
-                console.error('Error opening results window:', error);
-                showError('Could not open results window. Please try again.');
+                showError('Could not open results window.');
             }
         }
         
         function downloadPDF(base64Data, fileName) {
             try {
-                // Convert base64 to blob
+                // Convert base64 to bytes
                 const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 
@@ -1263,112 +1008,44 @@
                 showSuccess('PDF downloaded successfully!');
                 
             } catch (error) {
-                console.error('Error downloading PDF:', error);
-                throw new Error('Failed to download PDF: ' + error.message);
+                throw new Error('Failed to download PDF.');
             }
         }
         
         // ============================================
-        // TEST FUNCTIONS
+        // DATA PERSISTENCE
         // ============================================
-        
-        async function testAPIConnection() {
-            try {
-                const result = await callGAS('test', {});
-                console.log('✅ API Connection Test:', result);
-                
-                if (result.status === 'API is working') {
-                    updateConnectionStatus('Connected to server', 'success');
-                }
-            } catch (error) {
-                console.error('❌ API connection failed:', error.message);
-                updateConnectionStatus('Cannot connect to server. Some features may not work.', 'warning');
-            }
-        }
-        
-        // ============================================
-        // KEYBOARD SHORTCUTS
-        // ============================================
-        
-        document.addEventListener('keydown', function(event) {
-            // Ctrl+Enter to submit form
-            if (event.ctrlKey && event.key === 'Enter') {
-                event.preventDefault();
-                getResults();
-            }
-            
-            // Escape to close search results
-            if (event.key === 'Escape') {
-                const searchResults = document.getElementById('searchResults');
-                if (searchResults.style.display === 'block') {
-                    searchResults.style.display = 'none';
-                }
-            }
-        });
-        
-        // ============================================
-        // BROWSER COMPATIBILITY CHECK
-        // ============================================
-        
-        function checkBrowserCompatibility() {
-            const issues = [];
-            
-            // Check for required features
-            if (typeof atob === 'undefined') {
-                issues.push('Base64 decoding (atob) not supported');
-            }
-            
-            if (typeof URL.createObjectURL === 'undefined') {
-                issues.push('Blob URLs not supported');
-            }
-            
-            if (typeof Promise === 'undefined') {
-                issues.push('Promises not supported');
-            }
-            
-            if (issues.length > 0) {
-                console.warn('Browser compatibility issues:', issues);
-                showWarning('Your browser may not support all features. Consider updating to a modern browser.');
-            }
-        }
-        
-        // Run compatibility check
-        setTimeout(checkBrowserCompatibility, 1000);
-        
-        // ============================================
-        // AUTO-SAVE FORM DATA (Optional)
-        // ============================================
-        
         function saveFormData() {
-            const formData = {
-                studentClass: document.getElementById('studentClass').value,
-                studentName: document.getElementById('studentName').value,
-                dateOfBirth: document.getElementById('dateOfBirth').value
-            };
-            
             try {
-                localStorage.setItem('lunzu_last_form', JSON.stringify(formData));
+                const data = {
+                    studentClass: document.getElementById('studentClass').value,
+                    studentName: document.getElementById('studentName').value,
+                    dateOfBirth: document.getElementById('dateOfBirth').value
+                };
+                localStorage.setItem('lunzu_form_data', JSON.stringify(data));
             } catch (e) {
-                // Ignore localStorage errors
+                // Ignore errors
             }
         }
         
         function loadFormData() {
             try {
-                const saved = localStorage.getItem('lunzu_last_form');
+                const saved = localStorage.getItem('lunzu_form_data');
                 if (saved) {
-                    const formData = JSON.parse(saved);
-                    if (formData.studentClass) {
-                        document.getElementById('studentClass').value = formData.studentClass;
+                    const data = JSON.parse(saved);
+                    if (data.studentClass) {
+                        document.getElementById('studentClass').value = data.studentClass;
                         handleClassChange();
+                        
+                        // Set other values after a delay
                         setTimeout(() => {
-                            if (formData.studentName) {
-                                document.getElementById('studentName').value = formData.studentName;
+                            if (data.studentName) {
+                                document.getElementById('studentName').value = data.studentName;
                             }
-                            if (formData.dateOfBirth) {
-                                document.getElementById('dateOfBirth').value = formData.dateOfBirth;
+                            if (data.dateOfBirth) {
+                                document.getElementById('dateOfBirth').value = data.dateOfBirth;
                             }
-                        }, 1000);
+                        }, 500);
                     }
                 }
             } catch (e) {
@@ -1376,11 +1053,40 @@
             }
         }
         
-        // Auto-save when form changes
-        document.getElementById('studentForm').addEventListener('change', saveFormData);
+        // ============================================
+        // TEST FUNCTIONS
+        // ============================================
+        async function testAPIConnection() {
+            try {
+                const result = await callGAS('test', {});
+                document.getElementById('apiStatus').textContent = '✅ Connected to server';
+                document.getElementById('apiStatus').style.color = '#38a169';
+                console.log('API Test:', result);
+            } catch (error) {
+                document.getElementById('apiStatus').textContent = '❌ Cannot connect to server';
+                document.getElementById('apiStatus').style.color = '#e53e3e';
+                console.error('API Test failed:', error);
+            }
+        }
         
-        // Load saved data on page load
-        window.addEventListener('load', loadFormData);
+        // ============================================
+        // KEYBOARD SHORTCUTS
+        // ============================================
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+Enter to submit
+            if (event.ctrlKey && event.key === 'Enter') {
+                event.preventDefault();
+                getResults();
+            }
+            
+            // Escape to close search
+            if (event.key === 'Escape') {
+                const searchResults = document.getElementById('searchResults');
+                if (searchResults.style.display === 'block') {
+                    searchResults.style.display = 'none';
+                }
+            }
+        });
     </script>
 </body>
 </html>
