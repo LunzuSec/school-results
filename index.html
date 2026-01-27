@@ -331,7 +331,7 @@
         };
         
         // ============================================
-        // SIMPLE JSONP API CALL - WORKS ON ALL BROWSERS
+        // SIMPLE JSONP API CALL
         // ============================================
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
@@ -351,6 +351,8 @@
                 }
                 url += urlParams.join('&');
                 
+                console.log('Calling GAS URL:', url);
+                
                 // Create script element
                 const script = document.createElement('script');
                 script.src = url;
@@ -363,6 +365,8 @@
                         script.parentNode.removeChild(script);
                     }
                     
+                    console.log('GAS Response:', response);
+                    
                     if (response && response.error) {
                         reject(new Error(response.error));
                     } else {
@@ -372,23 +376,34 @@
                 
                 // Handle script loading errors
                 script.onerror = function() {
+                    console.error('Script loading failed');
                     delete window[callbackName];
                     if (script.parentNode) {
                         script.parentNode.removeChild(script);
                     }
-                    reject(new Error('Failed to connect to server. Please try again.'));
+                    reject(new Error('Failed to connect to server. Please check your internet connection and try again.'));
                 };
                 
                 // Timeout handling
-                setTimeout(() => {
+                const timeoutId = setTimeout(() => {
                     if (window[callbackName]) {
+                        console.error('Request timeout');
                         delete window[callbackName];
                         if (script.parentNode) {
                             script.parentNode.removeChild(script);
                         }
                         reject(new Error('Request timeout. Please try again.'));
                     }
-                }, 15000);
+                }, 30000); // 30 second timeout
+                
+                // Override timeout cleanup
+                const originalCallback = window[callbackName];
+                window[callbackName] = function(response) {
+                    clearTimeout(timeoutId);
+                    if (originalCallback) {
+                        originalCallback(response);
+                    }
+                };
                 
                 // Add to document
                 document.head.appendChild(script);
@@ -413,6 +428,11 @@
                     searchResults.style.display = 'none';
                 }
             });
+            
+            // Save form data on change
+            document.getElementById('studentClass').addEventListener('change', saveFormData);
+            document.getElementById('studentName').addEventListener('change', saveFormData);
+            document.getElementById('dateOfBirth').addEventListener('change', saveFormData);
         }
         
         function resetForm() {
@@ -453,13 +473,16 @@
         // ============================================
         async function loadStudentNames(studentClass) {
             showLoading('Loading students...');
+            console.log('Loading student names for class:', studentClass);
             
             try {
                 const names = await callGAS('getStudentNames', { studentClass: studentClass });
+                console.log('Received names:', names);
                 
                 if (Array.isArray(names) && names.length > 0) {
                     allStudentNames = names;
                     populateStudentDropdown(names);
+                    showInfo(`Loaded ${names.length} student(s)`);
                 } else {
                     allStudentNames = [];
                     showInfo('No students found for this class');
@@ -468,7 +491,7 @@
                 hideLoading();
             } catch (error) {
                 console.error('Error loading names:', error);
-                showError('Failed to load students. Please try again.');
+                showError('Failed to load students. ' + error.message);
                 hideLoading();
             }
         }
@@ -513,6 +536,7 @@
                         document.getElementById('studentName').value = name;
                         document.getElementById('studentSearch').value = name;
                         resultsDiv.style.display = 'none';
+                        saveFormData();
                     };
                     resultsDiv.appendChild(div);
                 });
@@ -544,6 +568,7 @@
             
             clearError();
             showLoading('Fetching results...');
+            console.log('Getting results for:', studentName, studentClass, dateOfBirth);
             
             try {
                 const result = await callGAS('getStudentResults', {
@@ -551,6 +576,8 @@
                     studentClass: studentClass,
                     dateOfBirth: dateOfBirth
                 });
+                
+                console.log('Results received:', result);
                 
                 if (result.error) {
                     throw new Error(result.error);
@@ -563,14 +590,18 @@
                     dateOfBirth: dateOfBirth
                 });
                 
+                console.log('HTML content received');
+                
                 // Open in new window
                 openResultsWindow(htmlContent, studentName + ' - Results');
                 
                 // Reset form
                 resetForm();
+                saveFormData();
                 
             } catch (error) {
-                showError(error.message || 'Failed to get results.');
+                console.error('Error getting results:', error);
+                showError(error.message || 'Failed to get results. Please check your details and try again.');
             } finally {
                 hideLoading();
             }
@@ -593,22 +624,31 @@
             
             clearError();
             showLoading('Generating PDF...');
+            console.log('Generating PDF for:', studentName);
             
             try {
-                const pdfBase64 = await callGAS('generatePDF', {
+                const result = await callGAS('generatePDF', {
                     studentName: studentName,
                     studentClass: studentClass,
                     dateOfBirth: dateOfBirth
                 });
                 
+                console.log('PDF generated, base64 length:', result.length);
+                
+                if (result && result.error) {
+                    throw new Error(result.error);
+                }
+                
                 // Download PDF
-                downloadPDF(pdfBase64, `${studentName}_${studentClass}_Results.pdf`);
+                downloadPDF(result, `${studentName.replace(/\s+/g, '_')}_${studentClass.replace(/\s+/g, '_')}_Results.pdf`);
                 
                 // Reset form
                 resetForm();
+                saveFormData();
                 
             } catch (error) {
-                showError(error.message || 'Failed to generate PDF.');
+                console.error('Error generating PDF:', error);
+                showError(error.message || 'Failed to generate PDF. Please try again.');
             } finally {
                 hideLoading();
             }
@@ -699,6 +739,8 @@
                 newWindow.document.close();
                 newWindow.focus();
                 
+                showSuccess('Results opened in new window!');
+                
             } catch (error) {
                 showError('Could not open results window.');
             }
@@ -706,6 +748,12 @@
         
         function downloadPDF(base64Data, fileName) {
             try {
+                if (!base64Data) {
+                    throw new Error('No PDF data received');
+                }
+                
+                console.log('Starting PDF download, data length:', base64Data.length);
+                
                 // Convert base64 to bytes
                 const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
@@ -737,13 +785,28 @@
                 showSuccess('PDF downloaded successfully!');
                 
             } catch (error) {
-                throw new Error('Failed to download PDF.');
+                console.error('Download error:', error);
+                throw new Error('Failed to download PDF: ' + error.message);
             }
         }
         
         // ============================================
         // DATA PERSISTENCE
         // ============================================
+        function saveFormData() {
+            try {
+                const data = {
+                    studentClass: document.getElementById('studentClass').value,
+                    studentName: document.getElementById('studentName').value,
+                    dateOfBirth: document.getElementById('dateOfBirth').value
+                };
+                
+                localStorage.setItem('lunzu_form_data', JSON.stringify(data));
+            } catch (e) {
+                console.error('Error saving form data:', e);
+            }
+        }
+        
         function loadFormData() {
             try {
                 const saved = localStorage.getItem('lunzu_form_data');
@@ -751,21 +814,25 @@
                     const data = JSON.parse(saved);
                     if (data.studentClass) {
                         document.getElementById('studentClass').value = data.studentClass;
-                        handleClassChange();
                         
-                        // Set other values after a delay
+                        // Trigger class change to load students
                         setTimeout(() => {
-                            if (data.studentName) {
-                                document.getElementById('studentName').value = data.studentName;
-                            }
-                            if (data.dateOfBirth) {
-                                document.getElementById('dateOfBirth').value = data.dateOfBirth;
-                            }
-                        }, 500);
+                            handleClassChange();
+                            
+                            // Set other values after students are loaded
+                            setTimeout(() => {
+                                if (data.studentName) {
+                                    document.getElementById('studentName').value = data.studentName;
+                                }
+                                if (data.dateOfBirth) {
+                                    document.getElementById('dateOfBirth').value = data.dateOfBirth;
+                                }
+                            }, 1000);
+                        }, 100);
                     }
                 }
             } catch (e) {
-                // Ignore errors
+                console.error('Error loading form data:', e);
             }
         }
         
@@ -774,14 +841,34 @@
         // ============================================
         async function testAPIConnection() {
             try {
+                console.log('Testing API connection...');
                 const result = await callGAS('test', {});
-                document.getElementById('apiStatus').textContent = '✅ Connected to server';
+                console.log('API test successful:', result);
+                document.getElementById('apiStatus').innerHTML = '✅ Connected to Lunzu Secondary School Server';
                 document.getElementById('apiStatus').style.color = '#38a169';
             } catch (error) {
-                document.getElementById('apiStatus').textContent = '❌ Cannot connect to server';
+                console.error('API test failed:', error);
+                document.getElementById('apiStatus').innerHTML = '❌ Cannot connect to server. Please check internet connection.';
                 document.getElementById('apiStatus').style.color = '#e53e3e';
             }
         }
+        
+        // ============================================
+        // DEBUGGING HELPERS
+        // ============================================
+        window.debugTest = function() {
+            console.log('Debug test running...');
+            console.log('GAS_URL:', GAS_URL);
+            console.log('allStudentNames:', allStudentNames);
+            console.log('Form values:', {
+                class: document.getElementById('studentClass').value,
+                name: document.getElementById('studentName').value,
+                dob: document.getElementById('dateOfBirth').value
+            });
+            
+            // Test the API directly
+            testAPIConnection();
+        };
     </script>
 </body>
 </html>
