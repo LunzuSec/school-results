@@ -264,6 +264,54 @@
             border-left: 4px solid #4299e1;
         }
         
+        .alert-warning {
+            background: #feebc8;
+            color: #744210;
+            border-left: 4px solid #ed8936;
+        }
+        
+        .browser-help {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+        
+        .browser-help h4 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .browser-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .browser-item {
+            flex: 1;
+            min-width: 150px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        
+        .browser-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .chrome { color: #4285F4; }
+        .firefox { color: #FF9500; }
+        .edge { color: #0078D7; }
+        .safari { color: #FF2E50; }
+        
         .footer {
             text-align: center;
             padding: 20px;
@@ -287,6 +335,7 @@
             .buttons { flex-direction: column; }
             h1 { font-size: 20px; }
             h2 { font-size: 16px; }
+            .browser-item { min-width: 120px; }
         }
     </style>
 </head>
@@ -308,6 +357,15 @@
             <!-- API Test -->
             <div style="text-align:center;margin:10px 0;padding:10px;background:#f7fafc;border-radius:8px;">
                 <span id="apiStatus">Checking connection...</span>
+            </div>
+            
+            <!-- Browser Compatibility Warning -->
+            <div id="browserWarning" class="alert alert-warning" style="display: none;">
+                <span>⚠️</span>
+                <div>
+                    <strong>Browser Compatibility Notice:</strong>
+                    <p style="margin-top: 5px; font-size: 14px;">For best experience, please use an updated modern browser like Chrome, Firefox, Edge, or Safari.</p>
+                </div>
             </div>
             
             <!-- Form -->
@@ -404,6 +462,33 @@
             
             <!-- Results/Error Container -->
             <div id="resultsContainer"></div>
+            
+            <!-- Browser Help Section (shown on errors) -->
+            <div id="browserHelp" class="browser-help">
+                <h4>Recommended Browsers:</h4>
+                <p style="margin-bottom: 10px; font-size: 14px; color: #4a5568;">If you're experiencing connection issues, try one of these updated browsers:</p>
+                <div class="browser-list">
+                    <div class="browser-item">
+                        <div class="browser-icon chrome">C</div>
+                        <div>Google Chrome</div>
+                    </div>
+                    <div class="browser-item">
+                        <div class="browser-icon firefox">F</div>
+                        <div>Mozilla Firefox</div>
+                    </div>
+                    <div class="browser-item">
+                        <div class="browser-icon edge">E</div>
+                        <div>Microsoft Edge</div>
+                    </div>
+                    <div class="browser-item">
+                        <div class="browser-icon safari">S</div>
+                        <div>Apple Safari</div>
+                    </div>
+                </div>
+                <p style="margin-top: 15px; font-size: 13px; color: #718096;">
+                    <strong>Note:</strong> Ensure your browser is updated to the latest version. Older browsers may not support all features.
+                </p>
+            </div>
         </div>
         
         <!-- Footer -->
@@ -439,6 +524,9 @@
             // Set current year
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
+            // Check browser compatibility
+            checkBrowserCompatibility();
+            
             // Test API connection
             testAPIConnection();
             
@@ -450,10 +538,59 @@
         };
         
         // ============================================
+        // BROWSER COMPATIBILITY CHECK
+        // ============================================
+        function checkBrowserCompatibility() {
+            const isModernBrowser = typeof Promise !== 'undefined' && 
+                                   typeof fetch !== 'undefined' &&
+                                   typeof URLSearchParams !== 'undefined';
+            
+            // Check for specific browser features needed
+            const neededFeatures = [
+                'Promise',
+                'fetch',
+                'URLSearchParams',
+                'localStorage',
+                'sessionStorage',
+                'atob',
+                'Uint8Array',
+                'Blob',
+                'URL'
+            ];
+            
+            const missingFeatures = neededFeatures.filter(feature => 
+                typeof window[feature] === 'undefined'
+            );
+            
+            if (missingFeatures.length > 0 || !isModernBrowser) {
+                console.warn('Browser may not support all features:', missingFeatures);
+                showBrowserWarning();
+            }
+        }
+        
+        function showBrowserWarning() {
+            document.getElementById('browserWarning').style.display = 'flex';
+        }
+        
+        function showBrowserHelp() {
+            document.getElementById('browserHelp').style.display = 'block';
+        }
+        
+        function hideBrowserHelp() {
+            document.getElementById('browserHelp').style.display = 'none';
+        }
+        
+        // ============================================
         // SIMPLE JSONP API CALL
         // ============================================
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
+                // Check if JSONP is supported
+                if (typeof document.createElement === 'undefined') {
+                    reject(new Error('Browser does not support required features. Please try a modern browser like Chrome, Firefox, Edge, or Safari.'));
+                    return;
+                }
+                
                 // Create unique callback name
                 const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 
@@ -495,12 +632,18 @@
                 
                 // Handle script loading errors
                 script.onerror = function() {
-                    console.error('Script loading failed');
+                    console.error('Script loading failed - possible CORS or browser compatibility issue');
                     delete window[callbackName];
                     if (script.parentNode) {
                         script.parentNode.removeChild(script);
                     }
-                    reject(new Error('Failed to connect to server. Please check your internet connection and try again.'));
+                    
+                    // Check if this might be a browser compatibility issue
+                    const errorMessage = isLikelyBrowserIssue() 
+                        ? 'Connection failed. This might be due to browser restrictions. Please try using Chrome, Firefox, Edge, or Safari with updated versions.'
+                        : 'Failed to connect to server. Please check your internet connection and try again.';
+                    
+                    reject(new Error(errorMessage));
                 };
                 
                 // Timeout handling
@@ -511,7 +654,7 @@
                         if (script.parentNode) {
                             script.parentNode.removeChild(script);
                         }
-                        reject(new Error('Request timeout. Please try again.'));
+                        reject(new Error('Request timeout. The server might be busy or there might be network restrictions.'));
                     }
                 }, 30000);
                 
@@ -527,6 +670,18 @@
                 // Add to document
                 document.head.appendChild(script);
             });
+        }
+        
+        function isLikelyBrowserIssue() {
+            // Check for common browser compatibility issues
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isOldIE = userAgent.indexOf('msie') !== -1 || userAgent.indexOf('trident') !== -1;
+            const isOldEdge = userAgent.indexOf('edge/') !== -1 && parseInt(userAgent.split('edge/')[1]) < 79;
+            const isOldSafari = userAgent.indexOf('safari') !== -1 && 
+                               userAgent.indexOf('version/') !== -1 && 
+                               parseInt(userAgent.split('version/')[1]) < 12;
+            
+            return isOldIE || isOldEdge || isOldSafari;
         }
         
         // ============================================
@@ -562,6 +717,7 @@
             document.getElementById('resultsContainer').innerHTML = '';
             hideLoading();
             allStudentNames = [];
+            hideBrowserHelp();
             
             // Reset loading indicators
             document.getElementById('studentsLoading').style.display = 'none';
@@ -586,6 +742,7 @@
             document.getElementById('searchResults').style.display = 'none';
             document.getElementById('searchResults').innerHTML = '';
             clearError();
+            hideBrowserHelp();
             
             // Reset loading indicators
             document.getElementById('studentsLoading').style.display = 'none';
@@ -705,7 +862,21 @@
                 document.getElementById('studentsLoading').style.display = 'none';
                 document.getElementById('progressContainer').style.display = 'none';
                 
-                showError('Failed to load students. ' + error.message);
+                // Show appropriate error message
+                const errorMessage = error.message.includes('browser') || 
+                                   error.message.includes('Chrome') || 
+                                   error.message.includes('Firefox') ||
+                                   error.message.includes('Edge') ||
+                                   error.message.includes('Safari')
+                    ? error.message
+                    : `Failed to load students: ${error.message}`;
+                
+                showError(errorMessage);
+                
+                // Show browser help if it's likely a browser issue
+                if (error.message.toLowerCase().includes('browser')) {
+                    showBrowserHelp();
+                }
                 
                 // Keep buttons disabled
                 document.getElementById('viewResultsBtn').disabled = true;
@@ -811,6 +982,7 @@
             }
             
             clearError();
+            hideBrowserHelp();
             showLoading('Opening results...');
             
             try {
@@ -854,6 +1026,7 @@
             }
             
             clearError();
+            hideBrowserHelp();
             showLoading('Generating PDF...');
             console.log('Generating PDF for:', studentName);
             
@@ -877,7 +1050,22 @@
                 
             } catch (error) {
                 console.error('Error generating PDF:', error);
-                showError(error.message || 'Failed to generate PDF. Please try again.');
+                
+                // Show appropriate error message
+                const errorMessage = error.message.includes('browser') || 
+                                   error.message.includes('Chrome') || 
+                                   error.message.includes('Firefox') ||
+                                   error.message.includes('Edge') ||
+                                   error.message.includes('Safari')
+                    ? error.message
+                    : `Failed to generate PDF: ${error.message}`;
+                
+                showError(errorMessage);
+                
+                // Show browser help if it's likely a browser issue
+                if (error.message.toLowerCase().includes('browser')) {
+                    showBrowserHelp();
+                }
             } finally {
                 hideLoading();
             }
@@ -939,7 +1127,9 @@
             container.innerHTML = `
                 <div class="alert alert-error">
                     <span>❌</span>
-                    <strong>Error:</strong> ${message}
+                    <div>
+                        <strong>Error:</strong> ${message}
+                    </div>
                 </div>
             `;
         }
@@ -949,7 +1139,7 @@
             container.innerHTML = `
                 <div class="alert alert-success">
                     <span>✅</span>
-                    ${message}
+                    <div>${message}</div>
                 </div>
             `;
             
@@ -966,7 +1156,7 @@
             container.innerHTML = `
                 <div class="alert alert-info">
                     <span>ℹ️</span>
-                    ${message}
+                    <div>${message}</div>
                 </div>
             `;
         }
@@ -982,6 +1172,12 @@
                 }
                 
                 console.log('Starting PDF download, data length:', base64Data.length);
+                
+                // Check for required browser features
+                if (typeof atob === 'undefined' || typeof Uint8Array === 'undefined' || 
+                    typeof Blob === 'undefined' || typeof URL === 'undefined') {
+                    throw new Error('Your browser does not support PDF download. Please use an updated browser like Chrome, Firefox, Edge, or Safari.');
+                }
                 
                 // Convert base64 to bytes
                 const byteCharacters = atob(base64Data);
@@ -1079,7 +1275,18 @@
                 document.getElementById('apiStatus').style.color = '#38a169';
             } catch (error) {
                 console.error('API test failed:', error);
-                document.getElementById('apiStatus').innerHTML = '❌ Cannot connect to server. Please check internet connection.';
+                
+                // Determine if it's a browser issue or connection issue
+                let statusMessage = '❌ Cannot connect to server. ';
+                if (error.message.includes('browser') || error.message.includes('Chrome') || 
+                    error.message.includes('Firefox') || error.message.includes('Edge') || 
+                    error.message.includes('Safari')) {
+                    statusMessage += 'This might be due to browser restrictions.';
+                } else {
+                    statusMessage += 'Please check internet connection and try again.';
+                }
+                
+                document.getElementById('apiStatus').innerHTML = statusMessage;
                 document.getElementById('apiStatus').style.color = '#e53e3e';
             }
         }
