@@ -565,7 +565,9 @@
             if (missingFeatures.length > 0 || !isModernBrowser) {
                 console.warn('Browser may not support all features:', missingFeatures);
                 showBrowserWarning();
+                return false;
             }
+            return true;
         }
         
         function showBrowserWarning() {
@@ -585,9 +587,9 @@
         // ============================================
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
-                // Check if JSONP is supported
-                if (typeof document.createElement === 'undefined') {
-                    reject(new Error('Browser does not support required features. Please try a modern browser like Chrome, Firefox, Edge, or Safari.'));
+                // Check if browser supports basic features
+                if (!checkBrowserCompatibility()) {
+                    reject(new Error('Your browser does not support all required features. Please update your browser or use Chrome, Firefox, Edge, or Safari.'));
                     return;
                 }
                 
@@ -638,12 +640,13 @@
                         script.parentNode.removeChild(script);
                     }
                     
-                    // Check if this might be a browser compatibility issue
-                    const errorMessage = isLikelyBrowserIssue() 
-                        ? 'Connection failed. This might be due to browser restrictions. Please try using Chrome, Firefox, Edge, or Safari with updated versions.'
-                        : 'Failed to connect to server. Please check your internet connection and try again.';
-                    
-                    reject(new Error(errorMessage));
+                    // Check browser compatibility
+                    const browserCheck = detectBrowserIssues();
+                    if (browserCheck.isProblematic) {
+                        reject(new Error(`${browserCheck.message} Please use Chrome, Firefox, Edge, or Safari with updated versions.`));
+                    } else {
+                        reject(new Error('Failed to connect to server. Please check your internet connection and try again.'));
+                    }
                 };
                 
                 // Timeout handling
@@ -654,7 +657,7 @@
                         if (script.parentNode) {
                             script.parentNode.removeChild(script);
                         }
-                        reject(new Error('Request timeout. The server might be busy or there might be network restrictions.'));
+                        reject(new Error('Request timeout. Please try again or check if your browser has security restrictions.'));
                     }
                 }, 30000);
                 
@@ -672,16 +675,73 @@
             });
         }
         
-        function isLikelyBrowserIssue() {
-            // Check for common browser compatibility issues
+        function detectBrowserIssues() {
             const userAgent = navigator.userAgent.toLowerCase();
-            const isOldIE = userAgent.indexOf('msie') !== -1 || userAgent.indexOf('trident') !== -1;
-            const isOldEdge = userAgent.indexOf('edge/') !== -1 && parseInt(userAgent.split('edge/')[1]) < 79;
-            const isOldSafari = userAgent.indexOf('safari') !== -1 && 
-                               userAgent.indexOf('version/') !== -1 && 
-                               parseInt(userAgent.split('version/')[1]) < 12;
             
-            return isOldIE || isOldEdge || isOldSafari;
+            // Detect Internet Explorer
+            if (userAgent.indexOf('msie') !== -1 || userAgent.indexOf('trident') !== -1) {
+                return {
+                    isProblematic: true,
+                    message: 'Internet Explorer is not supported.'
+                };
+            }
+            
+            // Detect old Edge (pre-Chromium)
+            if (userAgent.indexOf('edge/') !== -1) {
+                const edgeVersion = userAgent.match(/edge\/(\d+)/);
+                if (edgeVersion && parseInt(edgeVersion[1]) < 79) {
+                    return {
+                        isProblematic: true,
+                        message: 'Your Microsoft Edge browser is outdated.'
+                    };
+                }
+            }
+            
+            // Detect old Safari
+            if (userAgent.indexOf('safari') !== -1 && userAgent.indexOf('chrome') === -1) {
+                const safariVersion = userAgent.match(/version\/(\d+)/);
+                if (safariVersion && parseInt(safariVersion[1]) < 12) {
+                    return {
+                        isProblematic: true,
+                        message: 'Your Safari browser is outdated.'
+                    };
+                }
+            }
+            
+            // Detect old Firefox
+            if (userAgent.indexOf('firefox') !== -1) {
+                const firefoxVersion = userAgent.match(/firefox\/(\d+)/);
+                if (firefoxVersion && parseInt(firefoxVersion[1]) < 60) {
+                    return {
+                        isProblematic: true,
+                        message: 'Your Firefox browser is outdated.'
+                    };
+                }
+            }
+            
+            // Detect if JavaScript is disabled
+            if (typeof document.createElement === 'undefined') {
+                return {
+                    isProblematic: true,
+                    message: 'JavaScript appears to be disabled or not supported.'
+                };
+            }
+            
+            // Check for CORS support
+            if (typeof XMLHttpRequest !== 'undefined') {
+                const xhr = new XMLHttpRequest();
+                if (!('withCredentials' in xhr)) {
+                    return {
+                        isProblematic: true,
+                        message: 'Your browser does not support cross-origin requests.'
+                    };
+                }
+            }
+            
+            return {
+                isProblematic: false,
+                message: 'No browser issues detected.'
+            };
         }
         
         // ============================================
@@ -863,18 +923,11 @@
                 document.getElementById('progressContainer').style.display = 'none';
                 
                 // Show appropriate error message
-                const errorMessage = error.message.includes('browser') || 
-                                   error.message.includes('Chrome') || 
-                                   error.message.includes('Firefox') ||
-                                   error.message.includes('Edge') ||
-                                   error.message.includes('Safari')
-                    ? error.message
-                    : `Failed to load students: ${error.message}`;
-                
+                const errorMessage = formatErrorMessage(error.message);
                 showError(errorMessage);
                 
                 // Show browser help if it's likely a browser issue
-                if (error.message.toLowerCase().includes('browser')) {
+                if (isBrowserRelatedError(error.message)) {
                     showBrowserHelp();
                 }
                 
@@ -884,6 +937,44 @@
                 document.getElementById('studentSearch').disabled = true;
                 document.getElementById('studentName').disabled = true;
             }
+        }
+        
+        function formatErrorMessage(message) {
+            // Check if this is a browser-related error
+            if (message.includes('Chrome') || 
+                message.includes('Firefox') || 
+                message.includes('Edge') || 
+                message.includes('Safari') ||
+                message.includes('browser') ||
+                message.includes('Internet Explorer') ||
+                message.includes('outdated') ||
+                message.includes('JavaScript') ||
+                message.includes('cross-origin') ||
+                message.includes('security restrictions')) {
+                return message;
+            }
+            
+            // Check for specific network errors
+            if (message.includes('Failed to connect') || 
+                message.includes('network') ||
+                message.includes('connection')) {
+                return message;
+            }
+            
+            // Generic error formatting
+            return `Failed to load students: ${message}`;
+        }
+        
+        function isBrowserRelatedError(message) {
+            const browserKeywords = [
+                'Chrome', 'Firefox', 'Edge', 'Safari', 'browser', 
+                'Internet Explorer', 'outdated', 'JavaScript',
+                'cross-origin', 'security restrictions'
+            ];
+            
+            return browserKeywords.some(keyword => 
+                message.toLowerCase().includes(keyword.toLowerCase())
+            );
         }
         
         function populateStudentDropdown(names) {
@@ -1052,18 +1143,11 @@
                 console.error('Error generating PDF:', error);
                 
                 // Show appropriate error message
-                const errorMessage = error.message.includes('browser') || 
-                                   error.message.includes('Chrome') || 
-                                   error.message.includes('Firefox') ||
-                                   error.message.includes('Edge') ||
-                                   error.message.includes('Safari')
-                    ? error.message
-                    : `Failed to generate PDF: ${error.message}`;
-                
+                const errorMessage = formatErrorMessage(error.message);
                 showError(errorMessage);
                 
                 // Show browser help if it's likely a browser issue
-                if (error.message.toLowerCase().includes('browser')) {
+                if (isBrowserRelatedError(error.message)) {
                     showBrowserHelp();
                 }
             } finally {
@@ -1176,7 +1260,7 @@
                 // Check for required browser features
                 if (typeof atob === 'undefined' || typeof Uint8Array === 'undefined' || 
                     typeof Blob === 'undefined' || typeof URL === 'undefined') {
-                    throw new Error('Your browser does not support PDF download. Please use an updated browser like Chrome, Firefox, Edge, or Safari.');
+                    throw new Error('Your browser does not support PDF download. Please use Chrome, Firefox, Edge, or Safari.');
                 }
                 
                 // Convert base64 to bytes
@@ -1276,18 +1360,24 @@
             } catch (error) {
                 console.error('API test failed:', error);
                 
-                // Determine if it's a browser issue or connection issue
-                let statusMessage = '❌ Cannot connect to server. ';
-                if (error.message.includes('browser') || error.message.includes('Chrome') || 
-                    error.message.includes('Firefox') || error.message.includes('Edge') || 
-                    error.message.includes('Safari')) {
-                    statusMessage += 'This might be due to browser restrictions.';
-                } else {
-                    statusMessage += 'Please check internet connection and try again.';
+                // Format error message
+                const errorMessage = formatErrorMessage(error.message);
+                let statusMessage = '❌ ' + errorMessage;
+                
+                // If it's a browser issue, add specific advice
+                if (isBrowserRelatedError(error.message)) {
+                    statusMessage += ' Please try Chrome, Firefox, Edge, or Safari.';
                 }
                 
                 document.getElementById('apiStatus').innerHTML = statusMessage;
                 document.getElementById('apiStatus').style.color = '#e53e3e';
+                
+                // Show browser help if needed
+                if (isBrowserRelatedError(error.message)) {
+                    setTimeout(() => {
+                        showBrowserHelp();
+                    }, 500);
+                }
             }
         }
         
