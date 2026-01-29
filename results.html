@@ -22,12 +22,14 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         html, body {
             width: 100%;
             height: 100%;
             overflow-x: hidden;
+            touch-action: manipulation;
         }
         
         body {
@@ -38,6 +40,8 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         .results-container {
@@ -49,6 +53,7 @@
             border-radius: 12px;
             flex: 1;
             width: 100%;
+            position: relative;
         }
         
         .school-header {
@@ -123,41 +128,49 @@
             border-radius: 8px;
             background: white;
             overflow: hidden;
+            height: auto;
+            max-height: 500px;
         }
         
         .scroll-container {
             width: 100%;
+            height: 100%;
             overflow-x: auto;
-            overflow-y: visible;
+            overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
-            padding-bottom: 5px;
+            position: relative;
         }
         
         /* Custom scrollbar styling */
         .scroll-container::-webkit-scrollbar {
+            width: 8px;
             height: 8px;
         }
         
         .scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 4px;
-            margin: 0 10px;
         }
         
         .scroll-container::-webkit-scrollbar-thumb {
             background: #888;
             border-radius: 4px;
             min-width: 50px;
+            min-height: 50px;
         }
         
         .scroll-container::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
         
+        .scroll-container::-webkit-scrollbar-corner {
+            background: #f1f1f1;
+        }
+        
         .results-table {
             width: 100%;
-            min-width: 700px; /* Minimum width to ensure all columns are visible */
+            min-width: 700px;
             border-collapse: collapse;
             font-size: 0.9rem;
             table-layout: fixed;
@@ -167,6 +180,7 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            background-color: var(--primary-color);
         }
         
         .results-table thead th {
@@ -177,7 +191,8 @@
             text-align: center;
             white-space: nowrap;
             border-right: 1px solid rgba(255,255,255,0.2);
-            position: relative;
+            position: sticky;
+            top: 0;
         }
         
         .results-table thead th:last-child {
@@ -214,7 +229,7 @@
             border-bottom: none;
         }
         
-        /* Column widths for better mobile display */
+        /* Column widths */
         .results-table th:nth-child(1),
         .results-table td:nth-child(1) {
             width: 25%;
@@ -327,6 +342,7 @@
             cursor: pointer;
             font-size: 0.9rem;
             min-width: 130px;
+            touch-action: manipulation;
         }
         
         .btn-print {
@@ -335,7 +351,7 @@
             border-color: var(--primary-color);
         }
         
-        .btn-print:hover {
+        .btn-print:hover, .btn-print:active {
             background: var(--secondary-color);
             border-color: var(--secondary-color);
             transform: translateY(-2px);
@@ -348,7 +364,7 @@
             border-color: var(--primary-color);
         }
         
-        .btn-close:hover {
+        .btn-close:hover, .btn-close:active {
             background: var(--primary-color);
             color: white;
             transform: translateY(-2px);
@@ -401,12 +417,27 @@
             margin-bottom: 15px;
         }
         
-        /* Mobile scroll hint */
-        .scroll-hint {
+        /* Scroll hints */
+        .scroll-hint-horizontal {
             position: absolute;
             right: 10px;
             top: 50%;
             transform: translateY(-50%);
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            opacity: 0.8;
+            animation: pulse 2s infinite;
+            display: none;
+            z-index: 5;
+        }
+        
+        .scroll-hint-vertical {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
             background: var(--primary-color);
             color: white;
             padding: 4px 8px;
@@ -423,10 +454,17 @@
             50% { opacity: 0.4; }
         }
         
+        /* Touch-friendly improvements */
+        .touch-scroll-area {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        
         /* Mobile-specific styles */
         @media (max-width: 768px) {
             body {
                 padding: 8px;
+                touch-action: pan-y;
             }
             
             .results-container {
@@ -471,10 +509,12 @@
             
             .table-wrapper {
                 border-radius: 6px;
+                max-height: 400px;
             }
             
             .scroll-container {
-                padding-bottom: 8px;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior: contain;
             }
             
             .results-table {
@@ -523,17 +563,16 @@
                 font-size: 0.95rem;
             }
             
-            /* Show scroll hint on mobile */
-            .scroll-hint {
+            /* Show scroll hints on mobile */
+            .scroll-hint-horizontal,
+            .scroll-hint-vertical {
                 display: block;
             }
             
             /* Ensure scrolling works on all mobile browsers */
             .scroll-container {
                 -webkit-overflow-scrolling: touch;
-                overflow-x: scroll;
-                overflow-y: hidden;
-                scroll-snap-type: x mandatory;
+                scroll-snap-type: none;
             }
             
             /* Add visual indicator for scrollable area */
@@ -545,6 +584,18 @@
                 bottom: 0;
                 width: 20px;
                 background: linear-gradient(to right, transparent, rgba(0,0,0,0.1));
+                pointer-events: none;
+                display: block;
+            }
+            
+            .table-wrapper::before {
+                content: "";
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 20px;
+                background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.1));
                 pointer-events: none;
                 display: block;
             }
@@ -563,9 +614,14 @@
                 min-width: 600px;
             }
             
-            .scroll-hint {
+            .scroll-hint-horizontal,
+            .scroll-hint-vertical {
                 font-size: 0.65rem;
                 padding: 3px 6px;
+            }
+            
+            .table-wrapper {
+                max-height: 350px;
             }
         }
         
@@ -584,6 +640,10 @@
             
             .results-table {
                 min-width: 550px;
+            }
+            
+            .table-wrapper {
+                max-height: 300px;
             }
         }
         
@@ -624,7 +684,8 @@
             
             .action-buttons,
             .btn-action,
-            .scroll-hint {
+            .scroll-hint-horizontal,
+            .scroll-hint-vertical {
                 display: none !important;
             }
             
@@ -632,11 +693,13 @@
                 border: 1px solid #000 !important;
                 overflow: visible !important;
                 width: 100% !important;
+                max-height: none !important;
             }
             
             .scroll-container {
                 overflow: visible !important;
                 width: 100% !important;
+                height: auto !important;
             }
             
             .results-table {
@@ -656,7 +719,8 @@
                 display: none !important;
             }
             
-            .table-wrapper::after {
+            .table-wrapper::after,
+            .table-wrapper::before {
                 display: none !important;
             }
         }
@@ -700,10 +764,13 @@
         
         <!-- FIXED: Scrollable table container -->
         <div class="table-wrapper">
-            <div class="scroll-hint">
+            <div class="scroll-hint-horizontal">
                 <i class="fas fa-arrows-left-right"></i> Scroll
             </div>
-            <div class="scroll-container" id="tableScrollContainer">
+            <div class="scroll-hint-vertical">
+                <i class="fas fa-arrows-up-down"></i> Scroll
+            </div>
+            <div class="scroll-container touch-scroll-area" id="tableScrollContainer">
                 <table class="results-table" id="resultsTable">
                     <thead>
                         <tr>
@@ -778,7 +845,7 @@
         
         <!-- Mobile scroll instruction -->
         <div class="text-center mt-2 d-md-none" style="color: #666; font-size: 0.75rem;">
-            <i class="fas fa-info-circle me-1"></i> Swipe left/right to view full table
+            <i class="fas fa-info-circle me-1"></i> Swipe in any direction to view full table
         </div>
     </div>
     
@@ -799,6 +866,14 @@
         const studentClass = urlParams.get('class');
         const dateOfBirth = urlParams.get('dob');
         
+        // Touch variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+        let isScrolling = false;
+        let scrollDirection = null;
+        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('Page loaded with params:', { studentName, studentClass, dateOfBirth });
@@ -811,6 +886,9 @@
             
             // Initialize scrolling
             initializeTableScrolling();
+            
+            // Add touch event listeners to body
+            setupTouchEvents();
         });
         
         // Load student results from Google Apps Script
@@ -1007,44 +1085,114 @@
             }
         }
         
-        // Initialize table scrolling
+        // Initialize table scrolling with both horizontal AND vertical support
         function initializeTableScrolling() {
             const scrollContainer = document.getElementById('tableScrollContainer');
             if (!scrollContainer) return;
             
-            // Force scrollbar visibility
+            // Enable both horizontal and vertical scrolling
             scrollContainer.style.overflowX = 'auto';
+            scrollContainer.style.overflowY = 'auto';
             scrollContainer.style.WebkitOverflowScrolling = 'touch';
+            scrollContainer.style.overscrollBehavior = 'contain';
             
-            // Add touch event listeners for better mobile experience
-            let isScrolling = false;
-            let startX = 0;
-            let scrollLeft = 0;
+            // Make sure touch events work properly
+            scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+            scrollContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
+            scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
             
-            scrollContainer.addEventListener('touchstart', function(e) {
+            // Add wheel support for laptops with touchpads
+            scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+            
+            // Fix for iOS Safari
+            document.addEventListener('touchmove', function(e) {
+                if (scrollContainer.contains(e.target)) {
+                    // Allow scrolling in table container
+                    return;
+                }
+            }, { passive: true });
+        }
+        
+        // Setup touch events for the entire page
+        function setupTouchEvents() {
+            document.addEventListener('touchstart', function(e) {
+                // Don't prevent default on touch start
+            }, { passive: true });
+            
+            document.addEventListener('touchmove', function(e) {
+                // Don't prevent default on touch move
+            }, { passive: true });
+        }
+        
+        // Touch event handlers
+        function handleTouchStart(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            isScrolling = false;
+            scrollDirection = null;
+        }
+        
+        function handleTouchMove(e) {
+            if (!touchStartX || !touchStartY) return;
+            
+            touchEndX = e.touches[0].clientX;
+            touchEndY = e.touches[0].clientY;
+            
+            const diffX = touchStartX - touchEndX;
+            const diffY = touchStartY - touchEndY;
+            
+            // Determine scroll direction on first significant move
+            if (!isScrolling && (Math.abs(diffX) > 5 || Math.abs(diffY) > 5)) {
                 isScrolling = true;
-                startX = e.touches[0].pageX - scrollContainer.offsetLeft;
-                scrollLeft = scrollContainer.scrollLeft;
-            }, { passive: true });
+                scrollDirection = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+            }
             
-            scrollContainer.addEventListener('touchmove', function(e) {
-                if (!isScrolling) return;
+            // Let the browser handle scrolling naturally
+            // The scroll container's overflow properties will handle it
+        }
+        
+        function handleTouchEnd() {
+            touchStartX = 0;
+            touchStartY = 0;
+            isScrolling = false;
+            scrollDirection = null;
+        }
+        
+        // Handle mouse wheel for touchpads
+        function handleWheel(e) {
+            const scrollContainer = document.getElementById('tableScrollContainer');
+            if (!scrollContainer) return;
+            
+            // Check if we're at horizontal boundaries
+            const atLeft = scrollContainer.scrollLeft <= 0;
+            const atRight = scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 1;
+            
+            // Check if we're at vertical boundaries
+            const atTop = scrollContainer.scrollTop <= 0;
+            const atBottom = scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 1;
+            
+            // Determine primary scroll direction
+            const isVerticalScroll = Math.abs(e.deltaY) > Math.abs(e.deltaX);
+            
+            if (isVerticalScroll) {
+                // Vertical scrolling
+                if ((e.deltaY > 0 && atBottom) || (e.deltaY < 0 && atTop)) {
+                    // At boundary, allow page to scroll
+                    return;
+                }
+                // Scroll the container vertically
+                scrollContainer.scrollTop += e.deltaY;
                 e.preventDefault();
-                const x = e.touches[0].pageX - scrollContainer.offsetLeft;
-                const walk = (x - startX) * 2; // Scroll speed multiplier
-                scrollContainer.scrollLeft = scrollLeft - walk;
-            }, { passive: false });
-            
-            scrollContainer.addEventListener('touchend', function() {
-                isScrolling = false;
-            }, { passive: true });
-            
-            // Add mouse wheel support for laptops with touchpads
-            scrollContainer.addEventListener('wheel', function(e) {
-                if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+            } else {
+                // Horizontal scrolling
+                if ((e.deltaX > 0 && atRight) || (e.deltaX < 0 && atLeft)) {
+                    // At boundary, allow page to scroll
+                    return;
+                }
+                // Scroll the container horizontally
+                scrollContainer.scrollLeft += e.deltaX;
                 e.preventDefault();
-                scrollContainer.scrollLeft += e.deltaY;
-            }, { passive: false });
+            }
         }
         
         // Auto-scroll hint on mobile
@@ -1053,20 +1201,38 @@
             if (!scrollContainer || window.innerWidth > 768) return;
             
             const hasHorizontalScroll = scrollContainer.scrollWidth > scrollContainer.clientWidth;
+            const hasVerticalScroll = scrollContainer.scrollHeight > scrollContainer.clientHeight;
             
-            if (hasHorizontalScroll) {
-                // Briefly scroll right then back to show it's scrollable
-                const originalScroll = scrollContainer.scrollLeft;
-                const scrollAmount = 100;
+            if (hasHorizontalScroll || hasVerticalScroll) {
+                // Briefly scroll then back to show it's scrollable
+                const originalScrollLeft = scrollContainer.scrollLeft;
+                const originalScrollTop = scrollContainer.scrollTop;
                 
-                scrollContainer.scrollTo({
-                    left: originalScroll + scrollAmount,
-                    behavior: 'smooth'
-                });
+                // Horizontal hint
+                if (hasHorizontalScroll) {
+                    scrollContainer.scrollTo({
+                        left: originalScrollLeft + 80,
+                        top: originalScrollTop,
+                        behavior: 'smooth'
+                    });
+                }
                 
+                // Vertical hint
+                if (hasVerticalScroll) {
+                    setTimeout(() => {
+                        scrollContainer.scrollTo({
+                            left: originalScrollLeft + 80,
+                            top: originalScrollTop + 40,
+                            behavior: 'smooth'
+                        });
+                    }, 400);
+                }
+                
+                // Return to original position
                 setTimeout(() => {
                     scrollContainer.scrollTo({
-                        left: originalScroll,
+                        left: originalScrollLeft,
+                        top: originalScrollTop,
                         behavior: 'smooth'
                     });
                 }, 800);
@@ -1146,10 +1312,12 @@
                         overflow: visible !important;
                         width: 100% !important;
                         border: 1px solid #000 !important;
+                        max-height: none !important;
                     }
                     .scroll-container {
                         overflow: visible !important;
                         width: 100% !important;
+                        height: auto !important;
                     }
                     .results-table {
                         min-width: 100% !important;
@@ -1157,7 +1325,8 @@
                     }
                     .action-buttons,
                     .btn-action,
-                    .scroll-hint,
+                    .scroll-hint-horizontal,
+                    .scroll-hint-vertical,
                     .text-center.d-md-none {
                         display: none !important;
                     }
@@ -1254,15 +1423,6 @@
                 loadStudentResults(studentName, studentClass, dateOfBirth);
             }
         });
-        
-        // Fix for iOS Safari scrolling
-        document.addEventListener('touchmove', function(e) {
-            // Allow scrolling in table container
-            const scrollContainer = document.getElementById('tableScrollContainer');
-            if (scrollContainer && scrollContainer.contains(e.target)) {
-                return;
-            }
-        }, { passive: true });
     </script>
 </body>
 </html>
