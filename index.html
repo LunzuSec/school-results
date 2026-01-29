@@ -518,14 +518,160 @@
         let loadingInterval;
         
         // ============================================
+        // BROWSER DETECTION FUNCTIONS
+        // ============================================
+        
+        function detectBrowserIssues() {
+            const userAgent = navigator.userAgent;
+            const issues = [];
+            
+            // Detect Internet Explorer (IE 11 or older)
+            if (userAgent.indexOf('MSIE') !== -1 || userAgent.indexOf('Trident/') !== -1) {
+                issues.push({
+                    type: 'browser',
+                    message: 'Internet Explorer is not supported. Please use Chrome, Firefox, Edge, or Safari.',
+                    severity: 'high'
+                });
+            }
+            
+            // Detect old Edge (pre-Chromium)
+            if (userAgent.indexOf('Edge/') !== -1) {
+                const edgeVersion = userAgent.match(/Edge\/(\d+)/);
+                if (edgeVersion && parseInt(edgeVersion[1]) < 79) {
+                    issues.push({
+                        type: 'browser',
+                        message: 'Your Microsoft Edge browser is outdated (pre-Chromium). Please update to the latest version.',
+                        severity: 'high'
+                    });
+                }
+            }
+            
+            // Detect if JavaScript is disabled (though this wouldn't run if it were)
+            if (typeof document.createElement === 'undefined') {
+                issues.push({
+                    type: 'javascript',
+                    message: 'JavaScript appears to be disabled. Please enable JavaScript in your browser settings.',
+                    severity: 'critical'
+                });
+            }
+            
+            // Check for required features
+            const requiredFeatures = [
+                'Promise',
+                'fetch',
+                'URLSearchParams',
+                'localStorage',
+                'sessionStorage',
+                'atob',
+                'Uint8Array',
+                'Blob',
+                'URL',
+                'JSON'
+            ];
+            
+            const missingFeatures = requiredFeatures.filter(feature => 
+                typeof window[feature] === 'undefined'
+            );
+            
+            if (missingFeatures.length > 0) {
+                issues.push({
+                    type: 'features',
+                    message: `Your browser is missing required features: ${missingFeatures.join(', ')}. Please update your browser.`,
+                    severity: 'high'
+                });
+            }
+            
+            // Check if cookies are enabled (important for localStorage)
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+            } catch (e) {
+                issues.push({
+                    type: 'storage',
+                    message: 'Local storage/cookies appear to be disabled. Please enable cookies in your browser settings.',
+                    severity: 'medium'
+                });
+            }
+            
+            // Check if browser is too old (detect by missing modern APIs)
+            if (typeof Promise === 'undefined' || typeof fetch === 'undefined') {
+                issues.push({
+                    type: 'browser',
+                    message: 'Your browser is very outdated and does not support modern web features.',
+                    severity: 'critical'
+                });
+            }
+            
+            return issues;
+        }
+        
+        function isLikelyBrowserCompatibilityError(errorMessage) {
+            const errorLower = errorMessage.toLowerCase();
+            const browserKeywords = [
+                'access-control',
+                'cross-origin',
+                'cors',
+                'security',
+                'same-origin',
+                'origin',
+                'script error',
+                'jsonp',
+                'callback',
+                'permission',
+                'blocked',
+                'restricted',
+                'refused',
+                'forbidden',
+                'network error',
+                'failed to fetch',
+                'typeerror',
+                'syntaxerror'
+            ];
+            
+            return browserKeywords.some(keyword => errorLower.includes(keyword));
+        }
+        
+        function showBrowserHelp() {
+            document.getElementById('browserHelp').style.display = 'block';
+        }
+        
+        function hideBrowserHelp() {
+            document.getElementById('browserHelp').style.display = 'none';
+        }
+        
+        // ============================================
         // INITIALIZATION
         // ============================================
         window.onload = function() {
             // Set current year
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
-            // Check browser compatibility
-            checkBrowserCompatibility();
+            // Check browser compatibility FIRST
+            const browserIssues = detectBrowserIssues();
+            if (browserIssues.length > 0) {
+                console.warn('Browser issues detected:', browserIssues);
+                
+                // Show the most critical issue
+                const criticalIssue = browserIssues.find(issue => issue.severity === 'critical') || 
+                                     browserIssues.find(issue => issue.severity === 'high') || 
+                                     browserIssues[0];
+                
+                if (criticalIssue) {
+                    document.getElementById('apiStatus').innerHTML = `⚠️ ${criticalIssue.message}`;
+                    document.getElementById('apiStatus').style.color = '#e53e3e';
+                    
+                    // Show browser help section
+                    showBrowserHelp();
+                    
+                    // Disable form
+                    document.getElementById('studentClass').disabled = true;
+                    document.getElementById('studentSearch').disabled = true;
+                    document.getElementById('studentName').disabled = true;
+                    document.getElementById('dateOfBirth').disabled = true;
+                    
+                    return; // Don't continue with API test
+                }
+            }
             
             // Test API connection
             testAPIConnection();
@@ -538,58 +684,19 @@
         };
         
         // ============================================
-        // BROWSER COMPATIBILITY CHECK
-        // ============================================
-        function checkBrowserCompatibility() {
-            const isModernBrowser = typeof Promise !== 'undefined' && 
-                                   typeof fetch !== 'undefined' &&
-                                   typeof URLSearchParams !== 'undefined';
-            
-            // Check for specific browser features needed
-            const neededFeatures = [
-                'Promise',
-                'fetch',
-                'URLSearchParams',
-                'localStorage',
-                'sessionStorage',
-                'atob',
-                'Uint8Array',
-                'Blob',
-                'URL'
-            ];
-            
-            const missingFeatures = neededFeatures.filter(feature => 
-                typeof window[feature] === 'undefined'
-            );
-            
-            if (missingFeatures.length > 0 || !isModernBrowser) {
-                console.warn('Browser may not support all features:', missingFeatures);
-                showBrowserWarning();
-                return false;
-            }
-            return true;
-        }
-        
-        function showBrowserWarning() {
-            document.getElementById('browserWarning').style.display = 'flex';
-        }
-        
-        function showBrowserHelp() {
-            document.getElementById('browserHelp').style.display = 'block';
-        }
-        
-        function hideBrowserHelp() {
-            document.getElementById('browserHelp').style.display = 'none';
-        }
-        
-        // ============================================
         // SIMPLE JSONP API CALL
         // ============================================
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
-                // Check if browser supports basic features
-                if (!checkBrowserCompatibility()) {
-                    reject(new Error('Your browser does not support all required features. Please update your browser or use Chrome, Firefox, Edge, or Safari.'));
+                // First check browser compatibility
+                const browserIssues = detectBrowserIssues();
+                const criticalIssues = browserIssues.filter(issue => 
+                    issue.severity === 'critical' || issue.severity === 'high'
+                );
+                
+                if (criticalIssues.length > 0) {
+                    const errorMessage = criticalIssues[0].message + ' Please try Chrome, Firefox, Edge, or Safari.';
+                    reject(new Error(errorMessage));
                     return;
                 }
                 
@@ -634,18 +741,29 @@
                 
                 // Handle script loading errors
                 script.onerror = function() {
-                    console.error('Script loading failed - possible CORS or browser compatibility issue');
+                    console.error('Script loading failed');
                     delete window[callbackName];
                     if (script.parentNode) {
                         script.parentNode.removeChild(script);
                     }
                     
-                    // Check browser compatibility
-                    const browserCheck = detectBrowserIssues();
-                    if (browserCheck.isProblematic) {
-                        reject(new Error(`${browserCheck.message} Please use Chrome, Firefox, Edge, or Safari with updated versions.`));
+                    // Determine if this is likely a browser compatibility issue
+                    const browserIssues = detectBrowserIssues();
+                    if (browserIssues.length > 0) {
+                        const errorMessage = browserIssues[0].message + ' This may be causing connection issues.';
+                        reject(new Error(errorMessage));
                     } else {
-                        reject(new Error('Failed to connect to server. Please check your internet connection and try again.'));
+                        // Check for common network/browser errors
+                        const userAgent = navigator.userAgent;
+                        const isOldBrowser = userAgent.indexOf('MSIE') !== -1 || 
+                                            userAgent.indexOf('Trident/') !== -1 ||
+                                            userAgent.indexOf('Edge/') !== -1;
+                        
+                        if (isOldBrowser) {
+                            reject(new Error('Your browser may have compatibility issues with this site. Please try Chrome, Firefox, Edge, or Safari.'));
+                        } else {
+                            reject(new Error('Failed to connect to server. This could be due to:\n1. Internet connection issues\n2. Browser security restrictions\n3. Server temporarily unavailable\n\nPlease try again or use a different browser.'));
+                        }
                     }
                 };
                 
@@ -657,7 +775,17 @@
                         if (script.parentNode) {
                             script.parentNode.removeChild(script);
                         }
-                        reject(new Error('Request timeout. Please try again or check if your browser has security restrictions.'));
+                        
+                        // Check if browser might be blocking the request
+                        const isLikelyBlocked = navigator.userAgent.indexOf('MSIE') !== -1 || 
+                                               navigator.userAgent.indexOf('Trident/') !== -1 ||
+                                               navigator.userAgent.indexOf('Edge/') !== -1;
+                        
+                        if (isLikelyBlocked) {
+                            reject(new Error('Request timeout. Your browser may be blocking the connection. Please try Chrome, Firefox, Edge, or Safari.'));
+                        } else {
+                            reject(new Error('Request timeout. Please check your internet connection and try again.'));
+                        }
                     }
                 }, 30000);
                 
@@ -673,75 +801,6 @@
                 // Add to document
                 document.head.appendChild(script);
             });
-        }
-        
-        function detectBrowserIssues() {
-            const userAgent = navigator.userAgent.toLowerCase();
-            
-            // Detect Internet Explorer
-            if (userAgent.indexOf('msie') !== -1 || userAgent.indexOf('trident') !== -1) {
-                return {
-                    isProblematic: true,
-                    message: 'Internet Explorer is not supported.'
-                };
-            }
-            
-            // Detect old Edge (pre-Chromium)
-            if (userAgent.indexOf('edge/') !== -1) {
-                const edgeVersion = userAgent.match(/edge\/(\d+)/);
-                if (edgeVersion && parseInt(edgeVersion[1]) < 79) {
-                    return {
-                        isProblematic: true,
-                        message: 'Your Microsoft Edge browser is outdated.'
-                    };
-                }
-            }
-            
-            // Detect old Safari
-            if (userAgent.indexOf('safari') !== -1 && userAgent.indexOf('chrome') === -1) {
-                const safariVersion = userAgent.match(/version\/(\d+)/);
-                if (safariVersion && parseInt(safariVersion[1]) < 12) {
-                    return {
-                        isProblematic: true,
-                        message: 'Your Safari browser is outdated.'
-                    };
-                }
-            }
-            
-            // Detect old Firefox
-            if (userAgent.indexOf('firefox') !== -1) {
-                const firefoxVersion = userAgent.match(/firefox\/(\d+)/);
-                if (firefoxVersion && parseInt(firefoxVersion[1]) < 60) {
-                    return {
-                        isProblematic: true,
-                        message: 'Your Firefox browser is outdated.'
-                    };
-                }
-            }
-            
-            // Detect if JavaScript is disabled
-            if (typeof document.createElement === 'undefined') {
-                return {
-                    isProblematic: true,
-                    message: 'JavaScript appears to be disabled or not supported.'
-                };
-            }
-            
-            // Check for CORS support
-            if (typeof XMLHttpRequest !== 'undefined') {
-                const xhr = new XMLHttpRequest();
-                if (!('withCredentials' in xhr)) {
-                    return {
-                        isProblematic: true,
-                        message: 'Your browser does not support cross-origin requests.'
-                    };
-                }
-            }
-            
-            return {
-                isProblematic: false,
-                message: 'No browser issues detected.'
-            };
         }
         
         // ============================================
@@ -922,12 +981,12 @@
                 document.getElementById('studentsLoading').style.display = 'none';
                 document.getElementById('progressContainer').style.display = 'none';
                 
-                // Show appropriate error message
-                const errorMessage = formatErrorMessage(error.message);
-                showError(errorMessage);
+                // Format error message to be more helpful
+                const formattedError = formatErrorMessage(error.message);
+                showError(formattedError);
                 
                 // Show browser help if it's likely a browser issue
-                if (isBrowserRelatedError(error.message)) {
+                if (isLikelyBrowserCompatibilityError(error.message)) {
                     showBrowserHelp();
                 }
                 
@@ -939,42 +998,38 @@
             }
         }
         
-        function formatErrorMessage(message) {
-            // Check if this is a browser-related error
-            if (message.includes('Chrome') || 
-                message.includes('Firefox') || 
-                message.includes('Edge') || 
-                message.includes('Safari') ||
-                message.includes('browser') ||
-                message.includes('Internet Explorer') ||
-                message.includes('outdated') ||
-                message.includes('JavaScript') ||
-                message.includes('cross-origin') ||
-                message.includes('security restrictions')) {
-                return message;
+        function formatErrorMessage(errorMessage) {
+            const errorLower = errorMessage.toLowerCase();
+            
+            // Check for specific browser issues
+            if (errorLower.includes('internet explorer') || 
+                errorLower.includes('outdated') || 
+                errorLower.includes('browser') ||
+                errorLower.includes('chrome') ||
+                errorLower.includes('firefox') ||
+                errorLower.includes('edge') ||
+                errorLower.includes('safari') ||
+                errorLower.includes('compatibility')) {
+                return errorMessage; // Already formatted
             }
             
-            // Check for specific network errors
-            if (message.includes('Failed to connect') || 
-                message.includes('network') ||
-                message.includes('connection')) {
-                return message;
+            // Check for connection issues
+            if (errorLower.includes('failed to connect') || 
+                errorLower.includes('connection') ||
+                errorLower.includes('timeout') ||
+                errorLower.includes('network')) {
+                
+                // Check browser issues first
+                const browserIssues = detectBrowserIssues();
+                if (browserIssues.length > 0) {
+                    return `Connection failed. ${browserIssues[0].message} Please try Chrome, Firefox, Edge, or Safari.`;
+                }
+                
+                return 'Connection failed. This could be due to:\n1. Internet connection issues\n2. Browser security restrictions\n3. Server temporarily unavailable\n\nPlease try again or use a different browser.';
             }
             
-            // Generic error formatting
-            return `Failed to load students: ${message}`;
-        }
-        
-        function isBrowserRelatedError(message) {
-            const browserKeywords = [
-                'Chrome', 'Firefox', 'Edge', 'Safari', 'browser', 
-                'Internet Explorer', 'outdated', 'JavaScript',
-                'cross-origin', 'security restrictions'
-            ];
-            
-            return browserKeywords.some(keyword => 
-                message.toLowerCase().includes(keyword.toLowerCase())
-            );
+            // Generic error
+            return errorMessage;
         }
         
         function populateStudentDropdown(names) {
@@ -1142,12 +1197,12 @@
             } catch (error) {
                 console.error('Error generating PDF:', error);
                 
-                // Show appropriate error message
-                const errorMessage = formatErrorMessage(error.message);
-                showError(errorMessage);
+                // Format error message
+                const formattedError = formatErrorMessage(error.message);
+                showError(formattedError);
                 
                 // Show browser help if it's likely a browser issue
-                if (isBrowserRelatedError(error.message)) {
+                if (isLikelyBrowserCompatibilityError(error.message)) {
                     showBrowserHelp();
                 }
             } finally {
@@ -1208,11 +1263,13 @@
         
         function showError(message) {
             const container = document.getElementById('resultsContainer');
+            // Replace newlines with <br> tags for better display
+            const formattedMessage = message.replace(/\n/g, '<br>');
             container.innerHTML = `
                 <div class="alert alert-error">
                     <span>❌</span>
                     <div>
-                        <strong>Error:</strong> ${message}
+                        <strong>Error:</strong> ${formattedMessage}
                     </div>
                 </div>
             `;
@@ -1361,19 +1418,12 @@
                 console.error('API test failed:', error);
                 
                 // Format error message
-                const errorMessage = formatErrorMessage(error.message);
-                let statusMessage = '❌ ' + errorMessage;
-                
-                // If it's a browser issue, add specific advice
-                if (isBrowserRelatedError(error.message)) {
-                    statusMessage += ' Please try Chrome, Firefox, Edge, or Safari.';
-                }
-                
-                document.getElementById('apiStatus').innerHTML = statusMessage;
+                const formattedError = formatErrorMessage(error.message);
+                document.getElementById('apiStatus').innerHTML = '❌ ' + formattedError;
                 document.getElementById('apiStatus').style.color = '#e53e3e';
                 
                 // Show browser help if needed
-                if (isBrowserRelatedError(error.message)) {
+                if (isLikelyBrowserCompatibilityError(error.message)) {
                     setTimeout(() => {
                         showBrowserHelp();
                     }, 500);
