@@ -18,18 +18,24 @@
             --border-color: #dee2e6;
         }
         
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Poppins', sans-serif;
             background-color: var(--light-bg);
             color: #333;
-            padding: 20px;
+            padding: 15px;
             min-height: 100vh;
         }
         
         .results-container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 30px;
+            padding: 20px;
             background-color: white;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
             border-radius: 15px;
@@ -37,98 +43,143 @@
         
         .school-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             border-bottom: 3px solid var(--primary-color);
             padding-bottom: 20px;
         }
         
         .school-logo {
-            height: 80px;
+            height: 70px;
             margin-bottom: 15px;
+            max-width: 100%;
         }
         
         .school-title {
             font-family: 'Roboto Slab', serif;
             color: var(--primary-color);
             font-weight: 700;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             margin-bottom: 8px;
+            word-wrap: break-word;
         }
         
         .sub-title {
             color: var(--secondary-color);
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-bottom: 5px;
         }
         
         .student-info {
             background: linear-gradient(135deg, #f0f4f8 0%, #e3eaf3 100%);
-            padding: 20px;
+            padding: 18px;
             border-radius: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border-left: 5px solid var(--primary-color);
         }
         
         .info-label {
             font-weight: 600;
             color: var(--primary-color);
-            min-width: 200px;
             display: inline-block;
+            min-width: 180px;
+            margin-bottom: 5px;
         }
         
         .info-value {
             color: #555;
             font-weight: 500;
-        }
-        
-        .results-table {
-            margin-bottom: 25px;
-            font-size: 0.9rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .results-table thead th {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 600;
-            padding: 12px 8px;
-            border: none;
-            text-align: center;
-        }
-        
-        .results-table tbody td {
-            padding: 10px 8px;
-            vertical-align: middle;
-            border-color: var(--border-color);
-        }
-        
-        .results-table tbody tr:hover {
-            background-color: rgba(0, 51, 102, 0.05);
+            word-break: break-word;
         }
         
         .section-title {
             color: var(--primary-color);
             border-bottom: 2px solid var(--accent-color);
             padding-bottom: 8px;
-            margin-bottom: 15px;
+            margin: 25px 0 15px 0;
             font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        /* Mobile-responsive table container */
+        .table-responsive-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        
+        .results-table {
+            width: 100%;
+            min-width: 800px; /* Minimum width for table to maintain readability */
+            font-size: 0.9rem;
+            border-collapse: collapse;
+        }
+        
+        .results-table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            padding: 12px 10px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .results-table tbody td {
+            padding: 10px 8px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+            word-break: break-word;
+        }
+        
+        .results-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .results-table tbody tr:hover {
+            background-color: rgba(0, 51, 102, 0.05);
+        }
+        
+        .grade-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-align: center;
+            min-width: 30px;
+        }
+        
+        .grade-A { background-color: #d4edda; color: #155724; }
+        .grade-B { background-color: #d1ecf1; color: #0c5460; }
+        .grade-C { background-color: #fff3cd; color: #856404; }
+        .grade-D { background-color: #f8d7da; color: #721c24; }
+        .grade-F { background-color: #dc3545; color: white; }
+        .grade-1, .grade-2, .grade-3 { background-color: #d4edda; color: #155724; }
+        .grade-4, .grade-5 { background-color: #fff3cd; color: #856404; }
+        .grade-6, .grade-7, .grade-8 { background-color: #f8d7da; color: #721c24; }
+        .grade-9 { background-color: #dc3545; color: white; }
+        
+        .summary-row {
+            background-color: #e9ecef !important;
+            font-weight: 600;
         }
         
         .remarks-section {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 20px;
+            padding: 18px;
             border-radius: 10px;
-            margin-bottom: 25px;
+            margin: 20px 0;
             border-left: 4px solid var(--primary-color);
         }
         
         .footer-section {
             background: linear-gradient(135deg, #f0f4f8 0%, #e3eaf3 100%);
-            padding: 20px;
+            padding: 18px;
             border-radius: 10px;
             border-top: 3px solid var(--primary-color);
+            margin-top: 20px;
         }
         
         .footer-title {
@@ -142,6 +193,7 @@
             font-size: 0.85rem;
             color: #555;
             margin-bottom: 8px;
+            line-height: 1.4;
         }
         
         .action-buttons {
@@ -153,48 +205,45 @@
         }
         
         .btn-action {
-            padding: 10px 25px;
+            padding: 12px 25px;
             border-radius: 8px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            font-size: 0.95rem;
+            min-width: 140px;
         }
         
         .btn-print {
             background: var(--primary-color);
             color: white;
-            border: 2px solid var(--primary-color);
+            border-color: var(--primary-color);
         }
         
         .btn-print:hover {
             background: var(--secondary-color);
             border-color: var(--secondary-color);
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         
         .btn-close {
             background: transparent;
             color: var(--primary-color);
-            border: 2px solid var(--primary-color);
+            border-color: var(--primary-color);
         }
         
         .btn-close:hover {
             background: var(--primary-color);
             color: white;
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        
-        .grade-A { background-color: #d4edda; color: #155724; }
-        .grade-B { background-color: #d1ecf1; color: #0c5460; }
-        .grade-C { background-color: #fff3cd; color: #856404; }
-        .grade-D { background-color: #f8d7da; color: #721c24; }
-        .grade-F { background-color: #dc3545; color: white; }
-        .grade-1, .grade-2, .grade-3 { background-color: #d4edda; color: #155724; }
-        .grade-4, .grade-5 { background-color: #fff3cd; color: #856404; }
-        .grade-6, .grade-7, .grade-8 { background-color: #f8d7da; color: #721c24; }
-        .grade-9 { background-color: #dc3545; color: white; }
         
         .loading-overlay {
             position: fixed;
@@ -202,11 +251,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            padding: 20px;
         }
         
         .spinner {
@@ -216,6 +267,7 @@
             border-top: 5px solid var(--primary-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-bottom: 20px;
         }
         
         @keyframes spin {
@@ -223,6 +275,201 @@
             100% { transform: rotate(360deg); }
         }
         
+        .error-message {
+            text-align: center;
+            padding: 30px;
+            max-width: 500px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .error-icon {
+            font-size: 3rem;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        
+        /* Scrollbar styling for mobile */
+        .table-responsive-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .table-responsive-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .table-responsive-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        .table-responsive-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .results-container {
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .school-header {
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+            }
+            
+            .school-logo {
+                height: 60px;
+            }
+            
+            .school-title {
+                font-size: 1.3rem;
+            }
+            
+            .sub-title {
+                font-size: 1rem;
+            }
+            
+            .student-info {
+                padding: 15px;
+            }
+            
+            .info-label {
+                min-width: 150px;
+                font-size: 0.9rem;
+            }
+            
+            .info-value {
+                font-size: 0.9rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+                margin: 20px 0 12px 0;
+            }
+            
+            .results-table {
+                font-size: 0.8rem;
+                min-width: 700px;
+            }
+            
+            .results-table thead th {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+            
+            .results-table tbody td {
+                padding: 8px 6px;
+                font-size: 0.85rem;
+            }
+            
+            .grade-badge {
+                padding: 3px 8px;
+                font-size: 0.8rem;
+                min-width: 25px;
+            }
+            
+            .remarks-section,
+            .footer-section {
+                padding: 15px;
+            }
+            
+            .footer-title {
+                font-size: 0.95rem;
+            }
+            
+            .footer-info {
+                font-size: 0.8rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 20px;
+            }
+            
+            .btn-action {
+                width: 100%;
+                padding: 14px 20px;
+                font-size: 1rem;
+            }
+            
+            .table-responsive-container {
+                margin-left: -10px;
+                margin-right: -10px;
+                width: calc(100% + 20px);
+                border-left: none;
+                border-right: none;
+                border-radius: 0;
+            }
+            
+            .table-responsive-container table {
+                min-width: 650px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .school-title {
+                font-size: 1.1rem;
+            }
+            
+            .sub-title {
+                font-size: 0.9rem;
+            }
+            
+            .info-label {
+                display: block;
+                min-width: auto;
+                margin-bottom: 2px;
+            }
+            
+            .info-value {
+                display: block;
+                margin-bottom: 8px;
+            }
+            
+            .results-table {
+                min-width: 600px;
+            }
+            
+            .table-responsive-container {
+                margin-left: -15px;
+                margin-right: -15px;
+                width: calc(100% + 30px);
+            }
+            
+            .results-container {
+                padding: 12px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .school-logo {
+                height: 50px;
+            }
+            
+            .school-title {
+                font-size: 1rem;
+            }
+            
+            .sub-title {
+                font-size: 0.85rem;
+            }
+            
+            .results-table {
+                min-width: 550px;
+            }
+        }
+        
+        /* Print styles */
         @media print {
             @page {
                 size: A4;
@@ -249,7 +496,7 @@
             }
             
             .school-logo {
-                height: 60px;
+                height: 50px;
             }
             
             .action-buttons,
@@ -257,9 +504,15 @@
                 display: none !important;
             }
             
+            .table-responsive-container {
+                overflow: visible !important;
+                border: none !important;
+            }
+            
             .results-table {
                 font-size: 8pt;
                 border: 1px solid #000;
+                min-width: 100% !important;
             }
             
             .student-info,
@@ -267,37 +520,15 @@
             .footer-section {
                 border: 1px solid #000;
             }
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
+            
+            .loading-overlay {
+                display: none !important;
             }
             
-            .results-container {
-                padding: 15px;
-            }
-            
-            .school-title {
-                font-size: 1.4rem;
-            }
-            
-            .sub-title {
-                font-size: 1rem;
-            }
-            
-            .results-table {
-                font-size: 0.8rem;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .btn-action {
-                width: 100%;
-                justify-content: center;
+            .table-responsive-container {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                width: 100% !important;
             }
         }
     </style>
@@ -306,10 +537,8 @@
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
-        <div style="margin-left: 20px;">
-            <h4>Loading Results...</h4>
-            <p>Please wait while we fetch your results.</p>
-        </div>
+        <h4 style="color: var(--primary-color); margin-bottom: 10px;">Loading Student Results</h4>
+        <p style="color: #666; text-align: center; max-width: 300px;">Please wait while we fetch your results from the server...</p>
     </div>
     
     <!-- Results Container -->
@@ -340,16 +569,17 @@
         <!-- Subjects Section -->
         <h3 class="section-title"><i class="fas fa-book-open me-2"></i>SUBJECT PERFORMANCE</h3>
         
-        <div class="table-responsive results-table">
-            <table class="table table-bordered" id="resultsTable">
+        <!-- Scrollable table container -->
+        <div class="table-responsive-container">
+            <table class="results-table" id="resultsTable">
                 <thead>
                     <tr>
-                        <th>SUBJECT</th>
-                        <th>SCORE</th>
-                        <th>GRADE</th>
-                        <th>POSITION</th>
-                        <th>AVERAGE</th>
-                        <th>COMMENT</th>
+                        <th style="width: 25%;">SUBJECT</th>
+                        <th style="width: 15%;">SCORE</th>
+                        <th style="width: 15%;">GRADE</th>
+                        <th style="width: 15%;">POSITION</th>
+                        <th style="width: 15%;">AVERAGE</th>
+                        <th style="width: 15%;">COMMENT</th>
                     </tr>
                 </thead>
                 <tbody id="resultsBody">
@@ -361,13 +591,15 @@
         <!-- Summary Row -->
         <div class="row mb-4">
             <div class="col-md-6" id="totalMarksContainer" style="display: none;">
-                <div class="alert alert-primary">
-                    <strong>TOTAL MARKS:</strong> <span id="totalMarks">-</span>
+                <div class="alert alert-primary p-3">
+                    <strong><i class="fas fa-calculator me-2"></i>TOTAL MARKS:</strong> 
+                    <span id="totalMarks" class="ms-2 fs-5">-</span>
                 </div>
             </div>
             <div class="col-md-6" id="totalPointsContainer" style="display: none;">
-                <div class="alert alert-primary">
-                    <strong>TOTAL POINTS:</strong> <span id="totalPoints">-</span>
+                <div class="alert alert-primary p-3">
+                    <strong><i class="fas fa-chart-line me-2"></i>TOTAL POINTS:</strong> 
+                    <span id="totalPoints" class="ms-2 fs-5">-</span>
                 </div>
             </div>
         </div>
@@ -385,7 +617,7 @@
                     <h5 class="footer-title"><i class="fas fa-money-bill-wave me-2"></i>SCHOOL FEES</h5>
                     <p class="footer-info" id="feesInfo">-</p>
                     <p class="footer-info" id="accountInfo">-</p>
-                    <p class="footer-info">ACC TYPE: CURRENT | BANK: FDH | LUNZU BRANCH</p>
+                    <p class="footer-info"><i class="fas fa-university me-2"></i>ACC TYPE: CURRENT | BANK: FDH | LUNZU BRANCH</p>
                 </div>
                 <div class="col-md-6">
                     <h5 class="footer-title"><i class="fas fa-calendar-alt me-2"></i>IMPORTANT DATES</h5>
@@ -394,8 +626,8 @@
                     <h5 class="footer-title mt-3"><i class="fas fa-map-marker-alt me-2"></i>SCHOOL ADDRESS</h5>
                     <p class="footer-info">Private bag 130, Lunzu</p>
                     
-                    <h5 class="footer-title mt-3"><i class="fas fa-info-circle me-2"></i>POLICY</h5>
-                    <p class="footer-info">Grace period: 2 weeks from term start. No fees, no admission.</p>
+                    <h5 class="footer-title mt-3"><i class="fas fa-info-circle me-2"></i>GOVERNMENT POLICY</h5>
+                    <p class="footer-info">The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.</p>
                 </div>
             </div>
         </div>
@@ -409,7 +641,15 @@
                 <i class="fas fa-times"></i> Close Window
             </button>
         </div>
+        
+        <!-- Mobile scroll hint -->
+        <div class="text-center mt-3 d-md-none" style="color: #666; font-size: 0.8rem;">
+            <i class="fas fa-arrows-left-right me-1"></i> Scroll horizontally to view full table
+        </div>
     </div>
+    
+    <!-- Error Container -->
+    <div id="errorContainer" style="display: none;"></div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -427,11 +667,16 @@
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Page loaded with params:', { studentName, studentClass, dateOfBirth });
+            
             if (studentName && studentClass && dateOfBirth) {
                 await loadStudentResults(studentName, studentClass, dateOfBirth);
             } else {
-                showError('Missing student information. Please go back and try again.');
+                showError('Missing student information. Please go back to the main portal and try again.');
             }
+            
+            // Add touch event listeners for better mobile scrolling
+            setupTouchScrolling();
         });
         
         // Load student results from Google Apps Script
@@ -446,8 +691,14 @@
                     dateOfBirth: dob
                 });
                 
+                console.log('API Response:', response);
+                
                 if (response.error) {
                     throw new Error(response.error);
+                }
+                
+                if (!response.success) {
+                    throw new Error(response.message || 'Failed to retrieve results');
                 }
                 
                 // Populate results on the page
@@ -477,10 +728,13 @@
                 }
                 url += urlParams.join('&');
                 
+                console.log('Making API call to:', url.substring(0, 100) + '...');
+                
                 const script = document.createElement('script');
                 script.src = url;
                 
                 window[callbackName] = function(response) {
+                    console.log('API callback received:', response);
                     delete window[callbackName];
                     if (script.parentNode) {
                         script.parentNode.removeChild(script);
@@ -494,11 +748,12 @@
                 };
                 
                 script.onerror = function() {
+                    console.error('Script loading failed');
                     delete window[callbackName];
                     if (script.parentNode) {
                         script.parentNode.removeChild(script);
                     }
-                    reject(new Error('Failed to connect to server.'));
+                    reject(new Error('Failed to connect to server. Please check your internet connection.'));
                 };
                 
                 setTimeout(() => {
@@ -507,7 +762,7 @@
                         if (script.parentNode) {
                             script.parentNode.removeChild(script);
                         }
-                        reject(new Error('Request timeout.'));
+                        reject(new Error('Request timeout. Please try again.'));
                     }
                 }, 30000);
                 
@@ -518,64 +773,79 @@
         // Populate results on the page
         function populateResults(results) {
             try {
+                console.log('Populating results:', results);
+                
                 // Update school name for ODL
-                if (results.studentClass.includes("ODL")) {
+                if (results.studentClass && results.studentClass.includes("ODL")) {
                     document.getElementById('schoolName').textContent = "LUNZU OPEN SECONDARY SCHOOL";
                 }
                 
                 // Update student info
-                document.getElementById('studentName').textContent = results.name;
-                document.getElementById('dob').textContent = results.dob;
-                document.getElementById('studentClass').textContent = results.studentClass;
-                document.getElementById('studentCount').textContent = results.studentCount;
-                document.getElementById('examSitters').textContent = results.examSitters;
-                document.getElementById('overallPosition').textContent = results.additionalInfo.overallPosition || '-';
+                document.getElementById('studentName').textContent = results.name || '-';
+                document.getElementById('dob').textContent = results.dob || '-';
+                document.getElementById('studentClass').textContent = results.studentClass || '-';
+                document.getElementById('studentCount').textContent = results.studentCount || '-';
+                document.getElementById('examSitters').textContent = results.examSitters || '-';
+                document.getElementById('overallPosition').textContent = results.additionalInfo?.overallPosition || '-';
                 
                 // Update subjects table
                 const resultsBody = document.getElementById('resultsBody');
                 resultsBody.innerHTML = '';
                 
-                results.subjects.forEach(subject => {
-                    const score = subject.score !== null && subject.score !== undefined && subject.score !== "" ? 
-                        Math.round(subject.score) : "";
+                if (results.subjects && results.subjects.length > 0) {
+                    results.subjects.forEach(subject => {
+                        const score = subject.score !== null && subject.score !== undefined && subject.score !== "" ? 
+                            Math.round(subject.score) : "";
+                        
+                        const gradeAndComment = score !== "" ? 
+                            getGradeAndComment(parseFloat(score), results.studentClass) : 
+                            { grade: "", comment: "" };
+                        
+                        const grade = gradeAndComment.grade;
+                        const comment = gradeAndComment.comment;
+                        const position = subject.position || "-";
+                        const average = subject.average ? Math.round(subject.average) : "-";
+                        
+                        const gradeClass = getGradeClass(grade);
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><strong>${subject.name || '-'}</strong></td>
+                            <td>${score || '-'}</td>
+                            <td><span class="grade-badge ${gradeClass}">${grade || '-'}</span></td>
+                            <td>${position}</td>
+                            <td>${average}</td>
+                            <td>${comment || '-'}</td>
+                        `;
+                        resultsBody.appendChild(row);
+                    });
                     
-                    const gradeAndComment = score !== "" ? 
-                        getGradeAndComment(parseFloat(score), results.studentClass) : 
-                        { grade: "", comment: "" };
-                    
-                    const grade = gradeAndComment.grade;
-                    const comment = gradeAndComment.comment;
-                    const position = subject.position || "-";
-                    const average = subject.average ? Math.round(subject.average) : "-";
-                    
-                    const gradeClass = getGradeClass(grade);
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td><strong>${subject.name}</strong></td>
-                        <td>${score}</td>
-                        <td><span class="badge ${gradeClass} p-2">${grade}</span></td>
-                        <td>${position}</td>
-                        <td>${average}</td>
-                        <td>${comment}</td>
+                    // Add summary row
+                    if (results.additionalInfo?.totalMarks) {
+                        document.getElementById('totalMarksContainer').style.display = 'block';
+                        document.getElementById('totalMarks').textContent = results.additionalInfo.totalMarks;
+                        document.getElementById('totalPointsContainer').style.display = 'none';
+                    } else if (results.additionalInfo?.totalPoints) {
+                        document.getElementById('totalPointsContainer').style.display = 'block';
+                        document.getElementById('totalPoints').textContent = results.additionalInfo.totalPoints;
+                        document.getElementById('totalMarksContainer').style.display = 'none';
+                    }
+                } else {
+                    resultsBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                No subject data available
+                            </td>
+                        </tr>
                     `;
-                    resultsBody.appendChild(row);
-                });
-                
-                // Add summary row
-                if (results.additionalInfo.totalMarks) {
-                    document.getElementById('totalMarksContainer').style.display = 'block';
-                    document.getElementById('totalMarks').textContent = results.additionalInfo.totalMarks;
-                } else if (results.additionalInfo.totalPoints) {
-                    document.getElementById('totalPointsContainer').style.display = 'block';
-                    document.getElementById('totalPoints').textContent = results.additionalInfo.totalPoints;
                 }
                 
                 // Update remarks
-                document.getElementById('remarks').textContent = results.additionalInfo.remarks || 'No remarks available.';
+                document.getElementById('remarks').textContent = results.additionalInfo?.remarks || 'No remarks available.';
                 
                 // Update fees information
-                if (results.studentClass.includes("ODL")) {
+                if (results.studentClass && results.studentClass.includes("ODL")) {
                     document.getElementById('feesInfo').textContent = "SCHOOL FEES PER TERM: K40,000";
                     document.getElementById('accountInfo').textContent = "SCHOOL ACC NO.: 129 00000 41337";
                 } else {
@@ -587,7 +857,10 @@
                 document.querySelector('.results-container').style.display = 'block';
                 
                 // Update page title
-                document.title = `${results.name} - Results - Lunzu Secondary School`;
+                document.title = `${results.name || 'Student'} - Results - Lunzu Secondary School`;
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
                 
             } catch (error) {
                 console.error('Error populating results:', error);
@@ -624,7 +897,9 @@
         
         // Get CSS class for grade badge
         function getGradeClass(grade) {
-            switch(grade) {
+            if (!grade) return '';
+            
+            switch(grade.toString().toUpperCase()) {
                 case 'A': return 'grade-A';
                 case 'B': return 'grade-B';
                 case 'C': return 'grade-C';
@@ -655,6 +930,21 @@
                         left: 0;
                         top: 0;
                         width: 100%;
+                        margin: 0;
+                        padding: 0;
+                        box-shadow: none;
+                    }
+                    .table-responsive-container {
+                        overflow: visible !important;
+                        border: 1px solid #000 !important;
+                    }
+                    .grade-badge {
+                        border: 1px solid #000;
+                    }
+                    .action-buttons,
+                    .btn-action,
+                    .text-center.d-md-none {
+                        display: none !important;
                     }
                 }
             `;
@@ -665,11 +955,13 @@
             
             // Clean up after printing
             setTimeout(() => {
-                document.head.removeChild(printStyle);
+                if (printStyle.parentNode) {
+                    document.head.removeChild(printStyle);
+                }
             }, 100);
         }
         
-        // Close window
+        // Close window or go back
         function closeWindow() {
             if (window.history.length > 1) {
                 window.history.back();
@@ -681,6 +973,10 @@
         // Show loading overlay
         function showLoading() {
             document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('errorContainer').style.display = 'none';
+            if (document.querySelector('.results-container')) {
+                document.querySelector('.results-container').style.display = 'none';
+            }
         }
         
         // Hide loading overlay
@@ -690,27 +986,49 @@
         
         // Show error message
         function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'alert alert-danger';
-            errorDiv.innerHTML = `
-                <h4><i class="fas fa-exclamation-triangle me-2"></i>Error</h4>
-                <p>${message}</p>
-                <button onclick="window.history.back()" class="btn btn-sm btn-outline-danger">
-                    <i class="fas fa-arrow-left me-1"></i> Go Back
-                </button>
-            `;
-            
-            const container = document.querySelector('.results-container');
-            if (container) {
-                container.innerHTML = '';
-                container.appendChild(errorDiv);
-                container.style.display = 'block';
-            } else {
-                document.body.innerHTML = '';
-                document.body.appendChild(errorDiv);
-            }
-            
             hideLoading();
+            
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `
+                <div class="error-message">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h4 style="color: #dc3545; margin-bottom: 15px;">Error Loading Results</h4>
+                    <p style="color: #666; margin-bottom: 20px;">${message}</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="window.history.back()" class="btn-action btn-close" style="min-width: 120px;">
+                            <i class="fas fa-arrow-left me-1"></i> Go Back
+                        </button>
+                        <button onclick="location.reload()" class="btn-action btn-print" style="min-width: 120px;">
+                            <i class="fas fa-redo me-1"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+            `;
+            errorContainer.style.display = 'block';
+        }
+        
+        // Setup touch scrolling for better mobile experience
+        function setupTouchScrolling() {
+            const tableContainer = document.querySelector('.table-responsive-container');
+            if (tableContainer) {
+                let isScrolling = false;
+                
+                tableContainer.addEventListener('touchstart', function(e) {
+                    isScrolling = true;
+                });
+                
+                tableContainer.addEventListener('touchmove', function(e) {
+                    if (isScrolling) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                tableContainer.addEventListener('touchend', function() {
+                    isScrolling = false;
+                });
+            }
         }
         
         // Keyboard shortcuts
@@ -723,6 +1041,24 @@
             // Escape to close
             if (e.key === 'Escape') {
                 closeWindow();
+            }
+        });
+        
+        // Handle browser back button
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                location.reload();
+            }
+        });
+        
+        // Handle offline/online status
+        window.addEventListener('offline', function() {
+            showError('You are offline. Please check your internet connection and try again.');
+        });
+        
+        window.addEventListener('online', function() {
+            if (studentName && studentClass && dateOfBirth) {
+                loadStudentResults(studentName, studentClass, dateOfBirth);
             }
         });
     </script>
