@@ -29,7 +29,6 @@
             width: 100%;
             height: 100%;
             overflow-x: hidden;
-            touch-action: manipulation;
         }
         
         body {
@@ -42,6 +41,7 @@
             flex-direction: column;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            touch-action: pan-y;
         }
         
         .results-container {
@@ -53,7 +53,8 @@
             border-radius: 12px;
             flex: 1;
             width: 100%;
-            position: relative;
+            display: flex;
+            flex-direction: column;
         }
         
         .school-header {
@@ -61,6 +62,7 @@
             margin-bottom: 20px;
             border-bottom: 3px solid var(--primary-color);
             padding-bottom: 15px;
+            flex-shrink: 0;
         }
         
         .school-logo {
@@ -92,6 +94,7 @@
             border-radius: 10px;
             margin-bottom: 15px;
             border-left: 5px solid var(--primary-color);
+            flex-shrink: 0;
         }
         
         .info-label {
@@ -114,29 +117,32 @@
             color: var(--primary-color);
             border-bottom: 2px solid var(--accent-color);
             padding-bottom: 8px;
-            margin: 20px 0 15px 0;
+            margin: 20px 0 10px 0;
             font-weight: 700;
             font-size: 1.1rem;
+            flex-shrink: 0;
         }
         
-        /* FIXED: Mobile-responsive table container with perfect scrolling */
+        /* FIXED: Table container with BOTH horizontal AND vertical scrolling */
         .table-wrapper {
             width: 100%;
-            margin: 0 auto 20px auto;
+            margin: 0 auto 15px auto;
             position: relative;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             background: white;
             overflow: hidden;
-            height: auto;
+            flex: 1;
+            min-height: 300px;
             max-height: 500px;
+            display: flex;
+            flex-direction: column;
         }
         
         .scroll-container {
             width: 100%;
-            height: 100%;
-            overflow-x: auto;
-            overflow-y: auto;
+            flex: 1;
+            overflow: auto;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
             position: relative;
@@ -144,20 +150,20 @@
         
         /* Custom scrollbar styling */
         .scroll-container::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
         }
         
         .scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 4px;
+            border-radius: 5px;
         }
         
         .scroll-container::-webkit-scrollbar-thumb {
             background: #888;
-            border-radius: 4px;
-            min-width: 50px;
-            min-height: 50px;
+            border-radius: 5px;
+            min-width: 20px;
+            min-height: 20px;
         }
         
         .scroll-container::-webkit-scrollbar-thumb:hover {
@@ -171,7 +177,8 @@
         .results-table {
             width: 100%;
             min-width: 700px;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 0.9rem;
             table-layout: fixed;
         }
@@ -179,7 +186,7 @@
         .results-table thead {
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 100;
             background-color: var(--primary-color);
         }
         
@@ -193,6 +200,7 @@
             border-right: 1px solid rgba(255,255,255,0.2);
             position: sticky;
             top: 0;
+            box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
         }
         
         .results-table thead th:last-child {
@@ -297,6 +305,7 @@
             border-radius: 10px;
             margin: 15px 0;
             border-left: 4px solid var(--primary-color);
+            flex-shrink: 0;
         }
         
         .footer-section {
@@ -305,6 +314,7 @@
             border-radius: 10px;
             border-top: 3px solid var(--primary-color);
             margin-top: 15px;
+            flex-shrink: 0;
         }
         
         .footer-title {
@@ -327,6 +337,7 @@
             justify-content: center;
             gap: 12px;
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
         
         .btn-action {
@@ -454,12 +465,6 @@
             50% { opacity: 0.4; }
         }
         
-        /* Touch-friendly improvements */
-        .touch-scroll-area {
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-        }
-        
         /* Mobile-specific styles */
         @media (max-width: 768px) {
             body {
@@ -504,12 +509,13 @@
             
             .section-title {
                 font-size: 1rem;
-                margin: 15px 0 10px 0;
+                margin: 15px 0 8px 0;
             }
             
             .table-wrapper {
                 border-radius: 6px;
-                max-height: 400px;
+                max-height: 350px;
+                min-height: 250px;
             }
             
             .scroll-container {
@@ -569,12 +575,6 @@
                 display: block;
             }
             
-            /* Ensure scrolling works on all mobile browsers */
-            .scroll-container {
-                -webkit-overflow-scrolling: touch;
-                scroll-snap-type: none;
-            }
-            
             /* Add visual indicator for scrollable area */
             .table-wrapper::after {
                 content: "";
@@ -598,6 +598,7 @@
                 background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.1));
                 pointer-events: none;
                 display: block;
+                z-index: 1;
             }
         }
         
@@ -621,7 +622,8 @@
             }
             
             .table-wrapper {
-                max-height: 350px;
+                max-height: 300px;
+                min-height: 200px;
             }
         }
         
@@ -643,7 +645,8 @@
             }
             
             .table-wrapper {
-                max-height: 300px;
+                max-height: 250px;
+                min-height: 180px;
             }
         }
         
@@ -671,6 +674,7 @@
                 border-radius: 0;
                 width: 100%;
                 overflow: visible !important;
+                display: block;
             }
             
             .school-header {
@@ -694,6 +698,8 @@
                 overflow: visible !important;
                 width: 100% !important;
                 max-height: none !important;
+                min-height: auto !important;
+                display: block;
             }
             
             .scroll-container {
@@ -762,7 +768,7 @@
         <!-- Subjects Section -->
         <h3 class="section-title"><i class="fas fa-book-open me-2"></i>SUBJECT PERFORMANCE</h3>
         
-        <!-- FIXED: Scrollable table container -->
+        <!-- FIXED: Table container with BOTH horizontal AND vertical scrolling -->
         <div class="table-wrapper">
             <div class="scroll-hint-horizontal">
                 <i class="fas fa-arrows-left-right"></i> Scroll
@@ -770,7 +776,7 @@
             <div class="scroll-hint-vertical">
                 <i class="fas fa-arrows-up-down"></i> Scroll
             </div>
-            <div class="scroll-container touch-scroll-area" id="tableScrollContainer">
+            <div class="scroll-container" id="tableScrollContainer">
                 <table class="results-table" id="resultsTable">
                     <thead>
                         <tr>
@@ -844,7 +850,7 @@
         </div>
         
         <!-- Mobile scroll instruction -->
-        <div class="text-center mt-2 d-md-none" style="color: #666; font-size: 0.75rem;">
+        <div class="text-center mt-2 d-md-none" style="color: #666; font-size: 0.75rem; flex-shrink: 0;">
             <i class="fas fa-info-circle me-1"></i> Swipe in any direction to view full table
         </div>
     </div>
@@ -866,14 +872,6 @@
         const studentClass = urlParams.get('class');
         const dateOfBirth = urlParams.get('dob');
         
-        // Touch variables
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchEndX = 0;
-        let touchEndY = 0;
-        let isScrolling = false;
-        let scrollDirection = null;
-        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('Page loaded with params:', { studentName, studentClass, dateOfBirth });
@@ -884,11 +882,8 @@
                 showError('Missing student information. Please go back to the main portal and try again.');
             }
             
-            // Initialize scrolling
-            initializeTableScrolling();
-            
-            // Add touch event listeners to body
-            setupTouchEvents();
+            // Initialize scrolling after content is loaded
+            setTimeout(initializeTableScrolling, 500);
         });
         
         // Load student results from Google Apps Script
@@ -917,7 +912,7 @@
                 populateResults(response);
                 hideLoading();
                 
-                // Auto-scroll table on mobile to show it's scrollable
+                // Auto-scroll hint on mobile
                 setTimeout(() => {
                     autoScrollHint();
                 }, 1000);
@@ -1085,114 +1080,28 @@
             }
         }
         
-        // Initialize table scrolling with both horizontal AND vertical support
+        // Initialize table scrolling
         function initializeTableScrolling() {
             const scrollContainer = document.getElementById('tableScrollContainer');
             if (!scrollContainer) return;
             
             // Enable both horizontal and vertical scrolling
-            scrollContainer.style.overflowX = 'auto';
-            scrollContainer.style.overflowY = 'auto';
+            scrollContainer.style.overflow = 'auto';
             scrollContainer.style.WebkitOverflowScrolling = 'touch';
-            scrollContainer.style.overscrollBehavior = 'contain';
             
-            // Make sure touch events work properly
-            scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
-            scrollContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
-            scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
-            
-            // Add wheel support for laptops with touchpads
-            scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
-            
-            // Fix for iOS Safari
-            document.addEventListener('touchmove', function(e) {
-                if (scrollContainer.contains(e.target)) {
-                    // Allow scrolling in table container
-                    return;
-                }
-            }, { passive: true });
-        }
-        
-        // Setup touch events for the entire page
-        function setupTouchEvents() {
-            document.addEventListener('touchstart', function(e) {
-                // Don't prevent default on touch start
+            // Remove any touch event listeners that might interfere
+            scrollContainer.addEventListener('touchstart', function(e) {
+                // Allow touch to start scrolling
             }, { passive: true });
             
-            document.addEventListener('touchmove', function(e) {
-                // Don't prevent default on touch move
+            scrollContainer.addEventListener('touchmove', function(e) {
+                // Allow touch movement for scrolling
             }, { passive: true });
-        }
-        
-        // Touch event handlers
-        function handleTouchStart(e) {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            isScrolling = false;
-            scrollDirection = null;
-        }
-        
-        function handleTouchMove(e) {
-            if (!touchStartX || !touchStartY) return;
             
-            touchEndX = e.touches[0].clientX;
-            touchEndY = e.touches[0].clientY;
-            
-            const diffX = touchStartX - touchEndX;
-            const diffY = touchStartY - touchEndY;
-            
-            // Determine scroll direction on first significant move
-            if (!isScrolling && (Math.abs(diffX) > 5 || Math.abs(diffY) > 5)) {
-                isScrolling = true;
-                scrollDirection = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
-            }
-            
-            // Let the browser handle scrolling naturally
-            // The scroll container's overflow properties will handle it
-        }
-        
-        function handleTouchEnd() {
-            touchStartX = 0;
-            touchStartY = 0;
-            isScrolling = false;
-            scrollDirection = null;
-        }
-        
-        // Handle mouse wheel for touchpads
-        function handleWheel(e) {
-            const scrollContainer = document.getElementById('tableScrollContainer');
-            if (!scrollContainer) return;
-            
-            // Check if we're at horizontal boundaries
-            const atLeft = scrollContainer.scrollLeft <= 0;
-            const atRight = scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 1;
-            
-            // Check if we're at vertical boundaries
-            const atTop = scrollContainer.scrollTop <= 0;
-            const atBottom = scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 1;
-            
-            // Determine primary scroll direction
-            const isVerticalScroll = Math.abs(e.deltaY) > Math.abs(e.deltaX);
-            
-            if (isVerticalScroll) {
-                // Vertical scrolling
-                if ((e.deltaY > 0 && atBottom) || (e.deltaY < 0 && atTop)) {
-                    // At boundary, allow page to scroll
-                    return;
-                }
-                // Scroll the container vertically
-                scrollContainer.scrollTop += e.deltaY;
-                e.preventDefault();
-            } else {
-                // Horizontal scrolling
-                if ((e.deltaX > 0 && atRight) || (e.deltaX < 0 && atLeft)) {
-                    // At boundary, allow page to scroll
-                    return;
-                }
-                // Scroll the container horizontally
-                scrollContainer.scrollLeft += e.deltaX;
-                e.preventDefault();
-            }
+            // Add wheel event for laptops
+            scrollContainer.addEventListener('wheel', function(e) {
+                // Let browser handle wheel scrolling naturally
+            }, { passive: true });
         }
         
         // Auto-scroll hint on mobile
@@ -1204,38 +1113,25 @@
             const hasVerticalScroll = scrollContainer.scrollHeight > scrollContainer.clientHeight;
             
             if (hasHorizontalScroll || hasVerticalScroll) {
-                // Briefly scroll then back to show it's scrollable
                 const originalScrollLeft = scrollContainer.scrollLeft;
                 const originalScrollTop = scrollContainer.scrollTop;
                 
-                // Horizontal hint
-                if (hasHorizontalScroll) {
+                // Combined diagonal scroll hint
+                if (hasHorizontalScroll && hasVerticalScroll) {
                     scrollContainer.scrollTo({
-                        left: originalScrollLeft + 80,
-                        top: originalScrollTop,
+                        left: originalScrollLeft + 50,
+                        top: originalScrollTop + 30,
                         behavior: 'smooth'
                     });
-                }
-                
-                // Vertical hint
-                if (hasVerticalScroll) {
+                    
                     setTimeout(() => {
                         scrollContainer.scrollTo({
-                            left: originalScrollLeft + 80,
-                            top: originalScrollTop + 40,
+                            left: originalScrollLeft,
+                            top: originalScrollTop,
                             behavior: 'smooth'
                         });
-                    }, 400);
+                    }, 800);
                 }
-                
-                // Return to original position
-                setTimeout(() => {
-                    scrollContainer.scrollTo({
-                        left: originalScrollLeft,
-                        top: originalScrollTop,
-                        behavior: 'smooth'
-                    });
-                }, 800);
             }
         }
         
@@ -1313,6 +1209,7 @@
                         width: 100% !important;
                         border: 1px solid #000 !important;
                         max-height: none !important;
+                        min-height: auto !important;
                     }
                     .scroll-container {
                         overflow: visible !important;
