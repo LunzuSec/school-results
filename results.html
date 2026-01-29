@@ -124,7 +124,7 @@
             flex-shrink: 0;
         }
         
-        /* Table container with proper touch scrolling */
+        /* FIXED: Table container with proper touch scrolling */
         .table-wrapper {
             width: 100%;
             margin: 0 auto 10px auto;
@@ -134,7 +134,8 @@
             background: white;
             overflow: hidden;
             flex: 1 1 auto;
-            min-height: 200px;
+            min-height: 300px; /* Increased min-height */
+            max-height: 500px; /* Added max-height */
             display: flex;
             flex-direction: column;
             touch-action: pan-y; /* Allow vertical touch scrolling */
@@ -143,28 +144,29 @@
         .scroll-container {
             width: 100%;
             flex: 1;
-            overflow: auto;
+            overflow-x: auto;
+            overflow-y: auto; /* Changed from overflow: auto to explicit */
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
             position: relative;
-            max-height: 100%;
+            max-height: 100%; /* Ensure it respects parent's height */
             touch-action: pan-x; /* Allow horizontal touch scrolling inside table */
         }
         
         /* Custom scrollbar styling */
         .scroll-container::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 8px; /* Slightly wider for better touch target */
+            height: 8px;
         }
         
         .scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 3px;
+            border-radius: 4px;
         }
         
         .scroll-container::-webkit-scrollbar-thumb {
             background: #888;
-            border-radius: 3px;
+            border-radius: 4px;
             min-width: 20px;
             min-height: 20px;
         }
@@ -239,7 +241,7 @@
         }
         
         .results-table tbody tr:last-child td {
-            border-bottom: none;
+            border-bottom: 1px solid var(--border-color); /* Changed from none for consistency */
         }
         
         /* Column widths */
@@ -457,6 +459,22 @@
             20%, 80% { opacity: 1; }
         }
         
+        /* NEW: Visual indicator for scrollable area */
+        .scroll-hint {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 51, 102, 0.1);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            display: none;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
         /* Mobile-specific styles */
         @media (max-width: 768px) {
             body {
@@ -506,7 +524,8 @@
             
             .table-wrapper {
                 border-radius: 6px;
-                min-height: 250px;
+                min-height: 350px; /* Increased for mobile */
+                max-height: 450px; /* Added for mobile */
             }
             
             .scroll-container {
@@ -564,6 +583,18 @@
             .touch-scroll-indicator {
                 display: flex;
             }
+            
+            .scroll-hint {
+                display: block;
+            }
+        }
+        
+        /* NEW: Adjust for very small screens */
+        @media (max-width: 480px) {
+            .table-wrapper {
+                min-height: 400px;
+                max-height: 500px;
+            }
         }
         
         /* Print styles */
@@ -605,7 +636,8 @@
             .action-buttons,
             .btn-action,
             .loading-overlay,
-            .touch-scroll-indicator {
+            .touch-scroll-indicator,
+            .scroll-hint {
                 display: none !important;
             }
             
@@ -614,6 +646,7 @@
                 overflow: visible !important;
                 width: 100% !important;
                 min-height: auto !important;
+                max-height: none !important;
                 display: block;
             }
             
@@ -621,6 +654,7 @@
                 overflow: visible !important;
                 width: 100% !important;
                 height: auto !important;
+                max-height: none !important;
             }
             
             .results-table {
@@ -693,6 +727,10 @@
         <!-- Table container -->
         <div class="table-wrapper">
             <div class="scroll-container" id="tableScrollContainer">
+                <!-- Scroll hint for mobile -->
+                <div class="scroll-hint">
+                    <i class="fas fa-arrows-left-right"></i> Scroll horizontally
+                </div>
                 <table class="results-table" id="resultsTable">
                     <thead>
                         <tr>
@@ -805,6 +843,9 @@
             
             // Show touch hint on mobile
             showTouchScrollHint();
+            
+            // Adjust table height based on content
+            adjustTableHeight();
         });
         
         // Load student results from Google Apps Script
@@ -832,6 +873,9 @@
                 // Populate results on the page
                 populateResults(response);
                 hideLoading();
+                
+                // Adjust table height after content is loaded
+                setTimeout(adjustTableHeight, 100);
                 
             } catch (error) {
                 console.error('Error loading results:', error);
@@ -982,7 +1026,7 @@
                 }
                 
                 // Show the results container
-                document.querySelector('.results-container').style.display = 'block';
+                document.querySelector('.results-container').style.display = 'flex';
                 
                 // Update page title
                 document.title = `${results.name || 'Student'} - Results - Lunzu Secondary School`;
@@ -996,112 +1040,116 @@
             }
         }
         
+        // Adjust table height based on content and viewport
+        function adjustTableHeight() {
+            const tableWrapper = document.querySelector('.table-wrapper');
+            const resultsBody = document.getElementById('resultsBody');
+            
+            if (!tableWrapper || !resultsBody) return;
+            
+            const rowCount = resultsBody.children.length;
+            const viewportHeight = window.innerHeight;
+            
+            // Calculate optimal height based on content
+            let optimalHeight;
+            if (rowCount <= 5) {
+                optimalHeight = 300; // Small table
+            } else if (rowCount <= 10) {
+                optimalHeight = 400; // Medium table
+            } else {
+                optimalHeight = Math.min(500, viewportHeight * 0.6); // Large table, max 60% of viewport
+            }
+            
+            // Apply the calculated height
+            tableWrapper.style.minHeight = optimalHeight + 'px';
+            tableWrapper.style.maxHeight = (optimalHeight + 100) + 'px';
+        }
+        
         // Initialize touch scrolling for both table and page
         function initializeTouchScrolling() {
             const scrollContainer = document.getElementById('tableScrollContainer');
             const tableWrapper = document.querySelector('.table-wrapper');
-            const body = document.body;
             
             if (!scrollContainer || !tableWrapper) return;
             
-            // Table container touch events
-            tableWrapper.addEventListener('touchstart', handleTouchStart, { passive: true });
-            tableWrapper.addEventListener('touchmove', handleTouchMove, { passive: true });
-            tableWrapper.addEventListener('touchend', handleTouchEnd, { passive: true });
+            // Make scroll container focusable for keyboard navigation
+            scrollContainer.setAttribute('tabindex', '0');
             
-            // Table inner scroll container touch events
-            scrollContainer.addEventListener('touchstart', handleTableTouchStart, { passive: true });
-            scrollContainer.addEventListener('touchmove', handleTableTouchMove, { passive: true });
-            scrollContainer.addEventListener('touchend', handleTableTouchEnd, { passive: true });
+            // Add keyboard navigation
+            scrollContainer.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const scrollAmount = 50;
+                    scrollContainer.scrollTop += e.key === 'ArrowDown' ? scrollAmount : -scrollAmount;
+                }
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    const scrollAmount = 50;
+                    scrollContainer.scrollLeft += e.key === 'ArrowRight' ? scrollAmount : -scrollAmount;
+                }
+            });
             
-            // Prevent default touch behaviors that might interfere
-            document.addEventListener('touchmove', function(e) {
-                // Allow touch scrolling everywhere
+            // Improve touch scrolling
+            let isTouchMoving = false;
+            let startY = 0;
+            let startX = 0;
+            
+            scrollContainer.addEventListener('touchstart', function(e) {
+                isTouchMoving = true;
+                startY = e.touches[0].clientY;
+                startX = e.touches[0].clientX;
+                scrollContainer.style.scrollBehavior = 'auto'; // Disable smooth scroll during touch
             }, { passive: true });
             
-            // Enable smooth scrolling for the entire page
-            document.documentElement.style.scrollBehavior = 'smooth';
-            body.style.scrollBehavior = 'smooth';
-        }
-        
-        // Handle touch start on table wrapper
-        function handleTouchStart(e) {
-            touchStartY = e.touches[0].clientY;
-            touchStartX = e.touches[0].clientX;
-            isScrollingPage = false;
-            isScrollingTable = false;
-            lastTouchTime = Date.now();
-        }
-        
-        // Handle touch move on table wrapper
-        function handleTouchMove(e) {
-            if (!touchStartY) return;
-            
-            const touchY = e.touches[0].clientY;
-            const touchX = e.touches[0].clientX;
-            const deltaY = touchY - touchStartY;
-            const deltaX = touchX - touchStartX;
-            
-            // Determine if we're trying to scroll vertically (page scroll)
-            if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
-                // Check if we're at the top or bottom of the table
-                const scrollContainer = document.getElementById('tableScrollContainer');
-                const atTop = scrollContainer.scrollTop <= 0;
-                const atBottom = scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 1;
+            scrollContainer.addEventListener('touchmove', function(e) {
+                if (!isTouchMoving) return;
                 
-                // If at boundaries, scroll the page
+                const currentY = e.touches[0].clientY;
+                const currentX = e.touches[0].clientX;
+                
+                // Determine scroll direction
+                const deltaY = currentY - startY;
+                const deltaX = currentX - startX;
+                
+                // Check if we're at boundaries
+                const atTop = scrollContainer.scrollTop <= 0;
+                const atBottom = scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 5;
+                const atLeft = scrollContainer.scrollLeft <= 0;
+                const atRight = scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 5;
+                
+                // If at boundaries in the direction we're moving, prevent scrolling
                 if ((deltaY > 0 && atTop) || (deltaY < 0 && atBottom)) {
-                    isScrollingPage = true;
-                    isScrollingTable = false;
-                    // Let the browser handle page scrolling naturally
+                    // Allow page to scroll instead
                 } else {
-                    // Scroll the table
-                    isScrollingTable = true;
-                    isScrollingPage = false;
+                    // Scroll the container
                     scrollContainer.scrollTop -= deltaY;
                 }
                 
-                touchStartY = touchY;
-                touchStartX = touchX;
-            }
-        }
-        
-        // Handle touch end on table wrapper
-        function handleTouchEnd() {
-            touchStartY = 0;
-            touchStartX = 0;
-            isScrollingPage = false;
-            isScrollingTable = false;
-        }
-        
-        // Handle touch start inside table scroll container
-        function handleTableTouchStart(e) {
-            // Just record position, don't prevent default
-            touchStartY = e.touches[0].clientY;
-            touchStartX = e.touches[0].clientX;
-        }
-        
-        // Handle touch move inside table scroll container
-        function handleTableTouchMove(e) {
-            if (!touchStartY) return;
-            
-            const touchY = e.touches[0].clientY;
-            const touchX = e.touches[0].clientX;
-            const deltaY = touchY - touchStartY;
-            const deltaX = touchX - touchStartX;
-            
-            // If horizontal movement is dominant, scroll table horizontally
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                const scrollContainer = document.getElementById('tableScrollContainer');
+                // Always allow horizontal scrolling within the table
                 scrollContainer.scrollLeft -= deltaX;
-                touchStartX = touchX;
+                
+                // Update start positions
+                startY = currentY;
+                startX = currentX;
+            }, { passive: true });
+            
+            scrollContainer.addEventListener('touchend', function() {
+                isTouchMoving = false;
+                scrollContainer.style.scrollBehavior = 'smooth'; // Re-enable smooth scroll
+            }, { passive: true });
+            
+            // Show scroll hint on hover
+            if (window.innerWidth > 768) {
+                tableWrapper.addEventListener('mouseenter', function() {
+                    const hint = tableWrapper.querySelector('.scroll-hint');
+                    if (hint && scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+                        hint.style.display = 'block';
+                        setTimeout(() => {
+                            hint.style.display = 'none';
+                        }, 2000);
+                    }
+                });
             }
-        }
-        
-        // Handle touch end inside table scroll container
-        function handleTableTouchEnd() {
-            touchStartY = 0;
-            touchStartX = 0;
         }
         
         // Show touch scroll hint on mobile
@@ -1114,6 +1162,19 @@
                 setTimeout(() => {
                     indicator.style.display = 'none';
                 }, 3000);
+                
+                // Show table scroll hint
+                const tableWrapper = document.querySelector('.table-wrapper');
+                const scrollContainer = document.getElementById('tableScrollContainer');
+                if (scrollContainer && scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+                    const hint = tableWrapper.querySelector('.scroll-hint');
+                    if (hint) {
+                        hint.style.display = 'block';
+                        setTimeout(() => {
+                            hint.style.display = 'none';
+                        }, 3000);
+                    }
+                }
             }
         }
         
@@ -1192,11 +1253,13 @@
                         width: 100% !important;
                         border: 1px solid #000 !important;
                         min-height: auto !important;
+                        max-height: none !important;
                     }
                     .scroll-container {
                         overflow: visible !important;
                         width: 100% !important;
                         height: auto !important;
+                        max-height: none !important;
                     }
                     .results-table {
                         min-width: 100% !important;
@@ -1204,7 +1267,8 @@
                     }
                     .action-buttons,
                     .btn-action,
-                    .touch-scroll-indicator {
+                    .touch-scroll-indicator,
+                    .scroll-hint {
                         display: none !important;
                     }
                 }
@@ -1270,6 +1334,11 @@
             errorContainer.style.display = 'block';
         }
         
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            adjustTableHeight();
+        });
+        
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             // Ctrl+P or Cmd+P to print
@@ -1299,6 +1368,18 @@
             if (studentName && studentClass && dateOfBirth) {
                 loadStudentResults(studentName, studentClass, dateOfBirth);
             }
+        });
+        
+        // Auto-scroll to ensure all content is visible on load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const scrollContainer = document.getElementById('tableScrollContainer');
+                if (scrollContainer) {
+                    // Scroll to top to ensure header is visible
+                    scrollContainer.scrollTop = 0;
+                    scrollContainer.scrollLeft = 0;
+                }
+            }, 500);
         });
     </script>
 </body>
