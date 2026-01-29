@@ -55,7 +55,6 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 20px); /* Full viewport height minus padding */
         }
         
         .school-header {
@@ -124,7 +123,7 @@
             flex-shrink: 0;
         }
         
-        /* FIXED: Table container with MAXIMUM vertical height */
+        /* FIXED: Table container with PROPER maximum vertical height */
         .table-wrapper {
             width: 100%;
             margin: 0 auto 10px auto;
@@ -133,9 +132,9 @@
             border-radius: 8px;
             background: white;
             overflow: hidden;
-            flex: 1; /* Takes all available vertical space */
-            min-height: 300px;
-            max-height: calc(100vh - 400px); /* Dynamic max height */
+            flex: 1 1 auto; /* Critical: allows growth and shrinking */
+            min-height: 200px;
+            max-height: none !important; /* Remove max-height restriction */
             display: flex;
             flex-direction: column;
         }
@@ -147,6 +146,7 @@
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
             position: relative;
+            max-height: 100%;
         }
         
         /* Custom scrollbar styling */
@@ -431,43 +431,6 @@
             margin-bottom: 15px;
         }
         
-        /* Scroll hints */
-        .scroll-hint-horizontal {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--primary-color);
-            color: white;
-            padding: 4px 6px;
-            border-radius: 4px;
-            font-size: 0.65rem;
-            opacity: 0.8;
-            animation: pulse 2s infinite;
-            display: none;
-            z-index: 5;
-        }
-        
-        .scroll-hint-vertical {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            background: var(--primary-color);
-            color: white;
-            padding: 4px 6px;
-            border-radius: 4px;
-            font-size: 0.65rem;
-            opacity: 0.8;
-            animation: pulse 2s infinite;
-            display: none;
-            z-index: 5;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 0.4; }
-        }
-        
         /* Mobile-specific styles */
         @media (max-width: 768px) {
             body {
@@ -478,7 +441,6 @@
             .results-container {
                 padding: 10px;
                 border-radius: 10px;
-                height: calc(100vh - 16px); /* Adjust for mobile */
             }
             
             .school-header {
@@ -518,8 +480,7 @@
             
             .table-wrapper {
                 border-radius: 6px;
-                max-height: calc(100vh - 350px); /* More space on mobile */
-                min-height: 200px;
+                min-height: 250px;
             }
             
             .scroll-container {
@@ -573,67 +534,6 @@
                 font-size: 0.9rem;
                 min-width: auto;
             }
-            
-            /* Show scroll hints on mobile */
-            .scroll-hint-horizontal,
-            .scroll-hint-vertical {
-                display: block;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .school-title {
-                font-size: 1rem;
-            }
-            
-            .sub-title {
-                font-size: 0.85rem;
-            }
-            
-            .results-table {
-                min-width: 600px;
-            }
-            
-            .scroll-hint-horizontal,
-            .scroll-hint-vertical {
-                font-size: 0.6rem;
-                padding: 3px 5px;
-            }
-            
-            .table-wrapper {
-                max-height: calc(100vh - 320px);
-                min-height: 180px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .school-logo {
-                height: 45px;
-            }
-            
-            .school-title {
-                font-size: 0.95rem;
-            }
-            
-            .sub-title {
-                font-size: 0.8rem;
-            }
-            
-            .results-table {
-                min-width: 550px;
-            }
-            
-            .table-wrapper {
-                max-height: calc(100vh - 300px);
-                min-height: 150px;
-            }
-        }
-        
-        /* Large screen styles */
-        @media (min-width: 1200px) {
-            .table-wrapper {
-                max-height: calc(100vh - 350px); /* More space on large screens */
-            }
         }
         
         /* Print styles */
@@ -661,7 +561,6 @@
                 width: 100%;
                 overflow: visible !important;
                 display: block;
-                height: auto;
             }
             
             .school-header {
@@ -675,8 +574,6 @@
             
             .action-buttons,
             .btn-action,
-            .scroll-hint-horizontal,
-            .scroll-hint-vertical,
             .loading-overlay {
                 display: none !important;
             }
@@ -685,7 +582,6 @@
                 border: 1px solid #000 !important;
                 overflow: visible !important;
                 width: 100% !important;
-                max-height: none !important;
                 min-height: auto !important;
                 display: block;
             }
@@ -759,12 +655,6 @@
         
         <!-- Table container with MAXIMUM vertical height -->
         <div class="table-wrapper">
-            <div class="scroll-hint-horizontal">
-                <i class="fas fa-arrows-left-right"></i> Scroll
-            </div>
-            <div class="scroll-hint-vertical">
-                <i class="fas fa-arrows-up-down"></i> Scroll
-            </div>
             <div class="scroll-container" id="tableScrollContainer">
                 <table class="results-table" id="resultsTable">
                     <thead>
@@ -869,8 +759,8 @@
             // Initialize scrolling after content is loaded
             setTimeout(initializeTableScrolling, 500);
             
-            // Adjust table height on window resize
-            window.addEventListener('resize', adjustTableHeight);
+            // Force maximum height
+            setTimeout(forceMaximumHeight, 100);
         });
         
         // Load student results from Google Apps Script
@@ -899,8 +789,8 @@
                 populateResults(response);
                 hideLoading();
                 
-                // Adjust table height after content loads
-                setTimeout(adjustTableHeight, 100);
+                // Force maximum height after content loads
+                setTimeout(forceMaximumHeight, 100);
                 
             } catch (error) {
                 console.error('Error loading results:', error);
@@ -1075,21 +965,22 @@
             scrollContainer.style.WebkitOverflowScrolling = 'touch';
         }
         
-        // Adjust table height dynamically
-        function adjustTableHeight() {
+        // Force maximum height for table container
+        function forceMaximumHeight() {
             const tableWrapper = document.querySelector('.table-wrapper');
             if (!tableWrapper) return;
             
-            // Calculate available height
-            const viewportHeight = window.innerHeight;
-            const containerTop = tableWrapper.getBoundingClientRect().top;
-            const availableHeight = viewportHeight - containerTop - 150; // Reserve space for other elements
+            // Remove any max-height restrictions
+            tableWrapper.style.maxHeight = 'none';
+            tableWrapper.style.height = 'auto';
+            tableWrapper.style.flex = '1 1 auto';
             
-            // Set maximum height
-            const maxHeight = Math.max(300, Math.min(availableHeight, 600)); // Between 300px and 600px
-            tableWrapper.style.maxHeight = maxHeight + 'px';
+            // Force browser to recalculate layout
+            tableWrapper.style.display = 'none';
+            tableWrapper.offsetHeight; // Trigger reflow
+            tableWrapper.style.display = 'flex';
             
-            console.log('Adjusted table height to:', maxHeight, 'px');
+            console.log('Forced maximum height on table wrapper');
         }
         
         // Get grade and comment based on score and class
@@ -1166,7 +1057,6 @@
                         overflow: visible !important;
                         width: 100% !important;
                         border: 1px solid #000 !important;
-                        max-height: none !important;
                         min-height: auto !important;
                     }
                     .scroll-container {
@@ -1179,9 +1069,7 @@
                         width: 100% !important;
                     }
                     .action-buttons,
-                    .btn-action,
-                    .scroll-hint-horizontal,
-                    .scroll-hint-vertical {
+                    .btn-action {
                         display: none !important;
                     }
                 }
@@ -1277,9 +1165,6 @@
                 loadStudentResults(studentName, studentClass, dateOfBirth);
             }
         });
-        
-        // Initial height adjustment
-        setTimeout(adjustTableHeight, 100);
     </script>
 </body>
 </html>
