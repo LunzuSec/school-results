@@ -122,7 +122,7 @@
             flex-shrink: 0;
         }
         
-        /* Table Container */
+        /* Table Container - No fixed height conflicts */
         .table-container {
             width: 100%;
             border: 1px solid var(--border-color);
@@ -133,16 +133,18 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            min-height: 300px; /* Minimum height for empty tables */
         }
         
-        /* Fixed maximum height for table wrapper */
+        /* Table scroll wrapper - Takes maximum available space */
         .table-scroll-wrapper {
             flex: 1;
             overflow-x: auto;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
-            max-height: 500px; /* Maximum height for desktop */
+            display: flex;
+            flex-direction: column;
         }
         
         /* Custom scrollbar */
@@ -173,6 +175,7 @@
             border-spacing: 0;
             font-size: 0.9rem;
             table-layout: fixed;
+            flex-shrink: 0; /* Prevents table from shrinking */
         }
         
         .results-table thead {
@@ -477,8 +480,8 @@
                 margin: 12px 0 6px 0;
             }
             
-            .table-scroll-wrapper {
-                max-height: 400px; /* Slightly taller for mobile */
+            .table-container {
+                min-height: 350px;
             }
             
             .results-table {
@@ -533,14 +536,7 @@
             }
         }
         
-        /* Extra small screens */
-        @media (max-width: 480px) {
-            .table-scroll-wrapper {
-                max-height: 350px;
-            }
-        }
-        
-        /* Print styles */
+        /* Print styles - Remove all constraints */
         @media print {
             @page {
                 size: A4;
@@ -588,13 +584,16 @@
                 overflow: visible !important;
                 width: 100% !important;
                 display: block;
+                min-height: auto !important;
+                flex: none !important;
             }
             
             .table-scroll-wrapper {
                 overflow: visible !important;
                 width: 100% !important;
                 height: auto !important;
-                max-height: none !important;
+                display: block;
+                flex: none !important;
             }
             
             .results-table {
@@ -1067,12 +1066,15 @@
                         border: 1px solid #000 !important;
                         min-height: auto !important;
                         max-height: none !important;
+                        flex: none !important;
                     }
                     .table-scroll-wrapper {
                         overflow: visible !important;
                         width: 100% !important;
                         height: auto !important;
                         max-height: none !important;
+                        display: block;
+                        flex: none !important;
                     }
                     .results-table {
                         min-width: 100% !important;
