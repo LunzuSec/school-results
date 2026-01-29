@@ -60,6 +60,14 @@
             border: 2px solid #e2e8f0;
             border-radius: 8px;
             font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        select:disabled, input:disabled {
+            background-color: #f7fafc;
+            color: #a0aec0;
+            cursor: not-allowed;
+            opacity: 0.7;
         }
         
         select:focus, input:focus {
@@ -113,6 +121,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            transition: all 0.3s ease;
         }
         
         .btn-primary {
@@ -120,9 +129,33 @@
             color: white;
         }
         
+        .btn-primary:disabled {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .btn-primary:not(:disabled):hover {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+        }
+        
         .btn-secondary {
             background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
             color: white;
+        }
+        
+        .btn-secondary:disabled {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .btn-secondary:not(:disabled):hover {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 85, 104, 0.3);
         }
         
         .loading {
@@ -144,6 +177,64 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        .progress-container {
+            margin: 15px 0;
+            display: none;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+            border-radius: 4px;
+        }
+        
+        .students-loading {
+            text-align: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #4299e1;
+            display: none;
+        }
+        
+        .students-loading span {
+            color: #2c5282;
+            font-weight: 500;
+        }
+        
+        .students-loaded {
+            text-align: center;
+            padding: 15px;
+            background: #f0fff4;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #38a169;
+            display: none;
+        }
+        
+        .students-loaded span {
+            color: #22543d;
+            font-weight: 500;
         }
         
         .alert {
@@ -239,6 +330,28 @@
                     </select>
                 </div>
                 
+                <!-- Loading Indicator for Students -->
+                <div id="studentsLoading" class="students-loading">
+                    <div class="spinner" style="width: 20px; height: 20px; margin: 0 auto 10px;"></div>
+                    <span>Loading student list...</span>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div id="progressContainer" class="progress-container">
+                    <div class="progress-label">
+                        <span>Loading students</span>
+                        <span id="progressText">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                </div>
+                
+                <!-- Loaded Indicator -->
+                <div id="studentsLoaded" class="students-loaded">
+                    <span>✅ Students loaded successfully!</span>
+                </div>
+                
                 <!-- Student Search -->
                 <div class="form-group">
                     <label for="studentSearch">
@@ -259,8 +372,8 @@
                     <label for="studentName">
                         <span style="color: #e53e3e;">*</span> Student Name:
                     </label>
-                    <select id="studentName" required>
-                        <option value="" disabled selected>Select Student</option>
+                    <select id="studentName" required disabled>
+                        <option value="" disabled selected>Loading students...</option>
                     </select>
                 </div>
                 
@@ -274,10 +387,10 @@
                 
                 <!-- Buttons -->
                 <div class="buttons">
-                    <button type="button" class="btn btn-primary" onclick="getResults()">
+                    <button type="button" class="btn btn-primary" onclick="getResults()" id="viewResultsBtn" disabled>
                         <span>👁️</span> View Results
                     </button>
-                    <button type="button" class="btn btn-secondary" onclick="downloadResultsAsPDF()">
+                    <button type="button" class="btn btn-secondary" onclick="downloadResultsAsPDF()" id="downloadPdfBtn" disabled>
                         <span>📥</span> Download PDF
                     </button>
                 </div>
@@ -315,6 +428,9 @@
         // GLOBAL VARIABLES
         // ============================================
         let allStudentNames = [];
+        let isStudentsLoading = false;
+        let loadingProgress = 0;
+        let loadingInterval;
         
         // ============================================
         // INITIALIZATION
@@ -328,6 +444,9 @@
             
             // Setup form
             setupForm();
+            
+            // Initialize button states
+            updateButtonStates();
         };
         
         // ============================================
@@ -443,6 +562,14 @@
             document.getElementById('resultsContainer').innerHTML = '';
             hideLoading();
             allStudentNames = [];
+            
+            // Reset loading indicators
+            document.getElementById('studentsLoading').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('studentsLoaded').style.display = 'none';
+            stopProgressAnimation();
+            
+            updateButtonStates();
         }
         
         function handleClassChange() {
@@ -452,19 +579,88 @@
             
             // Reset
             studentSearch.value = '';
-            studentNameSelect.innerHTML = '<option value="" disabled selected>Select Student</option>';
+            studentSearch.disabled = true;
+            studentNameSelect.innerHTML = '<option value="" disabled selected>Loading students...</option>';
+            studentNameSelect.disabled = true;
             document.getElementById('dateOfBirth').value = '';
             document.getElementById('searchResults').style.display = 'none';
             document.getElementById('searchResults').innerHTML = '';
             clearError();
             
+            // Reset loading indicators
+            document.getElementById('studentsLoading').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('studentsLoaded').style.display = 'none';
+            stopProgressAnimation();
+            
+            // Disable action buttons
+            document.getElementById('viewResultsBtn').disabled = true;
+            document.getElementById('downloadPdfBtn').disabled = true;
+            
             if (studentClass) {
-                studentSearch.disabled = false;
-                studentNameSelect.disabled = false;
                 loadStudentNames(studentClass);
-            } else {
-                studentSearch.disabled = true;
-                studentNameSelect.disabled = true;
+            }
+        }
+        
+        // ============================================
+        // LOADING STATE MANAGEMENT
+        // ============================================
+        function startLoadingProgress() {
+            isStudentsLoading = true;
+            loadingProgress = 0;
+            
+            // Show loading indicators
+            document.getElementById('studentsLoading').style.display = 'block';
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('studentsLoaded').style.display = 'none';
+            
+            // Start progress animation
+            stopProgressAnimation();
+            loadingInterval = setInterval(() => {
+                if (loadingProgress < 90) {
+                    loadingProgress += Math.random() * 5 + 1; // Random increment
+                    if (loadingProgress > 90) loadingProgress = 90;
+                    updateProgressBar();
+                }
+            }, 300);
+        }
+        
+        function completeLoadingProgress() {
+            loadingProgress = 100;
+            updateProgressBar();
+            
+            // Clear the interval
+            stopProgressAnimation();
+            
+            // Show completion state
+            setTimeout(() => {
+                document.getElementById('studentsLoading').style.display = 'none';
+                document.getElementById('progressContainer').style.display = 'none';
+                document.getElementById('studentsLoaded').style.display = 'block';
+                
+                // Enable search and select
+                document.getElementById('studentSearch').disabled = false;
+                document.getElementById('studentName').disabled = false;
+                
+                isStudentsLoading = false;
+                updateButtonStates();
+            }, 500);
+        }
+        
+        function stopProgressAnimation() {
+            if (loadingInterval) {
+                clearInterval(loadingInterval);
+                loadingInterval = null;
+            }
+        }
+        
+        function updateProgressBar() {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressFill && progressText) {
+                progressFill.style.width = loadingProgress + '%';
+                progressText.textContent = Math.round(loadingProgress) + '%';
             }
         }
         
@@ -472,8 +668,10 @@
         // STUDENT DATA
         // ============================================
         async function loadStudentNames(studentClass) {
-            showLoading('Loading students...');
             console.log('Loading student names for class:', studentClass);
+            
+            // Start loading animation
+            startLoadingProgress();
             
             try {
                 const names = await callGAS('getStudentNames', { studentClass: studentClass });
@@ -482,17 +680,38 @@
                 if (Array.isArray(names) && names.length > 0) {
                     allStudentNames = names;
                     populateStudentDropdown(names);
-                    showInfo(`Loaded ${names.length} student(s)`);
+                    
+                    // Complete loading
+                    setTimeout(() => {
+                        completeLoadingProgress();
+                        showInfo(`Loaded ${names.length} student(s) from ${studentClass}`);
+                    }, 500);
                 } else {
                     allStudentNames = [];
-                    showInfo('No students found for this class');
+                    populateStudentDropdown([]);
+                    
+                    // Complete loading but show warning
+                    setTimeout(() => {
+                        completeLoadingProgress();
+                        showInfo('No students found for this class');
+                    }, 500);
                 }
                 
-                hideLoading();
             } catch (error) {
                 console.error('Error loading names:', error);
+                
+                // Stop loading animation on error
+                stopProgressAnimation();
+                document.getElementById('studentsLoading').style.display = 'none';
+                document.getElementById('progressContainer').style.display = 'none';
+                
                 showError('Failed to load students. ' + error.message);
-                hideLoading();
+                
+                // Keep buttons disabled
+                document.getElementById('viewResultsBtn').disabled = true;
+                document.getElementById('downloadPdfBtn').disabled = true;
+                document.getElementById('studentSearch').disabled = true;
+                document.getElementById('studentName').disabled = true;
             }
         }
         
@@ -500,9 +719,15 @@
             const select = document.getElementById('studentName');
             
             // Clear existing options
-            while (select.options.length > 1) {
-                select.remove(1);
-            }
+            select.innerHTML = '';
+            
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            defaultOption.textContent = names.length > 0 ? 'Select Student' : 'No students found';
+            select.appendChild(defaultOption);
             
             // Add names
             names.forEach(name => {
@@ -537,6 +762,7 @@
                         document.getElementById('studentSearch').value = name;
                         resultsDiv.style.display = 'none';
                         saveFormData();
+                        updateButtonStates();
                     };
                     resultsDiv.appendChild(div);
                 });
@@ -545,6 +771,24 @@
                 resultsDiv.innerHTML = '<div class="search-item">No students found</div>';
                 resultsDiv.style.display = 'block';
             }
+        }
+        
+        // ============================================
+        // BUTTON STATE MANAGEMENT
+        // ============================================
+        function updateButtonStates() {
+            const studentName = document.getElementById('studentName').value;
+            const studentClass = document.getElementById('studentClass').value;
+            const dateOfBirth = document.getElementById('dateOfBirth').value;
+            const isFormValid = studentName && studentClass && dateOfBirth;
+            
+            // Enable/disable buttons based on form validity and loading state
+            const viewResultsBtn = document.getElementById('viewResultsBtn');
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+            
+            // Only enable if form is valid AND students are not loading
+            viewResultsBtn.disabled = !isFormValid || isStudentsLoading;
+            downloadPdfBtn.disabled = !isFormValid || isStudentsLoading;
         }
         
         // ============================================
@@ -583,10 +827,6 @@
                 }
                 
                 newTab.focus();
-                
-                // Reset form
-                resetForm();
-                saveFormData();
                 
                 showSuccess('Opening results in new tab...');
                 
@@ -633,9 +873,7 @@
                 // Download PDF
                 downloadPDF(result, `${studentName.replace(/\s+/g, '_')}_${studentClass.replace(/\s+/g, '_')}_Results.pdf`);
                 
-                // Reset form
-                resetForm();
-                saveFormData();
+                showSuccess('PDF downloaded successfully!');
                 
             } catch (error) {
                 console.error('Error generating PDF:', error);
@@ -670,10 +908,30 @@
             
             loadingText.textContent = message;
             loading.style.display = 'block';
+            
+            // Disable form while loading
+            document.getElementById('studentClass').disabled = true;
+            document.getElementById('studentSearch').disabled = true;
+            document.getElementById('studentName').disabled = true;
+            document.getElementById('dateOfBirth').disabled = true;
+            document.getElementById('viewResultsBtn').disabled = true;
+            document.getElementById('downloadPdfBtn').disabled = true;
         }
         
         function hideLoading() {
             document.getElementById('loading').style.display = 'none';
+            
+            // Re-enable form elements (except those that should remain disabled)
+            document.getElementById('studentClass').disabled = false;
+            document.getElementById('dateOfBirth').disabled = false;
+            
+            // Only re-enable search and select if students are loaded
+            if (!isStudentsLoading && allStudentNames.length > 0) {
+                document.getElementById('studentSearch').disabled = false;
+                document.getElementById('studentName').disabled = false;
+            }
+            
+            updateButtonStates();
         }
         
         function showError(message) {
@@ -753,8 +1011,6 @@
                     URL.revokeObjectURL(url);
                 }, 100);
                 
-                showSuccess('PDF downloaded successfully!');
-                
             } catch (error) {
                 console.error('Download error:', error);
                 throw new Error('Failed to download PDF: ' + error.message);
@@ -773,6 +1029,9 @@
                 };
                 
                 localStorage.setItem('lunzu_form_data', JSON.stringify(data));
+                
+                // Update button states whenever form data changes
+                updateButtonStates();
             } catch (e) {
                 console.error('Error saving form data:', e);
             }
@@ -798,7 +1057,8 @@
                                 if (data.dateOfBirth) {
                                     document.getElementById('dateOfBirth').value = data.dateOfBirth;
                                 }
-                            }, 1000);
+                                updateButtonStates();
+                            }, 1500);
                         }, 100);
                     }
                 }
@@ -825,21 +1085,12 @@
         }
         
         // ============================================
-        // DEBUGGING HELPERS
+        // EVENT LISTENERS FOR BUTTON STATES
         // ============================================
-        window.debugTest = function() {
-            console.log('Debug test running...');
-            console.log('GAS_URL:', GAS_URL);
-            console.log('allStudentNames:', allStudentNames);
-            console.log('Form values:', {
-                class: document.getElementById('studentClass').value,
-                name: document.getElementById('studentName').value,
-                dob: document.getElementById('dateOfBirth').value
-            });
-            
-            // Test the API directly
-            testAPIConnection();
-        };
+        // Update button states when form fields change
+        document.getElementById('studentName').addEventListener('change', updateButtonStates);
+        document.getElementById('dateOfBirth').addEventListener('change', updateButtonStates);
+        document.getElementById('studentSearch').addEventListener('input', updateButtonStates);
     </script>
 </body>
 </html>
