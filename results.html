@@ -55,19 +55,20 @@
             width: 100%;
             display: flex;
             flex-direction: column;
+            height: calc(100vh - 20px); /* Full viewport height minus padding */
         }
         
         .school-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border-bottom: 3px solid var(--primary-color);
-            padding-bottom: 15px;
+            padding-bottom: 12px;
             flex-shrink: 0;
         }
         
         .school-logo {
-            height: 65px;
-            margin-bottom: 10px;
+            height: 60px;
+            margin-bottom: 8px;
             max-width: 100%;
             object-fit: contain;
         }
@@ -76,24 +77,24 @@
             font-family: 'Roboto Slab', serif;
             color: var(--primary-color);
             font-weight: 700;
-            font-size: 1.4rem;
-            margin-bottom: 5px;
+            font-size: 1.3rem;
+            margin-bottom: 4px;
             line-height: 1.3;
         }
         
         .sub-title {
             color: var(--secondary-color);
-            font-size: 1rem;
-            margin-bottom: 5px;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
             line-height: 1.2;
         }
         
         .student-info {
             background: linear-gradient(135deg, #f0f4f8 0%, #e3eaf3 100%);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border-left: 5px solid var(--primary-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary-color);
             flex-shrink: 0;
         }
         
@@ -102,39 +103,39 @@
             color: var(--primary-color);
             display: block;
             margin-bottom: 2px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         
         .info-value {
             color: #555;
             font-weight: 500;
             word-break: break-word;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
         }
         
         .section-title {
             color: var(--primary-color);
             border-bottom: 2px solid var(--accent-color);
-            padding-bottom: 8px;
-            margin: 20px 0 10px 0;
+            padding-bottom: 6px;
+            margin: 15px 0 8px 0;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
             flex-shrink: 0;
         }
         
-        /* FIXED: Table container with BOTH horizontal AND vertical scrolling */
+        /* FIXED: Table container with MAXIMUM vertical height */
         .table-wrapper {
             width: 100%;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 10px auto;
             position: relative;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             background: white;
             overflow: hidden;
-            flex: 1;
+            flex: 1; /* Takes all available vertical space */
             min-height: 300px;
-            max-height: 500px;
+            max-height: calc(100vh - 400px); /* Dynamic max height */
             display: flex;
             flex-direction: column;
         }
@@ -150,18 +151,18 @@
         
         /* Custom scrollbar styling */
         .scroll-container::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
         }
         
         .scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 5px;
+            border-radius: 4px;
         }
         
         .scroll-container::-webkit-scrollbar-thumb {
             background: #888;
-            border-radius: 5px;
+            border-radius: 4px;
             min-width: 20px;
             min-height: 20px;
         }
@@ -194,13 +195,14 @@
             background-color: var(--primary-color);
             color: white;
             font-weight: 600;
-            padding: 12px 8px;
+            padding: 10px 8px;
             text-align: center;
             white-space: nowrap;
             border-right: 1px solid rgba(255,255,255,0.2);
             position: sticky;
             top: 0;
             box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
+            font-size: 0.9rem;
         }
         
         .results-table thead th:last-child {
@@ -208,12 +210,13 @@
         }
         
         .results-table tbody td {
-            padding: 10px 8px;
+            padding: 8px 6px;
             vertical-align: middle;
             border-bottom: 1px solid var(--border-color);
             word-break: break-word;
             border-right: 1px solid var(--border-color);
             text-align: center;
+            font-size: 0.85rem;
         }
         
         .results-table tbody td:first-child {
@@ -276,12 +279,12 @@
         
         .grade-badge {
             display: inline-block;
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-align: center;
-            min-width: 35px;
+            min-width: 30px;
         }
         
         .grade-A { background-color: #d4edda; color: #155724; }
@@ -301,47 +304,47 @@
         
         .remarks-section {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
             border-left: 4px solid var(--primary-color);
             flex-shrink: 0;
         }
         
         .footer-section {
             background: linear-gradient(135deg, #f0f4f8 0%, #e3eaf3 100%);
-            padding: 15px;
-            border-radius: 10px;
+            padding: 12px;
+            border-radius: 8px;
             border-top: 3px solid var(--primary-color);
-            margin-top: 15px;
+            margin-top: 12px;
             flex-shrink: 0;
         }
         
         .footer-title {
             font-weight: 600;
             color: var(--primary-color);
-            margin-bottom: 8px;
-            font-size: 0.95rem;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
         }
         
         .footer-info {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #555;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             line-height: 1.4;
         }
         
         .action-buttons {
-            margin-top: 25px;
+            margin-top: 20px;
             display: flex;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
             flex-shrink: 0;
         }
         
         .btn-action {
-            padding: 12px 20px;
+            padding: 10px 18px;
             border-radius: 8px;
             font-weight: 600;
             display: inline-flex;
@@ -351,8 +354,8 @@
             transition: all 0.3s ease;
             border: 2px solid transparent;
             cursor: pointer;
-            font-size: 0.9rem;
-            min-width: 130px;
+            font-size: 0.85rem;
+            min-width: 120px;
             touch-action: manipulation;
         }
         
@@ -431,14 +434,14 @@
         /* Scroll hints */
         .scroll-hint-horizontal {
             position: absolute;
-            right: 10px;
+            right: 8px;
             top: 50%;
             transform: translateY(-50%);
             background: var(--primary-color);
             color: white;
-            padding: 4px 8px;
+            padding: 4px 6px;
             border-radius: 4px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             opacity: 0.8;
             animation: pulse 2s infinite;
             display: none;
@@ -447,13 +450,13 @@
         
         .scroll-hint-vertical {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
+            bottom: 8px;
+            right: 8px;
             background: var(--primary-color);
             color: white;
-            padding: 4px 8px;
+            padding: 4px 6px;
             border-radius: 4px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             opacity: 0.8;
             animation: pulse 2s infinite;
             display: none;
@@ -473,49 +476,50 @@
             }
             
             .results-container {
-                padding: 12px;
+                padding: 10px;
                 border-radius: 10px;
+                height: calc(100vh - 16px); /* Adjust for mobile */
             }
             
             .school-header {
-                margin-bottom: 15px;
-                padding-bottom: 12px;
+                margin-bottom: 12px;
+                padding-bottom: 10px;
             }
             
             .school-logo {
-                height: 55px;
+                height: 50px;
             }
             
             .school-title {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
             }
             
             .sub-title {
-                font-size: 0.95rem;
+                font-size: 0.9rem;
             }
             
             .student-info {
-                padding: 12px;
+                padding: 10px;
             }
             
             .info-label {
-                font-size: 0.85rem;
+                font-size: 0.8rem;
             }
             
             .info-value {
-                font-size: 0.9rem;
-                margin-bottom: 8px;
+                font-size: 0.85rem;
+                margin-bottom: 6px;
             }
             
             .section-title {
-                font-size: 1rem;
-                margin: 15px 0 8px 0;
+                font-size: 0.95rem;
+                margin: 12px 0 6px 0;
             }
             
             .table-wrapper {
                 border-radius: 6px;
-                max-height: 350px;
-                min-height: 250px;
+                max-height: calc(100vh - 350px); /* More space on mobile */
+                min-height: 200px;
             }
             
             .scroll-container {
@@ -525,48 +529,49 @@
             
             .results-table {
                 min-width: 650px;
-                font-size: 0.85rem;
+                font-size: 0.8rem;
             }
             
             .results-table thead th {
-                padding: 10px 6px;
-                font-size: 0.85rem;
+                padding: 8px 6px;
+                font-size: 0.8rem;
             }
             
             .results-table tbody td {
-                padding: 8px 6px;
-                font-size: 0.85rem;
+                padding: 6px 5px;
+                font-size: 0.8rem;
             }
             
             .grade-badge {
-                padding: 4px 10px;
-                font-size: 0.8rem;
-                min-width: 30px;
+                padding: 3px 8px;
+                font-size: 0.75rem;
+                min-width: 25px;
             }
             
             .remarks-section,
             .footer-section {
-                padding: 12px;
+                padding: 10px;
             }
             
             .footer-title {
-                font-size: 0.9rem;
+                font-size: 0.85rem;
             }
             
             .footer-info {
-                font-size: 0.8rem;
+                font-size: 0.75rem;
             }
             
             .action-buttons {
                 flex-direction: column;
-                gap: 10px;
-                margin-top: 20px;
+                gap: 8px;
+                margin-top: 15px;
             }
             
             .btn-action {
                 width: 100%;
-                padding: 12px 15px;
-                font-size: 0.95rem;
+                padding: 10px 12px;
+                font-size: 0.9rem;
+                min-width: auto;
             }
             
             /* Show scroll hints on mobile */
@@ -574,64 +579,9 @@
             .scroll-hint-vertical {
                 display: block;
             }
-            
-            /* Add visual indicator for scrollable area */
-            .table-wrapper::after {
-                content: "";
-                position: absolute;
-                right: 0;
-                top: 0;
-                bottom: 0;
-                width: 20px;
-                background: linear-gradient(to right, transparent, rgba(0,0,0,0.1));
-                pointer-events: none;
-                display: block;
-            }
-            
-            .table-wrapper::before {
-                content: "";
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 20px;
-                background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.1));
-                pointer-events: none;
-                display: block;
-                z-index: 1;
-            }
         }
         
         @media (max-width: 576px) {
-            .school-title {
-                font-size: 1.1rem;
-            }
-            
-            .sub-title {
-                font-size: 0.9rem;
-            }
-            
-            .results-table {
-                min-width: 600px;
-            }
-            
-            .scroll-hint-horizontal,
-            .scroll-hint-vertical {
-                font-size: 0.65rem;
-                padding: 3px 6px;
-            }
-            
-            .table-wrapper {
-                max-height: 300px;
-                min-height: 200px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .school-logo {
-                height: 45px;
-            }
-            
             .school-title {
                 font-size: 1rem;
             }
@@ -641,12 +591,48 @@
             }
             
             .results-table {
+                min-width: 600px;
+            }
+            
+            .scroll-hint-horizontal,
+            .scroll-hint-vertical {
+                font-size: 0.6rem;
+                padding: 3px 5px;
+            }
+            
+            .table-wrapper {
+                max-height: calc(100vh - 320px);
+                min-height: 180px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .school-logo {
+                height: 45px;
+            }
+            
+            .school-title {
+                font-size: 0.95rem;
+            }
+            
+            .sub-title {
+                font-size: 0.8rem;
+            }
+            
+            .results-table {
                 min-width: 550px;
             }
             
             .table-wrapper {
-                max-height: 250px;
-                min-height: 180px;
+                max-height: calc(100vh - 300px);
+                min-height: 150px;
+            }
+        }
+        
+        /* Large screen styles */
+        @media (min-width: 1200px) {
+            .table-wrapper {
+                max-height: calc(100vh - 350px); /* More space on large screens */
             }
         }
         
@@ -675,21 +661,23 @@
                 width: 100%;
                 overflow: visible !important;
                 display: block;
+                height: auto;
             }
             
             .school-header {
-                margin-bottom: 10px;
-                padding-bottom: 8px;
+                margin-bottom: 8px;
+                padding-bottom: 6px;
             }
             
             .school-logo {
-                height: 40px;
+                height: 35px;
             }
             
             .action-buttons,
             .btn-action,
             .scroll-hint-horizontal,
-            .scroll-hint-vertical {
+            .scroll-hint-vertical,
+            .loading-overlay {
                 display: none !important;
             }
             
@@ -711,23 +699,24 @@
             .results-table {
                 min-width: 100% !important;
                 width: 100% !important;
-                font-size: 8pt;
+                font-size: 9pt;
                 border: 1px solid #000;
+            }
+            
+            .results-table thead th {
+                padding: 8px 6px;
+                font-size: 9pt;
+            }
+            
+            .results-table tbody td {
+                padding: 6px 5px;
+                font-size: 9pt;
             }
             
             .student-info,
             .remarks-section,
             .footer-section {
                 border: 1px solid #000;
-            }
-            
-            .loading-overlay {
-                display: none !important;
-            }
-            
-            .table-wrapper::after,
-            .table-wrapper::before {
-                display: none !important;
             }
         }
     </style>
@@ -768,7 +757,7 @@
         <!-- Subjects Section -->
         <h3 class="section-title"><i class="fas fa-book-open me-2"></i>SUBJECT PERFORMANCE</h3>
         
-        <!-- FIXED: Table container with BOTH horizontal AND vertical scrolling -->
+        <!-- Table container with MAXIMUM vertical height -->
         <div class="table-wrapper">
             <div class="scroll-hint-horizontal">
                 <i class="fas fa-arrows-left-right"></i> Scroll
@@ -848,11 +837,6 @@
                 <i class="fas fa-times"></i> Close Window
             </button>
         </div>
-        
-        <!-- Mobile scroll instruction -->
-        <div class="text-center mt-2 d-md-none" style="color: #666; font-size: 0.75rem; flex-shrink: 0;">
-            <i class="fas fa-info-circle me-1"></i> Swipe in any direction to view full table
-        </div>
     </div>
     
     <!-- Error Container -->
@@ -884,6 +868,9 @@
             
             // Initialize scrolling after content is loaded
             setTimeout(initializeTableScrolling, 500);
+            
+            // Adjust table height on window resize
+            window.addEventListener('resize', adjustTableHeight);
         });
         
         // Load student results from Google Apps Script
@@ -912,10 +899,8 @@
                 populateResults(response);
                 hideLoading();
                 
-                // Auto-scroll hint on mobile
-                setTimeout(() => {
-                    autoScrollHint();
-                }, 1000);
+                // Adjust table height after content loads
+                setTimeout(adjustTableHeight, 100);
                 
             } catch (error) {
                 console.error('Error loading results:', error);
@@ -1088,51 +1073,23 @@
             // Enable both horizontal and vertical scrolling
             scrollContainer.style.overflow = 'auto';
             scrollContainer.style.WebkitOverflowScrolling = 'touch';
-            
-            // Remove any touch event listeners that might interfere
-            scrollContainer.addEventListener('touchstart', function(e) {
-                // Allow touch to start scrolling
-            }, { passive: true });
-            
-            scrollContainer.addEventListener('touchmove', function(e) {
-                // Allow touch movement for scrolling
-            }, { passive: true });
-            
-            // Add wheel event for laptops
-            scrollContainer.addEventListener('wheel', function(e) {
-                // Let browser handle wheel scrolling naturally
-            }, { passive: true });
         }
         
-        // Auto-scroll hint on mobile
-        function autoScrollHint() {
-            const scrollContainer = document.getElementById('tableScrollContainer');
-            if (!scrollContainer || window.innerWidth > 768) return;
+        // Adjust table height dynamically
+        function adjustTableHeight() {
+            const tableWrapper = document.querySelector('.table-wrapper');
+            if (!tableWrapper) return;
             
-            const hasHorizontalScroll = scrollContainer.scrollWidth > scrollContainer.clientWidth;
-            const hasVerticalScroll = scrollContainer.scrollHeight > scrollContainer.clientHeight;
+            // Calculate available height
+            const viewportHeight = window.innerHeight;
+            const containerTop = tableWrapper.getBoundingClientRect().top;
+            const availableHeight = viewportHeight - containerTop - 150; // Reserve space for other elements
             
-            if (hasHorizontalScroll || hasVerticalScroll) {
-                const originalScrollLeft = scrollContainer.scrollLeft;
-                const originalScrollTop = scrollContainer.scrollTop;
-                
-                // Combined diagonal scroll hint
-                if (hasHorizontalScroll && hasVerticalScroll) {
-                    scrollContainer.scrollTo({
-                        left: originalScrollLeft + 50,
-                        top: originalScrollTop + 30,
-                        behavior: 'smooth'
-                    });
-                    
-                    setTimeout(() => {
-                        scrollContainer.scrollTo({
-                            left: originalScrollLeft,
-                            top: originalScrollTop,
-                            behavior: 'smooth'
-                        });
-                    }, 800);
-                }
-            }
+            // Set maximum height
+            const maxHeight = Math.max(300, Math.min(availableHeight, 600)); // Between 300px and 600px
+            tableWrapper.style.maxHeight = maxHeight + 'px';
+            
+            console.log('Adjusted table height to:', maxHeight, 'px');
         }
         
         // Get grade and comment based on score and class
@@ -1203,6 +1160,7 @@
                         padding: 0 !important;
                         box-shadow: none !important;
                         border: none !important;
+                        height: auto !important;
                     }
                     .table-wrapper {
                         overflow: visible !important;
@@ -1223,8 +1181,7 @@
                     .action-buttons,
                     .btn-action,
                     .scroll-hint-horizontal,
-                    .scroll-hint-vertical,
-                    .text-center.d-md-none {
+                    .scroll-hint-vertical {
                         display: none !important;
                     }
                 }
@@ -1320,6 +1277,9 @@
                 loadStudentResults(studentName, studentClass, dateOfBirth);
             }
         });
+        
+        // Initial height adjustment
+        setTimeout(adjustTableHeight, 100);
     </script>
 </body>
 </html>
