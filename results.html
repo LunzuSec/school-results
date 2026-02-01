@@ -734,6 +734,9 @@
             <button onclick="closeWindow()" class="btn-action btn-close">
                 <i class="fas fa-times"></i> Close Window
             </button>
+            <button onclick="downloadPDF()" class="btn-action btn-print">
+                <i class="fas fa-download"></i> Download PDF
+            </button>
         </div>
     </div>
     
@@ -754,6 +757,10 @@
         const studentClass = urlParams.get('class');
         const dateOfBirth = urlParams.get('dob');
         
+        // Global variables
+        let studentResults = null;
+        let systemConfig = null;
+        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('Page loaded with params:', { studentName, studentClass, dateOfBirth });
@@ -771,7 +778,7 @@
                 showLoading();
                 
                 // Get system configuration first
-                const systemConfig = await getSystemConfigFromServer();
+                systemConfig = await getSystemConfigFromServer();
                 console.log('System config loaded:', systemConfig);
                 
                 // Call Google Apps Script API for student results
@@ -790,6 +797,9 @@
                 if (!response.success) {
                     throw new Error(response.message || 'Failed to retrieve results');
                 }
+                
+                // Store results globally
+                studentResults = response;
                 
                 // Populate results on the page with system config
                 populateResults(response, systemConfig);
@@ -1156,6 +1166,94 @@
             }, 100);
         }
         
+        // Download PDF
+        async function downloadPDF() {
+            if (!studentResults || !systemConfig) {
+                alert('Results not loaded yet. Please wait.');
+                return;
+            }
+            
+            try {
+                // Disable download button and show loading
+                const downloadBtn = document.querySelector('[onclick="downloadPDF()"]');
+                const originalText = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+                downloadBtn.disabled = true;
+                
+                // Call Google Apps Script to generate PDF
+                const pdfResponse = await callGASAPI('generatePDF', {
+                    studentName: studentResults.name,
+                    studentClass: studentResults.studentClass,
+                    dateOfBirth: studentResults.dob
+                });
+                
+                console.log('PDF response:', pdfResponse);
+                
+                if (pdfResponse && pdfResponse.error) {
+                    throw new Error(pdfResponse.error);
+                }
+                
+                // Download the PDF
+                if (typeof pdfResponse === 'string' && pdfResponse.length > 0) {
+                    downloadBase64AsPDF(
+                        pdfResponse, 
+                        `${studentResults.name.replace(/\s+/g, '_')}_${studentResults.studentClass.replace(/\s+/g, '_')}_${systemConfig.academicYear.replace(/\s+/g, '_')}_Results.pdf`
+                    );
+                    alert('PDF downloaded successfully!');
+                } else {
+                    throw new Error('Invalid PDF data received');
+                }
+                
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                alert('Failed to generate PDF: ' + error.message);
+            } finally {
+                // Re-enable download button
+                const downloadBtn = document.querySelector('[onclick="downloadPDF()"]');
+                if (downloadBtn) {
+                    downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
+                    downloadBtn.disabled = false;
+                }
+            }
+        }
+        
+        // Helper function to download base64 as PDF
+        function downloadBase64AsPDF(base64Data, fileName) {
+            try {
+                // Convert base64 to blob
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+                
+                // Create download link
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                link.style.display = 'none';
+                
+                // Trigger download
+                document.body.appendChild(link);
+                link.click();
+                
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                throw new Error('Failed to download PDF: ' + error.message);
+            }
+        }
+        
         // Close window or go back
         function closeWindow() {
             if (window.history.length > 1) {
@@ -1192,7 +1290,7 @@
                     <h4 style="color: #dc3545; margin-bottom: 15px;">Error Loading Results</h4>
                     <p style="color: #666; margin-bottom: 20px;">${message}</p>
                     <div style="display: flex; gap: 10px; justify-content: center;">
-                        <button onclick="window.location.href='https://lunzusec.github.io/school-results/'" class="btn-action btn-close" style="min-width: 120px;">
+                        <button onclick="window.location.href='https://lunzusec.github.io/School_results/'" class="btn-action btn-close" style="min-width: 120px;">
                             <i class="fas fa-arrow-left me-1"></i> Go Back
                         </button>
                         <button onclick="location.reload()" class="btn-action btn-print" style="min-width: 120px;">
