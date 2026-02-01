@@ -635,7 +635,7 @@
         <div class="school-header">
             <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" alt="School Logo" class="school-logo">
             <h1 class="school-title" id="schoolName">LUNZU SECONDARY SCHOOL</h1>
-            <h2 class="sub-title">2025-2026 END OF TERM 1 RESULTS</h2>
+            <h2 class="sub-title" id="academicHeader">2025-2026 END OF TERM 1 RESULTS</h2>
         </div>
         
         <!-- Student Information -->
@@ -715,13 +715,13 @@
                 </div>
                 <div class="col-md-6">
                     <h5 class="footer-title"><i class="fas fa-calendar-alt me-2"></i>IMPORTANT DATES</h5>
-                    <p class="footer-info"><strong>Next Term Starts:</strong> 05/01/2026</p>
+                    <p class="footer-info"><strong>Next Term Starts:</strong> <span id="nextTermStart">05/01/2026</span></p>
                     
                     <h5 class="footer-title mt-3"><i class="fas fa-map-marker-alt me-2"></i>SCHOOL ADDRESS</h5>
-                    <p class="footer-info">Private bag 130, Lunzu</p>
+                    <p class="footer-info" id="schoolAddress">Private bag 130, Lunzu</p>
                     
                     <h5 class="footer-title mt-3"><i class="fas fa-info-circle me-2"></i>GOVERNMENT POLICY</h5>
-                    <p class="footer-info">The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.</p>
+                    <p class="footer-info" id="governmentPolicy">The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.</p>
                 </div>
             </div>
         </div>
@@ -770,7 +770,11 @@
             try {
                 showLoading();
                 
-                // Call Google Apps Script API
+                // Get system configuration first
+                const systemConfig = await getSystemConfigFromServer();
+                console.log('System config loaded:', systemConfig);
+                
+                // Call Google Apps Script API for student results
                 const response = await callGASAPI('getStudentResults', {
                     studentName: name,
                     studentClass: className,
@@ -787,8 +791,8 @@
                     throw new Error(response.message || 'Failed to retrieve results');
                 }
                 
-                // Populate results on the page
-                populateResults(response);
+                // Populate results on the page with system config
+                populateResults(response, systemConfig);
                 hideLoading();
                 
                 // Setup scroll hint
@@ -798,6 +802,37 @@
                 console.error('Error loading results:', error);
                 showError('Failed to load results: ' + error.message);
                 hideLoading();
+            }
+        }
+        
+        // Get system config from Google Apps Script
+        async function getSystemConfigFromServer() {
+            try {
+                const response = await callGASAPI('getSystemConfig', {});
+                console.log('System config response:', response);
+                return response || {};
+            } catch (error) {
+                console.warn('Failed to get system config, using defaults:', error);
+                return {
+                    academicYear: "2025-2026",
+                    term: "END OF TERM 1",
+                    examType: "RESULTS",
+                    schoolName: "LUNZU SECONDARY SCHOOL",
+                    schoolNameODL: "LUNZU OPEN SECONDARY SCHOOL",
+                    nextTermStart: "05/01/2026",
+                    schoolAddress: "Private bag 130, Lunzu",
+                    governmentPolicy: "The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.",
+                    contacts: {
+                        regular: {
+                            fees: "BOARDING FEES PER TERM: K165,000",
+                            accountNumber: "129 00000 98673"
+                        },
+                        odl: {
+                            fees: "SCHOOL FEES PER TERM: K40,000",
+                            accountNumber: "129 00000 41337"
+                        }
+                    }
+                };
             }
         }
         
@@ -860,14 +895,21 @@
         }
         
         // Populate results on the page
-        function populateResults(results) {
+        function populateResults(results, systemConfig) {
             try {
                 console.log('Populating results:', results);
+                console.log('System config:', systemConfig);
                 
                 // Update school name for ODL
                 if (results.studentClass && results.studentClass.includes("ODL")) {
-                    document.getElementById('schoolName').textContent = "LUNZU OPEN SECONDARY SCHOOL";
+                    document.getElementById('schoolName').textContent = systemConfig.schoolNameODL || "LUNZU OPEN SECONDARY SCHOOL";
+                } else {
+                    document.getElementById('schoolName').textContent = systemConfig.schoolName || "LUNZU SECONDARY SCHOOL";
                 }
+                
+                // Update academic header
+                const academicHeader = `${systemConfig.academicYear || '2025-2026'} ${systemConfig.term || 'END OF TERM 1'} ${systemConfig.examType || 'RESULTS'}`;
+                document.getElementById('academicHeader').textContent = academicHeader;
                 
                 // Update student info
                 document.getElementById('studentName').textContent = results.name || '-';
@@ -933,20 +975,33 @@
                 // Update remarks
                 document.getElementById('remarks').textContent = results.additionalInfo?.remarks || 'No remarks available.';
                 
-                // Update fees information
+                // Update fees information based on class type
+                let contactInfo;
                 if (results.studentClass && results.studentClass.includes("ODL")) {
-                    document.getElementById('feesInfo').textContent = "SCHOOL FEES PER TERM: K40,000";
-                    document.getElementById('accountInfo').textContent = "SCHOOL ACC NO.: 129 00000 41337";
+                    contactInfo = systemConfig.contacts?.odl || {
+                        fees: "SCHOOL FEES PER TERM: K40,000",
+                        accountNumber: "129 00000 41337"
+                    };
                 } else {
-                    document.getElementById('feesInfo').textContent = "BOARDING FEES PER TERM: K165,000";
-                    document.getElementById('accountInfo').textContent = "SCHOOL ACC NO.: 129 00000 98673";
+                    contactInfo = systemConfig.contacts?.regular || {
+                        fees: "BOARDING FEES PER TERM: K165,000",
+                        accountNumber: "129 00000 98673"
+                    };
                 }
+                
+                document.getElementById('feesInfo').textContent = contactInfo.fees;
+                document.getElementById('accountInfo').textContent = "SCHOOL ACC NO.: " + contactInfo.accountNumber;
+                
+                // Update other system information
+                document.getElementById('nextTermStart').textContent = systemConfig.nextTermStart || "05/01/2026";
+                document.getElementById('schoolAddress').textContent = systemConfig.schoolAddress || "Private bag 130, Lunzu";
+                document.getElementById('governmentPolicy').textContent = systemConfig.governmentPolicy || "The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.";
                 
                 // Show the results container
                 document.querySelector('.results-container').style.display = 'flex';
                 
                 // Update page title
-                document.title = `${results.name || 'Student'} - Results - Lunzu Secondary School`;
+                document.title = `${results.name || 'Student'} - Results - ${document.getElementById('schoolName').textContent}`;
                 
             } catch (error) {
                 console.error('Error populating results:', error);

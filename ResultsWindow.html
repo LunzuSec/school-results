@@ -177,8 +177,8 @@
     <div class="results-container my-4">
         <div class="school-header">
             <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" alt="School Logo" class="school-logo">
-            <h1 class="school-title"><?= results.studentClass.includes("ODL") ? "LUNZU OPEN SECONDARY SCHOOL" : "LUNZU SECONDARY SCHOOL" ?></h1>
-            <h2 class="school-title">2025-2026 END OF TERM 1 RESULTS</h2>
+            <h1 class="school-title"><?= getSchoolName(results.studentClass) ?></h1>
+            <h2 class="school-title"><?= getAcademicHeader(results.studentClass) ?></h2>
         </div>
         
         <div class="student-info">
@@ -260,22 +260,19 @@
         
         <div class="footer-section">
             <h5 class="footer-title"><i class="fas fa-money-bill-wave me-2"></i>SCHOOL FEES REQUIREMENT</h5>
-            <p><?= results.studentClass.includes("ODL") ? 
-                "SCHOOL FEES PER TERM: K40,000" : 
-                "BOARDING FEES PER TERM: K165,000" ?></p>
-            <p><?= results.studentClass.includes("ODL") ? 
-                "SCHOOL ACC NO.: 129 00000 41337" : 
-                "SCHOOL ACC NO.: 129 00000 98673" ?></p>
-            <p>ACC TYPE: CURRENT | BANK: FDH | LUNZU BRANCH</p>
+            <? const contactInfo = getContactInfo(results.studentClass); ?>
+            <p><?= contactInfo.fees ?></p>
+            <p>SCHOOL ACC NO.: <?= contactInfo.accountNumber ?></p>
+            <p><?= getSystemConfig().bankInfo ?></p>
             
             <h5 class="footer-title mt-3"><i class="fas fa-info-circle me-2"></i>GOVERNMENT POLICY</h5>
-            <p>The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.</p>
+            <p><?= getSystemConfig().governmentPolicy ?></p>
             
             <h5 class="footer-title mt-3"><i class="fas fa-calendar-alt me-2"></i>IMPORTANT DATES</h5>
-            <p><strong>Next Term Starts On:</strong> 05/01/2026</p>
+            <p><strong>Next Term Starts On:</strong> <?= getSystemConfig().nextTermStart ?></p>
             
             <h5 class="footer-title mt-3"><i class="fas fa-map-marker-alt me-2"></i>SCHOOL ADDRESS</h5>
-            <p>Private bag 130, Lunzu</p>
+            <p><?= getSystemConfig().schoolAddress ?></p>
         </div>
         
         <div class="action-buttons">
