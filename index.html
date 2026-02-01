@@ -6,6 +6,7 @@
     <title>Lunzu Secondary School - Results Portal</title>
     
     <style>
+        /* [Keep all existing CSS styles] */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
@@ -348,6 +349,33 @@
             h2 { font-size: 16px; }
             .browser-item { min-width: 120px; }
         }
+        
+        /* Academic year specific styles */
+        .academic-year-container {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .academic-year-container.show {
+            display: block;
+        }
+        
+        .academic-year-label {
+            font-weight: bold;
+            color: #0369a1;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .academic-year-value {
+            font-size: 16px;
+            color: #0c4a6e;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -359,12 +387,18 @@
                  alt="Malawi Government Logo" 
                  class="logo">
             <h1>LUNZU SECONDARY SCHOOL</h1>
-            <h2><?= getAcademicHeader() ?></h2>
+            <h2 id="academicHeader">Loading academic year...</h2>
             <h3>Student Results Portal</h3>
         </div>
         
         <!-- Content -->
         <div class="content">
+            <!-- Academic Year Info -->
+            <div id="academicYearContainer" class="academic-year-container">
+                <div class="academic-year-label">Academic Year:</div>
+                <div id="academicYearValue" class="academic-year-value">2025-2026</div>
+            </div>
+            
             <!-- API Test -->
             <div style="text-align:center;margin:10px 0;padding:10px;background:#f7fafc;border-radius:8px;">
                 <span id="apiStatus">Checking connection...</span>
@@ -530,6 +564,7 @@
         let isStudentsLoading = false;
         let loadingProgress = 0;
         let loadingInterval;
+        let systemConfig = null; // Will store the system configuration
         
         // ============================================
         // BROWSER DETECTION FUNCTIONS
@@ -687,6 +722,9 @@
                 }
             }
             
+            // Load system configuration FIRST (includes academic year)
+            loadSystemConfig();
+            
             // Test API connection
             testAPIConnection();
             
@@ -696,6 +734,58 @@
             // Initialize button states
             updateButtonStates();
         };
+        
+        // ============================================
+        // LOAD SYSTEM CONFIGURATION
+        // ============================================
+        async function loadSystemConfig() {
+            try {
+                console.log('Loading system configuration...');
+                const config = await callGAS('getSystemConfig', {});
+                
+                if (config && !config.error) {
+                    systemConfig = config;
+                    updateAcademicYearDisplay();
+                    console.log('System configuration loaded:', config);
+                } else {
+                    console.error('Failed to load system config:', config);
+                    // Set default values
+                    systemConfig = {
+                        academicYear: "2025-2026",
+                        term: "END OF TERM 1",
+                        examType: "RESULTS"
+                    };
+                    updateAcademicYearDisplay();
+                }
+            } catch (error) {
+                console.error('Error loading system config:', error);
+                // Set default values
+                systemConfig = {
+                    academicYear: "2025-2026",
+                    term: "END OF TERM 1",
+                    examType: "RESULTS"
+                };
+                updateAcademicYearDisplay();
+            }
+        }
+        
+        function updateAcademicYearDisplay() {
+            if (systemConfig) {
+                const academicYear = systemConfig.academicYear || "2025-2026";
+                const term = systemConfig.term || "END OF TERM 1";
+                const examType = systemConfig.examType || "RESULTS";
+                
+                // Update the header
+                document.getElementById('academicHeader').textContent = `${academicYear} ${term} ${examType}`;
+                
+                // Update the academic year container
+                document.getElementById('academicYearValue').textContent = academicYear;
+                document.getElementById('academicYearContainer').classList.add('show');
+                
+                // Also update the title for PDF generation context
+                document.title = `Lunzu Secondary School - ${academicYear} Results Portal`;
+            }
+        }
         
         // ============================================
         // SIMPLE JSONP API CALL
@@ -1149,6 +1239,12 @@
                 // Open results in new tab
                 const resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}`;
                 
+                // Add academic year to the URL if available
+                if (systemConfig && systemConfig.academicYear) {
+                    resultsUrl += `&academicYear=${encodeURIComponent(systemConfig.academicYear)}`;
+                    resultsUrl += `&term=${encodeURIComponent(systemConfig.term || '')}`;
+                }
+                
                 // Open in new tab
                 const newTab = window.open(resultsUrl, '_blank');
                 
@@ -1203,8 +1299,13 @@
                     throw new Error(result.error);
                 }
                 
+                // Get current academic year for filename
+                const academicYear = systemConfig && systemConfig.academicYear ? 
+                    systemConfig.academicYear.replace(/\s+/g, '_') : 
+                    '2025-2026';
+                
                 // Download PDF
-                downloadPDF(result, `${studentName.replace(/\s+/g, '_')}_${studentClass.replace(/\s+/g, '_')}_Results.pdf`);
+                downloadPDF(result, `${studentName.replace(/\s+/g, '_')}_${studentClass.replace(/\s+/g, '_')}_${academicYear}_Results.pdf`);
                 
                 showSuccess('PDF downloaded successfully!');
                 
