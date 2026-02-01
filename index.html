@@ -6,7 +6,6 @@
     <title>Lunzu Secondary School - Results Portal</title>
     
     <style>
-        /* [Keep all existing CSS styles] */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
@@ -1237,7 +1236,7 @@
             
             try {
                 // Open results in new tab
-                const resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}`;
+                let resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}`;
                 
                 // Add academic year to the URL if available
                 if (systemConfig && systemConfig.academicYear) {
