@@ -169,6 +169,17 @@
             box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
         }
         
+        .btn-test {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+        
+        .btn-test:hover {
+            background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(221, 107, 32, 0.3);
+        }
+        
         .loading {
             display: none;
             text-align: center;
@@ -375,6 +386,26 @@
             color: #0c4a6e;
             font-weight: 600;
         }
+        
+        /* Test button */
+        .test-buttons {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #e2e8f0;
+        }
+        
+        .debug-info {
+            font-family: monospace;
+            font-size: 12px;
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 3px solid #4299e1;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -402,6 +433,9 @@
             <div style="text-align:center;margin:10px 0;padding:10px;background:#f7fafc;border-radius:8px;">
                 <span id="apiStatus">Checking connection...</span>
             </div>
+            
+            <!-- Debug Info (hidden by default) -->
+            <div id="debugInfo" class="debug-info"></div>
             
             <!-- Browser Compatibility Warning -->
             <div id="browserWarning" class="alert alert-warning" style="display: none;">
@@ -487,7 +521,7 @@
                     <input type="date" id="dateOfBirth" required>
                 </div>
                 
-                <!-- Buttons -->
+                <!-- Main Buttons -->
                 <div class="buttons">
                     <button type="button" class="btn btn-primary" onclick="getResults()" id="viewResultsBtn" disabled>
                         <span>👁️</span> View Results
@@ -497,6 +531,16 @@
                     </button>
                     <button type="button" class="btn btn-back" onclick="goToStudentPortal()">
                         <span>←</span> Back to Student Portal
+                    </button>
+                </div>
+                
+                <!-- Test Buttons (for debugging) -->
+                <div class="test-buttons">
+                    <button type="button" class="btn btn-test" onclick="testPDFFunction()" id="testPdfBtn">
+                        <span>🔧</span> Test PDF Generation
+                    </button>
+                    <button type="button" class="btn btn-test" onclick="toggleDebug()" id="debugBtn">
+                        <span>🐛</span> Show Debug Info
                     </button>
                 </div>
             </form>
@@ -563,7 +607,54 @@
         let isStudentsLoading = false;
         let loadingProgress = 0;
         let loadingInterval;
-        let systemConfig = null; // Will store the system configuration
+        let systemConfig = null;
+        let debugLogs = [];
+        
+        // ============================================
+        // DEBUGGING FUNCTIONS
+        // ============================================
+        
+        function addDebugLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            debugLogs.push(logEntry);
+            
+            // Keep only last 50 logs
+            if (debugLogs.length > 50) {
+                debugLogs.shift();
+            }
+            
+            // Update debug display if visible
+            if (document.getElementById('debugInfo').style.display === 'block') {
+                updateDebugDisplay();
+            }
+            
+            console.log(logEntry);
+        }
+        
+        function updateDebugDisplay() {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.innerHTML = debugLogs.map(log => {
+                const color = log.includes('ERROR') ? '#e53e3e' : 
+                             log.includes('WARN') ? '#ed8936' : 
+                             log.includes('SUCCESS') ? '#38a169' : '#4299e1';
+                return `<div style="color: ${color}; margin: 2px 0;">${log}</div>`;
+            }).join('');
+        }
+        
+        function toggleDebug() {
+            const debugInfo = document.getElementById('debugInfo');
+            const debugBtn = document.getElementById('debugBtn');
+            
+            if (debugInfo.style.display === 'block') {
+                debugInfo.style.display = 'none';
+                debugBtn.innerHTML = '<span>🐛</span> Show Debug Info';
+            } else {
+                debugInfo.style.display = 'block';
+                debugBtn.innerHTML = '<span>🐛</span> Hide Debug Info';
+                updateDebugDisplay();
+            }
+        }
         
         // ============================================
         // BROWSER DETECTION FUNCTIONS
@@ -589,18 +680,9 @@
                     issues.push({
                         type: 'browser',
                         message: 'Your Microsoft Edge browser is outdated (pre-Chromium). Please update to the latest version.',
-                    severity: 'high'
+                        severity: 'high'
                     });
                 }
-            }
-            
-            // Detect if JavaScript is disabled (though this wouldn't run if it were)
-            if (typeof document.createElement === 'undefined') {
-                issues.push({
-                    type: 'javascript',
-                    message: 'JavaScript appears to be disabled. Please enable JavaScript in your browser settings.',
-                    severity: 'critical'
-                });
             }
             
             // Check for required features
@@ -691,13 +773,15 @@
         // INITIALIZATION
         // ============================================
         window.onload = function() {
+            addDebugLog('Page loading...');
+            
             // Set current year
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
             // Check browser compatibility FIRST
             const browserIssues = detectBrowserIssues();
             if (browserIssues.length > 0) {
-                console.warn('Browser issues detected:', browserIssues);
+                addDebugLog('Browser issues detected: ' + JSON.stringify(browserIssues), 'warn');
                 
                 // Show the most critical issue
                 const criticalIssue = browserIssues.find(issue => issue.severity === 'critical') || 
@@ -732,6 +816,8 @@
             
             // Initialize button states
             updateButtonStates();
+            
+            addDebugLog('Page initialization complete', 'success');
         };
         
         // ============================================
@@ -739,15 +825,15 @@
         // ============================================
         async function loadSystemConfig() {
             try {
-                console.log('Loading system configuration...');
+                addDebugLog('Loading system configuration...');
                 const config = await callGAS('getSystemConfig', {});
                 
                 if (config && !config.error) {
                     systemConfig = config;
                     updateAcademicYearDisplay();
-                    console.log('System configuration loaded:', config);
+                    addDebugLog('System configuration loaded successfully', 'success');
                 } else {
-                    console.error('Failed to load system config:', config);
+                    addDebugLog('Failed to load system config: ' + (config ? config.error : 'unknown'), 'error');
                     // Set default values
                     systemConfig = {
                         academicYear: "2025-2026",
@@ -757,7 +843,7 @@
                     updateAcademicYearDisplay();
                 }
             } catch (error) {
-                console.error('Error loading system config:', error);
+                addDebugLog('Error loading system config: ' + error.message, 'error');
                 // Set default values
                 systemConfig = {
                     academicYear: "2025-2026",
@@ -799,6 +885,7 @@
                 
                 if (criticalIssues.length > 0) {
                     const errorMessage = criticalIssues[0].message + ' Please try Chrome, Firefox, Edge, or Safari.';
+                    addDebugLog(`Browser issue prevents API call: ${errorMessage}`, 'error');
                     reject(new Error(errorMessage));
                     return;
                 }
@@ -819,7 +906,7 @@
                 }
                 url += urlParams.join('&');
                 
-                console.log('Calling GAS URL:', url);
+                addDebugLog(`Calling GAS API: ${action}`, 'info');
                 
                 // Create script element
                 const script = document.createElement('script');
@@ -833,18 +920,20 @@
                         script.parentNode.removeChild(script);
                     }
                     
-                    console.log('GAS Response:', response);
+                    addDebugLog(`GAS Response for ${action}: ${JSON.stringify(response).substring(0, 100)}...`, 'info');
                     
                     if (response && response.error) {
+                        addDebugLog(`API Error for ${action}: ${response.error}`, 'error');
                         reject(new Error(response.error));
                     } else {
+                        addDebugLog(`API Success for ${action}`, 'success');
                         resolve(response);
                     }
                 };
                 
                 // Handle script loading errors
                 script.onerror = function() {
-                    console.error('Script loading failed');
+                    addDebugLog('Script loading failed for API call', 'error');
                     delete window[callbackName];
                     if (script.parentNode) {
                         script.parentNode.removeChild(script);
@@ -873,7 +962,7 @@
                 // Timeout handling
                 const timeoutId = setTimeout(() => {
                     if (window[callbackName]) {
-                        console.error('Request timeout');
+                        addDebugLog(`Request timeout for ${action}`, 'error');
                         delete window[callbackName];
                         if (script.parentNode) {
                             script.parentNode.removeChild(script);
@@ -954,6 +1043,8 @@
             const studentClass = document.getElementById('studentClass').value;
             const studentSearch = document.getElementById('studentSearch');
             const studentNameSelect = document.getElementById('studentName');
+            
+            addDebugLog(`Class changed to: ${studentClass}`);
             
             // Reset
             studentSearch.value = '';
@@ -1047,14 +1138,14 @@
         // STUDENT DATA
         // ============================================
         async function loadStudentNames(studentClass) {
-            console.log('Loading student names for class:', studentClass);
+            addDebugLog(`Loading student names for class: ${studentClass}`);
             
             // Start loading animation
             startLoadingProgress();
             
             try {
                 const names = await callGAS('getStudentNames', { studentClass: studentClass });
-                console.log('Received names:', names);
+                addDebugLog(`Received ${names.length} student names for ${studentClass}`, 'success');
                 
                 if (Array.isArray(names) && names.length > 0) {
                     allStudentNames = names;
@@ -1077,7 +1168,7 @@
                 }
                 
             } catch (error) {
-                console.error('Error loading names:', error);
+                addDebugLog(`Error loading names: ${error.message}`, 'error');
                 
                 // Stop loading animation on error
                 stopProgressAnimation();
@@ -1230,6 +1321,8 @@
                 return;
             }
             
+            addDebugLog(`Getting results for: ${studentName}, ${studentClass}, ${dateOfBirth}`);
+            
             clearError();
             hideBrowserHelp();
             showLoading('Opening results...');
@@ -1258,7 +1351,7 @@
                 showSuccess('Opening results in new tab...');
                 
             } catch (error) {
-                console.error('Error:', error);
+                addDebugLog(`Error opening results: ${error.message}`, 'error');
                 showError('Could not open results. Please try again.');
             } finally {
                 hideLoading();
@@ -1280,22 +1373,28 @@
                 return;
             }
             
+            addDebugLog(`Generating PDF for: ${studentName}, ${studentClass}, ${dateOfBirth}`);
+            
             clearError();
             hideBrowserHelp();
             showLoading('Generating PDF...');
-            console.log('Generating PDF for:', studentName);
             
             try {
+                addDebugLog('Calling generatePDF API...');
                 const result = await callGAS('generatePDF', {
                     studentName: studentName,
                     studentClass: studentClass,
                     dateOfBirth: dateOfBirth
                 });
                 
-                console.log('PDF generated, base64 length:', result.length);
+                addDebugLog(`PDF API response received, length: ${result ? result.length : 0}`, 'success');
                 
                 if (result && result.error) {
                     throw new Error(result.error);
+                }
+                
+                if (!result || typeof result !== 'string' || result.length < 100) {
+                    throw new Error('Invalid PDF data received from server');
                 }
                 
                 // Get current academic year for filename
@@ -1307,9 +1406,10 @@
                 downloadPDF(result, `${studentName.replace(/\s+/g, '_')}_${studentClass.replace(/\s+/g, '_')}_${academicYear}_Results.pdf`);
                 
                 showSuccess('PDF downloaded successfully!');
+                addDebugLog('PDF downloaded successfully', 'success');
                 
             } catch (error) {
-                console.error('Error generating PDF:', error);
+                addDebugLog(`Error generating PDF: ${error.message}`, 'error');
                 
                 // Format error message
                 const formattedError = formatErrorMessage(error.message);
@@ -1325,10 +1425,40 @@
         }
         
         // ============================================
+        // TEST PDF FUNCTION
+        // ============================================
+        async function testPDFFunction() {
+            addDebugLog('Testing PDF generation function...');
+            
+            showLoading('Testing PDF generation...');
+            
+            try {
+                const result = await callGAS('testPDF', {});
+                
+                if (result.success) {
+                    addDebugLog(`PDF Test SUCCESS: ${result.message}`, 'success');
+                    showSuccess(`PDF Test Successful! PDF length: ${result.pdfLength} bytes`);
+                } else {
+                    addDebugLog(`PDF Test FAILED: ${result.error}`, 'error');
+                    showError(`PDF Test Failed: ${result.error}`);
+                    
+                    if (result.message) {
+                        addDebugLog(`Additional info: ${result.message}`, 'info');
+                    }
+                }
+            } catch (error) {
+                addDebugLog(`PDF Test ERROR: ${error.message}`, 'error');
+                showError(`PDF Test Error: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // ============================================
         // BACK TO STUDENT PORTAL FUNCTION
         // ============================================
         function goToStudentPortal() {
-            // Redirect to the student portal
+            addDebugLog('Redirecting to student portal');
             window.location.href = 'https://lunzusec.github.io/School_results/student-portal.html';
         }
         
@@ -1365,6 +1495,7 @@
             document.getElementById('dateOfBirth').disabled = true;
             document.getElementById('viewResultsBtn').disabled = true;
             document.getElementById('downloadPdfBtn').disabled = true;
+            document.getElementById('testPdfBtn').disabled = true;
         }
         
         function hideLoading() {
@@ -1373,6 +1504,7 @@
             // Re-enable form elements (except those that should remain disabled)
             document.getElementById('studentClass').disabled = false;
             document.getElementById('dateOfBirth').disabled = false;
+            document.getElementById('testPdfBtn').disabled = false;
             
             // Only re-enable search and select if students are loaded
             if (!isStudentsLoading && allStudentNames.length > 0) {
@@ -1434,7 +1566,7 @@
                     throw new Error('No PDF data received');
                 }
                 
-                console.log('Starting PDF download, data length:', base64Data.length);
+                addDebugLog(`Starting PDF download, data length: ${base64Data.length}`);
                 
                 // Check for required browser features
                 if (typeof atob === 'undefined' || typeof Uint8Array === 'undefined' || 
@@ -1471,7 +1603,7 @@
                 }, 100);
                 
             } catch (error) {
-                console.error('Download error:', error);
+                addDebugLog(`Download error: ${error.message}`, 'error');
                 throw new Error('Failed to download PDF: ' + error.message);
             }
         }
@@ -1492,7 +1624,7 @@
                 // Update button states whenever form data changes
                 updateButtonStates();
             } catch (e) {
-                console.error('Error saving form data:', e);
+                addDebugLog(`Error saving form data: ${e.message}`, 'error');
             }
         }
         
@@ -1522,7 +1654,7 @@
                     }
                 }
             } catch (e) {
-                console.error('Error loading form data:', e);
+                addDebugLog(`Error loading form data: ${e.message}`, 'error');
             }
         }
         
@@ -1531,13 +1663,13 @@
         // ============================================
         async function testAPIConnection() {
             try {
-                console.log('Testing API connection...');
+                addDebugLog('Testing API connection...');
                 const result = await callGAS('test', {});
-                console.log('API test successful:', result);
+                addDebugLog('API test successful', 'success');
                 document.getElementById('apiStatus').innerHTML = '✅ Connected to Lunzu Secondary School Server';
                 document.getElementById('apiStatus').style.color = '#38a169';
             } catch (error) {
-                console.error('API test failed:', error);
+                addDebugLog(`API test failed: ${error.message}`, 'error');
                 
                 // Format error message
                 const formattedError = formatErrorMessage(error.message);
@@ -1560,6 +1692,9 @@
         document.getElementById('studentName').addEventListener('change', updateButtonStates);
         document.getElementById('dateOfBirth').addEventListener('change', updateButtonStates);
         document.getElementById('studentSearch').addEventListener('input', updateButtonStates);
+        
+        // Initialize debug info
+        addDebugLog('System initialized. Ready to use.', 'success');
     </script>
 </body>
 </html>
