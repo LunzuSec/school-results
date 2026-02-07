@@ -1,1565 +1,772 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lunzu Secondary School - Results Portal</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lunzu Secondary School - School Results Management System</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-pj6VsoMV3Pn0aO5/KE1qPBD6gEijSdykOqYlCkgVgJt+5UrHhHgfKgnA9yGo0A37uj5yK69IaMzuq8wRA3+4qA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- Custom CSS -->
+  <style>
+    :root {
+      --primary-color: #007BFF;
+      --primary-dark: #0056b3;
+      --secondary-color: #6c757d;
+      --accent-color: #17a2b8;
+      --light-bg: #f8f9fa;
+      --dark-bg: #343a40;
+      --success-color: #28a745;
+      --warning-color: #ffc107;
+      --portal-bg: #1a3a5f;
+    }
     
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #1a3c6e 0%, #2c5282 100%);
-            color: white;
-            padding: 25px;
-            text-align: center;
-        }
-        
-        .logo {
-            max-width: 120px;
-            margin-bottom: 15px;
-            background: white;
-            padding: 8px;
-            border-radius: 8px;
-        }
-        
-        h1 { font-size: 24px; margin-bottom: 8px; }
-        h2 { font-size: 18px; color: #ffd700; margin-bottom: 5px; }
-        h3 { font-size: 16px; color: #cbd5e0; }
-        
-        .content { padding: 30px; }
-        .form-group { margin-bottom: 25px; }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #2d3748;
-            font-size: 16px;
-        }
-        
-        select, input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        
-        select:disabled, input:disabled {
-            background-color: #f7fafc;
-            color: #a0aec0;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-        
-        select:focus, input:focus {
-            outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
-        }
-        
-        .search-container { position: relative; }
-        
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 2px solid #4299e1;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .search-item {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            cursor: pointer;
-        }
-        
-        .search-item:hover { background: #f7fafc; }
-        
-        .buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            flex: 1;
-            min-width: 200px;
-            padding: 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-        }
-        
-        .btn-primary:disabled {
-            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        
-        .btn-primary:not(:disabled):hover {
-            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
-            color: white;
-        }
-        
-        .btn-secondary:disabled {
-            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        
-        .btn-secondary:not(:disabled):hover {
-            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 85, 104, 0.3);
-        }
-        
-        .btn-back {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-        }
-        
-        .btn-back:hover {
-            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 30px 0;
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #4299e1;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .progress-container {
-            margin: 15px 0;
-            display: none;
-        }
-        
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #4a5568;
-        }
-        
-        .progress-bar {
-            height: 8px;
-            background-color: #e2e8f0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
-            width: 0%;
-            transition: width 0.5s ease-in-out;
-            border-radius: 4px;
-        }
-        
-        .students-loading {
-            text-align: center;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 8px;
-            margin: 10px 0;
-            border-left: 4px solid #4299e1;
-            display: none;
-        }
-        
-        .students-loading span {
-            color: #2c5282;
-            font-weight: 500;
-        }
-        
-        .students-loaded {
-            text-align: center;
-            padding: 15px;
-            background: #f0fff4;
-            border-radius: 8px;
-            margin: 10px 0;
-            border-left: 4px solid #38a169;
-            display: none;
-        }
-        
-        .students-loaded span {
-            color: #22543d;
-            font-weight: 500;
-        }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .alert-error {
-            background: #fed7d7;
-            color: #742a2a;
-            border-left: 4px solid #e53e3e;
-        }
-        
-        .alert-success {
-            background: #c6f6d5;
-            color: #22543d;
-            border-left: 4px solid #38a169;
-        }
-        
-        .alert-info {
-            background: #bee3f8;
-            color: #2c5282;
-            border-left: 4px solid #4299e1;
-        }
-        
-        .alert-warning {
-            background: #feebc8;
-            color: #744210;
-            border-left: 4px solid #ed8936;
-        }
-        
-        .browser-help {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            display: none;
-        }
-        
-        .browser-help h4 {
-            color: #2d3748;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        
-        .browser-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .browser-item {
-            flex: 1;
-            min-width: 150px;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-            text-align: center;
-        }
-        
-        .browser-icon {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .chrome { color: #4285F4; }
-        .firefox { color: #FF9500; }
-        .edge { color: #0078D7; }
-        .safari { color: #FF2E50; }
-        
-        .footer {
-            text-align: center;
-            padding: 20px;
-            background: #f7fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #718096;
-            font-size: 14px;
-        }
-        
-        .footer a {
-            color: #4299e1;
-            text-decoration: none;
-        }
-        
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .container { border-radius: 10px; }
-            .header { padding: 20px 15px; }
-            .content { padding: 20px; }
-            .btn { min-width: 100%; }
-            .buttons { flex-direction: column; }
-            h1 { font-size: 20px; }
-            h2 { font-size: 16px; }
-            .browser-item { min-width: 120px; }
-        }
-        
-        /* Academic year specific styles */
-        .academic-year-container {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .academic-year-container.show {
-            display: block;
-        }
-        
-        .academic-year-label {
-            font-weight: bold;
-            color: #0369a1;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        
-        .academic-year-value {
-            font-size: 16px;
-            color: #0c4a6e;
-            font-weight: 600;
-        }
-    </style>
+    * {
+      font-family: 'Open Sans', sans-serif;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .navbar-brand {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+    }
+    
+    .navbar-custom {
+      background-color: var(--primary-color);
+      padding: 15px 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .navbar-custom .navbar-brand,
+    .navbar-custom .nav-link {
+      color: white !important;
+    }
+    
+    .navbar-custom .nav-link {
+      margin: 0 8px;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    
+    .navbar-custom .nav-link:hover {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    .hero-section {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+      color: white;
+      padding: 100px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hero-subtitle {
+      font-size: 1.5rem;
+      margin-bottom: 2.5rem;
+      opacity: 0.95;
+    }
+    
+    .card-custom {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      overflow: hidden;
+      margin-bottom: 30px;
+      height: 100%;
+    }
+    
+    .card-custom:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-custom-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 25px;
+      border-bottom: none;
+    }
+    
+    .btn-custom {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 30px;
+      font-weight: 600;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+    
+    .btn-custom:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+      color: white;
+    }
+    
+    .btn-portal {
+      font-size: 1.2rem;
+      padding: 20px 40px;
+      margin: 15px;
+      border-radius: 12px;
+      transition: all 0.3s;
+      min-width: 250px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-portal:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-portal.teacher {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    }
+    
+    .btn-portal.student {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    }
+    
+    .section-title {
+      position: relative;
+      margin-bottom: 50px;
+      text-align: center;
+    }
+    
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      border-radius: 2px;
+    }
+    
+    .feature-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      color: white;
+      font-size: 2rem;
+    }
+    
+    .testimonial-card {
+      border-left: 5px solid var(--primary-color);
+      padding: 25px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      margin: 20px;
+    }
+    
+    .testimonial-text {
+      font-style: italic;
+      color: #555;
+      line-height: 1.8;
+    }
+    
+    .portal-section {
+      background: linear-gradient(135deg, var(--portal-bg) 0%, #0d2846 100%);
+      padding: 80px 0;
+      border-radius: 20px;
+      margin: 60px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .portal-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10-10-4.477-10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10-10-4.477-10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .portal-title {
+      color: #ffffff !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      position: relative;
+      z-index: 2;
+    }
+    
+    .portal-subtitle {
+      color: rgba(255, 255, 255, 0.95) !important;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .portal-security-note {
+      color: rgba(255, 255, 255, 0.9) !important;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .contact-info {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .contact-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      margin-right: 15px;
+    }
+    
+    .announcement-section {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      padding: 25px;
+      border-radius: 12px;
+      margin: 30px 0;
+      border-left: 5px solid var(--warning-color);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+    }
+    
+    .footer {
+      background: linear-gradient(135deg, var(--dark-bg) 0%, #212529 100%);
+      color: white;
+      padding: 50px 0 30px;
+    }
+    
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    
+    .footer-links a:hover {
+      color: white;
+      text-decoration: underline;
+    }
+    
+    .section-content {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    .active-section {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Portal button container for better alignment */
+    .portal-buttons-container {
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* Portal button hover effects */
+    .btn-portal.teacher:hover {
+      background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
+      box-shadow: 0 12px 30px rgba(231, 76, 60, 0.3);
+    }
+    
+    .btn-portal.student:hover {
+      background: linear-gradient(135deg, #3ae374 0%, #2ecc71 100%);
+      box-shadow: 0 12px 30px rgba(46, 204, 113, 0.3);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      
+      .hero-subtitle {
+        font-size: 1.2rem;
+      }
+      
+      .hero-section {
+        padding: 60px 0;
+      }
+      
+      .btn-portal {
+        min-width: 200px;
+        padding: 15px 30px;
+        margin: 10px 5px;
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      
+      .section-title {
+        font-size: 2rem;
+      }
+      
+      .portal-section {
+        padding: 50px 0;
+        margin: 40px 0;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+      
+      .btn-portal {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+      }
+      
+      .portal-title {
+        font-size: 1.8rem;
+      }
+      
+      .portal-subtitle {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- Main Container -->
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" 
-                 alt="Malawi Government Logo" 
-                 class="logo">
-            <h1>LUNZU SECONDARY SCHOOL</h1>
-            <h2 id="academicHeader">Loading academic year...</h2>
-            <h3>Student Results Portal</h3>
-        </div>
-        
-        <!-- Content -->
-        <div class="content">
-            <!-- Academic Year Info -->
-            <div id="academicYearContainer" class="academic-year-container">
-                <div class="academic-year-label">Academic Year:</div>
-                <div id="academicYearValue" class="academic-year-value">2025-2026</div>
-            </div>
-            
-            <!-- API Test -->
-            <div style="text-align:center;margin:10px 0;padding:10px;background:#f7fafc;border-radius:8px;">
-                <span id="apiStatus">Checking connection...</span>
-            </div>
-            
-            <!-- Browser Compatibility Warning -->
-            <div id="browserWarning" class="alert alert-warning" style="display: none;">
-                <span>⚠️</span>
-                <div>
-                    <strong>Browser Compatibility Notice:</strong>
-                    <p style="margin-top: 5px; font-size: 14px;">For best experience, please use an updated modern browser like Chrome, Firefox, Edge, or Safari.</p>
-                </div>
-            </div>
-            
-            <!-- Form -->
-            <form id="studentForm">
-                <!-- Class Selection -->
-                <div class="form-group">
-                    <label for="studentClass">
-                        <span style="color: #e53e3e;">*</span> Class:
-                    </label>
-                    <select id="studentClass" required onchange="handleClassChange()">
-                        <option value="" disabled selected>Select Class</option>
-                        <option value="Form 1">Form 1</option>
-                        <option value="Form 2">Form 2</option>
-                        <option value="Form 3">Form 3</option>
-                        <option value="Form 4">Form 4</option>
-                        <option value="Form 1 ODL">Form 1 ODL</option>
-                        <option value="Form 2 ODL">Form 2 ODL</option>
-                        <option value="Form 3 ODL">Form 3 ODL</option>
-                        <option value="Form 4 ODL">Form 4 ODL</option>
-                    </select>
-                </div>
-                
-                <!-- Loading Indicator for Students -->
-                <div id="studentsLoading" class="students-loading">
-                    <div class="spinner" style="width: 20px; height: 20px; margin: 0 auto 10px;"></div>
-                    <span>Loading student list...</span>
-                </div>
-                
-                <!-- Progress Bar -->
-                <div id="progressContainer" class="progress-container">
-                    <div class="progress-label">
-                        <span>Loading students</span>
-                        <span id="progressText">0%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div id="progressFill" class="progress-fill"></div>
-                    </div>
-                </div>
-                
-                <!-- Loaded Indicator -->
-                <div id="studentsLoaded" class="students-loaded">
-                    <span>✅ Students loaded successfully!</span>
-                </div>
-                
-                <!-- Student Search -->
-                <div class="form-group">
-                    <label for="studentSearch">
-                        Search Student:
-                    </label>
-                    <div class="search-container">
-                        <input type="text" 
-                               id="studentSearch" 
-                               placeholder="Type to search students..." 
-                               oninput="handleSearchInput()" 
-                               disabled>
-                        <div id="searchResults" class="search-results"></div>
-                    </div>
-                </div>
-                
-                <!-- Student Name -->
-                <div class="form-group">
-                    <label for="studentName">
-                        <span style="color: #e53e3e;">*</span> Student Name:
-                    </label>
-                    <select id="studentName" required disabled>
-                        <option value="" disabled selected>Loading students...</option>
-                    </select>
-                </div>
-                
-                <!-- Date of Birth -->
-                <div class="form-group">
-                    <label for="dateOfBirth">
-                        <span style="color: #e53e3e;">*</span> Date of Birth:
-                    </label>
-                    <input type="date" id="dateOfBirth" required>
-                </div>
-                
-                <!-- Buttons -->
-                <div class="buttons">
-                    <button type="button" class="btn btn-primary" onclick="getResults()" id="viewResultsBtn" disabled>
-                        <span>👁️</span> View Results
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="downloadResultsAsPDF()" id="downloadPdfBtn" disabled>
-                        <span>📥</span> Download PDF
-                    </button>
-                    <button type="button" class="btn btn-back" onclick="goToStudentPortal()">
-                        <span>←</span> Back to Student Portal
-                    </button>
-                </div>
-            </form>
-            
-            <!-- Loading -->
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p id="loadingText">Processing...</p>
-            </div>
-            
-            <!-- Results/Error Container -->
-            <div id="resultsContainer"></div>
-            
-            <!-- Browser Help Section (shown on errors) -->
-            <div id="browserHelp" class="browser-help">
-                <h4>Recommended Browsers:</h4>
-                <p style="margin-bottom: 10px; font-size: 14px; color: #4a5568;">If you're experiencing connection issues, try one of these updated browsers:</p>
-                <div class="browser-list">
-                    <div class="browser-item">
-                        <div class="browser-icon chrome">C</div>
-                        <div>Google Chrome</div>
-                    </div>
-                    <div class="browser-item">
-                        <div class="browser-icon firefox">F</div>
-                        <div>Mozilla Firefox</div>
-                    </div>
-                    <div class="browser-item">
-                        <div class="browser-icon edge">E</div>
-                        <div>Microsoft Edge</div>
-                    </div>
-                    <div class="browser-item">
-                        <div class="browser-icon safari">S</div>
-                        <div>Apple Safari</div>
-                    </div>
-                </div>
-                <p style="margin-top: 15px; font-size: 13px; color: #718096;">
-                    <strong>Note:</strong> Ensure your browser is updated to the latest version. Older browsers may not support all features.
-                </p>
-            </div>
-        </div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <p>© <span id="currentYear"></span> Lunzu Secondary School - Examination Department</p>
-            <p>For support: 
-                <a href="https://wa.me/265888866269" target="_blank">
-                    WhatsApp: +265 888 866 269
-                </a>
-            </p>
-        </div>
+      <a class="navbar-brand" href="#" onclick="showSection('home')">
+        <i class="fas fa-school me-2"></i>Lunzu Secondary School
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showSection('home')">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showSection('about')">About</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showSection('features')">Features</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showSection('portals')">Portals</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showSection('testimonials')">Testimonials</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showSection('contact')">Contact</a>
+          </li>
+        </ul>
+      </div>
     </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div id="home-section" class="hero-section active-section">
+    <div class="container">
+      <div class="hero-content text-center">
+        <h1 class="hero-title">Lunzu Secondary School</h1>
+        <p class="hero-subtitle">Excellence in Education Since 1985</p>
+        <p class="lead mb-4">Empowering students through quality education and innovative learning solutions</p>
+        <button class="btn btn-light btn-lg px-5 py-3 fw-bold" onclick="showSection('portals')">
+          <i class="fas fa-door-open me-2"></i>Access Portals
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcements Section -->
+  <div class="container mt-4">
+    <div class="announcement-section">
+      <div class="d-flex align-items-center">
+        <div class="me-3">
+          <i class="fas fa-bullhorn fa-2x" style="color: #856404;"></i>
+        </div>
+        <div>
+          <h4 class="mb-2" style="color: #856404;">
+            <i class="fas fa-exclamation-circle me-2"></i>Important Announcement
+          </h4>
+          <p class="mb-0" style="color: #856404;">
+            School opens for term 2 on 5th January, 2026. All students are expected to report on 4th January, 2026 with proof of payment of school fees and necessary materials including mosquito nets, pails, and tissues.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Sections -->
+  <div class="container my-5">
     
-    <!-- JavaScript -->
-    <script>
-        // ============================================
-        // CONFIGURATION
-        // ============================================
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
-        
-        // ============================================
-        // GLOBAL VARIABLES
-        // ============================================
-        let allStudentNames = [];
-        let isStudentsLoading = false;
-        let loadingProgress = 0;
-        let loadingInterval;
-        let systemConfig = null; // Will store the system configuration
-        
-        // ============================================
-        // BROWSER DETECTION FUNCTIONS
-        // ============================================
-        
-        function detectBrowserIssues() {
-            const userAgent = navigator.userAgent;
-            const issues = [];
-            
-            // Detect Internet Explorer (IE 11 or older)
-            if (userAgent.indexOf('MSIE') !== -1 || userAgent.indexOf('Trident/') !== -1) {
-                issues.push({
-                    type: 'browser',
-                    message: 'Internet Explorer is not supported. Please use Chrome, Firefox, Edge, or Safari.',
-                    severity: 'high'
-                });
-            }
-            
-            // Detect old Edge (pre-Chromium)
-            if (userAgent.indexOf('Edge/') !== -1) {
-                const edgeVersion = userAgent.match(/Edge\/(\d+)/);
-                if (edgeVersion && parseInt(edgeVersion[1]) < 79) {
-                    issues.push({
-                        type: 'browser',
-                        message: 'Your Microsoft Edge browser is outdated (pre-Chromium). Please update to the latest version.',
-                    severity: 'high'
-                    });
-                }
-            }
-            
-            // Detect if JavaScript is disabled (though this wouldn't run if it were)
-            if (typeof document.createElement === 'undefined') {
-                issues.push({
-                    type: 'javascript',
-                    message: 'JavaScript appears to be disabled. Please enable JavaScript in your browser settings.',
-                    severity: 'critical'
-                });
-            }
-            
-            // Check for required features
-            const requiredFeatures = [
-                'Promise',
-                'fetch',
-                'URLSearchParams',
-                'localStorage',
-                'sessionStorage',
-                'atob',
-                'Uint8Array',
-                'Blob',
-                'URL',
-                'JSON'
-            ];
-            
-            const missingFeatures = requiredFeatures.filter(feature => 
-                typeof window[feature] === 'undefined'
-            );
-            
-            if (missingFeatures.length > 0) {
-                issues.push({
-                    type: 'features',
-                    message: `Your browser is missing required features: ${missingFeatures.join(', ')}. Please update your browser.`,
-                    severity: 'high'
-                });
-            }
-            
-            // Check if cookies are enabled (important for localStorage)
-            try {
-                localStorage.setItem('test', 'test');
-                localStorage.removeItem('test');
-            } catch (e) {
-                issues.push({
-                    type: 'storage',
-                    message: 'Local storage/cookies appear to be disabled. Please enable cookies in your browser settings.',
-                    severity: 'medium'
-                });
-            }
-            
-            // Check if browser is too old (detect by missing modern APIs)
-            if (typeof Promise === 'undefined' || typeof fetch === 'undefined') {
-                issues.push({
-                    type: 'browser',
-                    message: 'Your browser is very outdated and does not support modern web features.',
-                    severity: 'critical'
-                });
-            }
-            
-            return issues;
-        }
-        
-        function isLikelyBrowserCompatibilityError(errorMessage) {
-            const errorLower = errorMessage.toLowerCase();
-            const browserKeywords = [
-                'access-control',
-                'cross-origin',
-                'cors',
-                'security',
-                'same-origin',
-                'origin',
-                'script error',
-                'jsonp',
-                'callback',
-                'permission',
-                'blocked',
-                'restricted',
-                'refused',
-                'forbidden',
-                'network error',
-                'failed to fetch',
-                'typeerror',
-                'syntaxerror'
-            ];
-            
-            return browserKeywords.some(keyword => errorLower.includes(keyword));
-        }
-        
-        function showBrowserHelp() {
-            document.getElementById('browserHelp').style.display = 'block';
-        }
-        
-        function hideBrowserHelp() {
-            document.getElementById('browserHelp').style.display = 'none';
-        }
-        
-        // ============================================
-        // INITIALIZATION
-        // ============================================
-        window.onload = function() {
-            // Set current year
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-            
-            // Check browser compatibility FIRST
-            const browserIssues = detectBrowserIssues();
-            if (browserIssues.length > 0) {
-                console.warn('Browser issues detected:', browserIssues);
-                
-                // Show the most critical issue
-                const criticalIssue = browserIssues.find(issue => issue.severity === 'critical') || 
-                                     browserIssues.find(issue => issue.severity === 'high') || 
-                                     browserIssues[0];
-                
-                if (criticalIssue) {
-                    document.getElementById('apiStatus').innerHTML = `⚠️ ${criticalIssue.message}`;
-                    document.getElementById('apiStatus').style.color = '#e53e3e';
-                    
-                    // Show browser help section
-                    showBrowserHelp();
-                    
-                    // Disable form
-                    document.getElementById('studentClass').disabled = true;
-                    document.getElementById('studentSearch').disabled = true;
-                    document.getElementById('studentName').disabled = true;
-                    document.getElementById('dateOfBirth').disabled = true;
-                    
-                    return; // Don't continue with API test
-                }
-            }
-            
-            // Load system configuration FIRST (includes academic year)
-            loadSystemConfig();
-            
-            // Test API connection
-            testAPIConnection();
-            
-            // Setup form
-            setupForm();
-            
-            // Initialize button states
-            updateButtonStates();
-        };
-        
-        // ============================================
-        // LOAD SYSTEM CONFIGURATION
-        // ============================================
-        async function loadSystemConfig() {
-            try {
-                console.log('Loading system configuration...');
-                const config = await callGAS('getSystemConfig', {});
-                
-                if (config && !config.error) {
-                    systemConfig = config;
-                    updateAcademicYearDisplay();
-                    console.log('System configuration loaded:', config);
-                } else {
-                    console.error('Failed to load system config:', config);
-                    // Set default values
-                    systemConfig = {
-                        academicYear: "2025-2026",
-                        term: "END OF TERM 1",
-                        examType: "RESULTS"
-                    };
-                    updateAcademicYearDisplay();
-                }
-            } catch (error) {
-                console.error('Error loading system config:', error);
-                // Set default values
-                systemConfig = {
-                    academicYear: "2025-2026",
-                    term: "END OF TERM 1",
-                    examType: "RESULTS"
-                };
-                updateAcademicYearDisplay();
-            }
-        }
-        
-        function updateAcademicYearDisplay() {
-            if (systemConfig) {
-                const academicYear = systemConfig.academicYear || "2025-2026";
-                const term = systemConfig.term || "END OF TERM 1";
-                const examType = systemConfig.examType || "RESULTS";
-                
-                // Update the header
-                document.getElementById('academicHeader').textContent = `${academicYear} ${term} ${examType}`;
-                
-                // Update the academic year container
-                document.getElementById('academicYearValue').textContent = academicYear;
-                document.getElementById('academicYearContainer').classList.add('show');
-                
-                // Also update the title for PDF generation context
-                document.title = `Lunzu Secondary School - ${academicYear} Results Portal`;
-            }
-        }
-        
-        // ============================================
-        // SIMPLE JSONP API CALL
-        // ============================================
-        function callGAS(action, params = {}) {
-            return new Promise((resolve, reject) => {
-                // First check browser compatibility
-                const browserIssues = detectBrowserIssues();
-                const criticalIssues = browserIssues.filter(issue => 
-                    issue.severity === 'critical' || issue.severity === 'high'
-                );
-                
-                if (criticalIssues.length > 0) {
-                    const errorMessage = criticalIssues[0].message + ' Please try Chrome, Firefox, Edge, or Safari.';
-                    reject(new Error(errorMessage));
-                    return;
-                }
-                
-                // Create unique callback name
-                const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                
-                // Build URL with parameters
-                params.callback = callbackName;
-                params.action = action;
-                
-                let url = GAS_URL + '?';
-                const urlParams = [];
-                for (const key in params) {
-                    if (params[key] !== undefined && params[key] !== null) {
-                        urlParams.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
-                    }
-                }
-                url += urlParams.join('&');
-                
-                console.log('Calling GAS URL:', url);
-                
-                // Create script element
-                const script = document.createElement('script');
-                script.src = url;
-                
-                // Define callback function
-                window[callbackName] = function(response) {
-                    // Clean up
-                    delete window[callbackName];
-                    if (script.parentNode) {
-                        script.parentNode.removeChild(script);
-                    }
-                    
-                    console.log('GAS Response:', response);
-                    
-                    if (response && response.error) {
-                        reject(new Error(response.error));
-                    } else {
-                        resolve(response);
-                    }
-                };
-                
-                // Handle script loading errors
-                script.onerror = function() {
-                    console.error('Script loading failed');
-                    delete window[callbackName];
-                    if (script.parentNode) {
-                        script.parentNode.removeChild(script);
-                    }
-                    
-                    // Determine if this is likely a browser compatibility issue
-                    const browserIssues = detectBrowserIssues();
-                    if (browserIssues.length > 0) {
-                        const errorMessage = browserIssues[0].message + ' This may be causing connection issues.';
-                        reject(new Error(errorMessage));
-                    } else {
-                        // Check for common network/browser errors
-                        const userAgent = navigator.userAgent;
-                        const isOldBrowser = userAgent.indexOf('MSIE') !== -1 || 
-                                            userAgent.indexOf('Trident/') !== -1 ||
-                                            userAgent.indexOf('Edge/') !== -1;
-                        
-                        if (isOldBrowser) {
-                            reject(new Error('Your browser may have compatibility issues with this site. Please try Chrome, Firefox, Edge, or Safari.'));
-                        } else {
-                            reject(new Error('Failed to connect to server. This could be due to:\n1. Internet connection issues\n2. Browser security restrictions\n3. Server temporarily unavailable\n\nPlease try again or use a different browser.'));
-                        }
-                    }
-                };
-                
-                // Timeout handling
-                const timeoutId = setTimeout(() => {
-                    if (window[callbackName]) {
-                        console.error('Request timeout');
-                        delete window[callbackName];
-                        if (script.parentNode) {
-                            script.parentNode.removeChild(script);
-                        }
-                        
-                        // Check if browser might be blocking the request
-                        const isLikelyBlocked = navigator.userAgent.indexOf('MSIE') !== -1 || 
-                                               navigator.userAgent.indexOf('Trident/') !== -1 ||
-                                               navigator.userAgent.indexOf('Edge/') !== -1;
-                        
-                        if (isLikelyBlocked) {
-                            reject(new Error('Request timeout. Your browser may be blocking the connection. Please try Chrome, Firefox, Edge, or Safari.'));
-                        } else {
-                            reject(new Error('Request timeout. Please check your internet connection and try again.'));
-                        }
-                    }
-                }, 30000);
-                
-                // Override timeout cleanup
-                const originalCallback = window[callbackName];
-                window[callbackName] = function(response) {
-                    clearTimeout(timeoutId);
-                    if (originalCallback) {
-                        originalCallback(response);
-                    }
-                };
-                
-                // Add to document
-                document.head.appendChild(script);
-            });
-        }
-        
-        // ============================================
-        // FORM HANDLING
-        // ============================================
-        function setupForm() {
-            // Reset form state
-            resetForm();
-            
-            // Load saved data
-            loadFormData();
-            
-            // Close search on outside click
-            document.addEventListener('click', function(event) {
-                const searchResults = document.getElementById('searchResults');
-                if (searchResults.style.display === 'block' && 
-                    !event.target.closest('.search-container')) {
-                    searchResults.style.display = 'none';
-                }
-            });
-            
-            // Save form data on change
-            document.getElementById('studentClass').addEventListener('change', saveFormData);
-            document.getElementById('studentName').addEventListener('change', saveFormData);
-            document.getElementById('dateOfBirth').addEventListener('change', saveFormData);
-        }
-        
-        function resetForm() {
-            document.getElementById('studentSearch').disabled = true;
-            document.getElementById('studentName').disabled = true;
-            document.getElementById('searchResults').style.display = 'none';
-            document.getElementById('searchResults').innerHTML = '';
-            document.getElementById('resultsContainer').innerHTML = '';
-            hideLoading();
-            allStudentNames = [];
-            hideBrowserHelp();
-            
-            // Reset loading indicators
-            document.getElementById('studentsLoading').style.display = 'none';
-            document.getElementById('progressContainer').style.display = 'none';
-            document.getElementById('studentsLoaded').style.display = 'none';
-            stopProgressAnimation();
-            
-            updateButtonStates();
-        }
-        
-        function handleClassChange() {
-            const studentClass = document.getElementById('studentClass').value;
-            const studentSearch = document.getElementById('studentSearch');
-            const studentNameSelect = document.getElementById('studentName');
-            
-            // Reset
-            studentSearch.value = '';
-            studentSearch.disabled = true;
-            studentNameSelect.innerHTML = '<option value="" disabled selected>Loading students...</option>';
-            studentNameSelect.disabled = true;
-            document.getElementById('dateOfBirth').value = '';
-            document.getElementById('searchResults').style.display = 'none';
-            document.getElementById('searchResults').innerHTML = '';
-            clearError();
-            hideBrowserHelp();
-            
-            // Reset loading indicators
-            document.getElementById('studentsLoading').style.display = 'none';
-            document.getElementById('progressContainer').style.display = 'none';
-            document.getElementById('studentsLoaded').style.display = 'none';
-            stopProgressAnimation();
-            
-            // Disable action buttons
-            document.getElementById('viewResultsBtn').disabled = true;
-            document.getElementById('downloadPdfBtn').disabled = true;
-            
-            if (studentClass) {
-                loadStudentNames(studentClass);
-            }
-        }
-        
-        // ============================================
-        // LOADING STATE MANAGEMENT
-        // ============================================
-        function startLoadingProgress() {
-            isStudentsLoading = true;
-            loadingProgress = 0;
-            
-            // Show loading indicators
-            document.getElementById('studentsLoading').style.display = 'block';
-            document.getElementById('progressContainer').style.display = 'block';
-            document.getElementById('studentsLoaded').style.display = 'none';
-            
-            // Start progress animation
-            stopProgressAnimation();
-            loadingInterval = setInterval(() => {
-                if (loadingProgress < 90) {
-                    loadingProgress += Math.random() * 5 + 1; // Random increment
-                    if (loadingProgress > 90) loadingProgress = 90;
-                    updateProgressBar();
-                }
-            }, 300);
-        }
-        
-        function completeLoadingProgress() {
-            loadingProgress = 100;
-            updateProgressBar();
-            
-            // Clear the interval
-            stopProgressAnimation();
-            
-            // Show completion state
-            setTimeout(() => {
-                document.getElementById('studentsLoading').style.display = 'none';
-                document.getElementById('progressContainer').style.display = 'none';
-                document.getElementById('studentsLoaded').style.display = 'block';
-                
-                // Enable search and select
-                document.getElementById('studentSearch').disabled = false;
-                document.getElementById('studentName').disabled = false;
-                
-                isStudentsLoading = false;
-                updateButtonStates();
-            }, 500);
-        }
-        
-        function stopProgressAnimation() {
-            if (loadingInterval) {
-                clearInterval(loadingInterval);
-                loadingInterval = null;
-            }
-        }
-        
-        function updateProgressBar() {
-            const progressFill = document.getElementById('progressFill');
-            const progressText = document.getElementById('progressText');
-            
-            if (progressFill && progressText) {
-                progressFill.style.width = loadingProgress + '%';
-                progressText.textContent = Math.round(loadingProgress) + '%';
-            }
-        }
-        
-        // ============================================
-        // STUDENT DATA
-        // ============================================
-        async function loadStudentNames(studentClass) {
-            console.log('Loading student names for class:', studentClass);
-            
-            // Start loading animation
-            startLoadingProgress();
-            
-            try {
-                const names = await callGAS('getStudentNames', { studentClass: studentClass });
-                console.log('Received names:', names);
-                
-                if (Array.isArray(names) && names.length > 0) {
-                    allStudentNames = names;
-                    populateStudentDropdown(names);
-                    
-                    // Complete loading
-                    setTimeout(() => {
-                        completeLoadingProgress();
-                        showInfo(`Loaded ${names.length} student(s) from ${studentClass}`);
-                    }, 500);
-                } else {
-                    allStudentNames = [];
-                    populateStudentDropdown([]);
-                    
-                    // Complete loading but show warning
-                    setTimeout(() => {
-                        completeLoadingProgress();
-                        showInfo('No students found for this class');
-                    }, 500);
-                }
-                
-            } catch (error) {
-                console.error('Error loading names:', error);
-                
-                // Stop loading animation on error
-                stopProgressAnimation();
-                document.getElementById('studentsLoading').style.display = 'none';
-                document.getElementById('progressContainer').style.display = 'none';
-                
-                // Format error message to be more helpful
-                const formattedError = formatErrorMessage(error.message);
-                showError(formattedError);
-                
-                // Show browser help if it's likely a browser issue
-                if (isLikelyBrowserCompatibilityError(error.message)) {
-                    showBrowserHelp();
-                }
-                
-                // Keep buttons disabled
-                document.getElementById('viewResultsBtn').disabled = true;
-                document.getElementById('downloadPdfBtn').disabled = true;
-                document.getElementById('studentSearch').disabled = true;
-                document.getElementById('studentName').disabled = true;
-            }
-        }
-        
-        function formatErrorMessage(errorMessage) {
-            const errorLower = errorMessage.toLowerCase();
-            
-            // Check for specific browser issues
-            if (errorLower.includes('internet explorer') || 
-                errorLower.includes('outdated') || 
-                errorLower.includes('browser') ||
-                errorLower.includes('chrome') ||
-                errorLower.includes('firefox') ||
-                errorLower.includes('edge') ||
-                errorLower.includes('safari') ||
-                errorLower.includes('compatibility')) {
-                return errorMessage; // Already formatted
-            }
-            
-            // Check for connection issues
-            if (errorLower.includes('failed to connect') || 
-                errorLower.includes('connection') ||
-                errorLower.includes('timeout') ||
-                errorLower.includes('network')) {
-                
-                // Check browser issues first
-                const browserIssues = detectBrowserIssues();
-                if (browserIssues.length > 0) {
-                    return `Connection failed. ${browserIssues[0].message} Please try Chrome, Firefox, Edge, or Safari.`;
-                }
-                
-                return 'Connection failed. This could be due to:\n1. Internet connection issues\n2. Browser security restrictions\n3. Server temporarily unavailable\n\nPlease try again or use a different browser.';
-            }
-            
-            // Generic error
-            return errorMessage;
-        }
-        
-        function populateStudentDropdown(names) {
-            const select = document.getElementById('studentName');
-            
-            // Clear existing options
-            select.innerHTML = '';
-            
-            // Add default option
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.disabled = true;
-            defaultOption.selected = true;
-            defaultOption.textContent = names.length > 0 ? 'Select Student' : 'No students found';
-            select.appendChild(defaultOption);
-            
-            // Add names
-            names.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                select.appendChild(option);
-            });
-        }
-        
-        function handleSearchInput() {
-            const query = document.getElementById('studentSearch').value.toLowerCase().trim();
-            const resultsDiv = document.getElementById('searchResults');
-            
-            if (!query) {
-                resultsDiv.style.display = 'none';
-                return;
-            }
-            
-            const filtered = allStudentNames.filter(name => 
-                name.toLowerCase().includes(query)
-            ).slice(0, 10);
-            
-            if (filtered.length > 0) {
-                resultsDiv.innerHTML = '';
-                filtered.forEach(name => {
-                    const div = document.createElement('div');
-                    div.className = 'search-item';
-                    div.textContent = name;
-                    div.onclick = function() {
-                        document.getElementById('studentName').value = name;
-                        document.getElementById('studentSearch').value = name;
-                        resultsDiv.style.display = 'none';
-                        saveFormData();
-                        updateButtonStates();
-                    };
-                    resultsDiv.appendChild(div);
-                });
-                resultsDiv.style.display = 'block';
-            } else {
-                resultsDiv.innerHTML = '<div class="search-item">No students found</div>';
-                resultsDiv.style.display = 'block';
-            }
-        }
-        
-        // ============================================
-        // BUTTON STATE MANAGEMENT
-        // ============================================
-        function updateButtonStates() {
-            const studentName = document.getElementById('studentName').value;
-            const studentClass = document.getElementById('studentClass').value;
-            const dateOfBirth = document.getElementById('dateOfBirth').value;
-            const isFormValid = studentName && studentClass && dateOfBirth;
-            
-            // Enable/disable buttons based on form validity and loading state
-            const viewResultsBtn = document.getElementById('viewResultsBtn');
-            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
-            
-            // Only enable if form is valid AND students are not loading
-            viewResultsBtn.disabled = !isFormValid || isStudentsLoading;
-            downloadPdfBtn.disabled = !isFormValid || isStudentsLoading;
-        }
-        
-        // ============================================
-        // MAIN ACTIONS
-        // ============================================
-        async function getResults() {
-            // Validate
-            if (!validateForm()) {
-                showError('Please fill in all required fields.');
-                return;
-            }
-            
-            const studentName = document.getElementById('studentName').value.trim();
-            const studentClass = document.getElementById('studentClass').value;
-            const dateOfBirth = document.getElementById('dateOfBirth').value;
-            
-            if (!isValidDate(dateOfBirth)) {
-                showError('Please enter a valid date (YYYY-MM-DD).');
-                return;
-            }
-            
-            clearError();
-            hideBrowserHelp();
-            showLoading('Opening results...');
-            
-            try {
-                // Open results in new tab
-                let resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}`;
-                
-                // Add academic year to the URL if available
-                if (systemConfig && systemConfig.academicYear) {
-                    resultsUrl += `&academicYear=${encodeURIComponent(systemConfig.academicYear)}`;
-                    resultsUrl += `&term=${encodeURIComponent(systemConfig.term || '')}`;
-                }
-                
-                // Open in new tab
-                const newTab = window.open(resultsUrl, '_blank');
-                
-                if (!newTab) {
-                    showError('Please allow pop-ups to view results.');
-                    hideLoading();
-                    return;
-                }
-                
-                newTab.focus();
-                
-                showSuccess('Opening results in new tab...');
-                
-            } catch (error) {
-                console.error('Error:', error);
-                showError('Could not open results. Please try again.');
-            } finally {
-                hideLoading();
-            }
-        }
-        
-        async function downloadResultsAsPDF() {
-            if (!validateForm()) {
-                showError('Please fill in all required fields.');
-                return;
-            }
-            
-            const studentName = document.getElementById('studentName').value.trim();
-            const studentClass = document.getElementById('studentClass').value;
-            const dateOfBirth = document.getElementById('dateOfBirth').value;
-            
-            if (!isValidDate(dateOfBirth)) {
-                showError('Please enter a valid date (YYYY-MM-DD).');
-                return;
-            }
-            
-            clearError();
-            hideBrowserHelp();
-            showLoading('Generating PDF...');
-            console.log('Generating PDF for:', studentName);
-            
-            try {
-                const result = await callGAS('generatePDF', {
-                    studentName: studentName,
-                    studentClass: studentClass,
-                    dateOfBirth: dateOfBirth
-                });
-                
-                console.log('PDF generated, base64 length:', result.length);
-                
-                if (result && result.error) {
-                    throw new Error(result.error);
-                }
-                
-                // Get current academic year for filename
-                const academicYear = systemConfig && systemConfig.academicYear ? 
-                    systemConfig.academicYear.replace(/\s+/g, '_') : 
-                    '2025-2026';
-                
-                // Download PDF
-                downloadPDF(result, `${studentName.replace(/\s+/g, '_')}_${studentClass.replace(/\s+/g, '_')}_${academicYear}_Results.pdf`);
-                
-                showSuccess('PDF downloaded successfully!');
-                
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                
-                // Format error message
-                const formattedError = formatErrorMessage(error.message);
-                showError(formattedError);
-                
-                // Show browser help if it's likely a browser issue
-                if (isLikelyBrowserCompatibilityError(error.message)) {
-                    showBrowserHelp();
-                }
-            } finally {
-                hideLoading();
-            }
-        }
-        
-        // ============================================
-        // BACK TO STUDENT PORTAL FUNCTION
-        // ============================================
-        function goToStudentPortal() {
-            // Redirect to the student portal
-            window.location.href = 'https://lunzusec.github.io/School_results/student-portal.html';
-        }
-        
-        // ============================================
-        // HELPER FUNCTIONS
-        // ============================================
-        function validateForm() {
-            const studentName = document.getElementById('studentName').value;
-            const studentClass = document.getElementById('studentClass').value;
-            const dateOfBirth = document.getElementById('dateOfBirth').value;
-            
-            return studentName && studentClass && dateOfBirth;
-        }
-        
-        function isValidDate(dateString) {
-            const regex = /^\d{4}-\d{2}-\d{2}$/;
-            if (!regex.test(dateString)) return false;
-            
-            const date = new Date(dateString);
-            return date instanceof Date && !isNaN(date);
-        }
-        
-        function showLoading(message) {
-            const loading = document.getElementById('loading');
-            const loadingText = document.getElementById('loadingText');
-            
-            loadingText.textContent = message;
-            loading.style.display = 'block';
-            
-            // Disable form while loading
-            document.getElementById('studentClass').disabled = true;
-            document.getElementById('studentSearch').disabled = true;
-            document.getElementById('studentName').disabled = true;
-            document.getElementById('dateOfBirth').disabled = true;
-            document.getElementById('viewResultsBtn').disabled = true;
-            document.getElementById('downloadPdfBtn').disabled = true;
-        }
-        
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-            
-            // Re-enable form elements (except those that should remain disabled)
-            document.getElementById('studentClass').disabled = false;
-            document.getElementById('dateOfBirth').disabled = false;
-            
-            // Only re-enable search and select if students are loaded
-            if (!isStudentsLoading && allStudentNames.length > 0) {
-                document.getElementById('studentSearch').disabled = false;
-                document.getElementById('studentName').disabled = false;
-            }
-            
-            updateButtonStates();
-        }
-        
-        function showError(message) {
-            const container = document.getElementById('resultsContainer');
-            // Replace newlines with <br> tags for better display
-            const formattedMessage = message.replace(/\n/g, '<br>');
-            container.innerHTML = `
-                <div class="alert alert-error">
-                    <span>❌</span>
-                    <div>
-                        <strong>Error:</strong> ${formattedMessage}
+    <!-- About Section -->
+    <div id="about-section" class="section-content pt-5">
+      <h2 class="section-title">About Our School</h2>
+      <div class="row justify-content-center">
+        <div class="col-lg-10">
+          <div class="card card-custom">
+            <div class="card-body p-5">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <h3 class="mb-4">A Legacy of Excellence Since 1985</h3>
+                  <p class="lead mb-4">
+                    Lunzu Secondary School is a distinguished government-run institution serving both boys and girls in Blantyre Rural. Established in 1985, our school has built a strong reputation for academic excellence and holistic development.
+                  </p>
+                  <div class="row mb-4">
+                    <div class="col-6">
+                      <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-graduation-cap text-primary me-3 fa-lg"></i>
+                        <div>
+                          <h5 class="mb-0">Academic Excellence</h5>
+                          <small>Consistent top performance</small>
+                        </div>
+                      </div>
                     </div>
+                    <div class="col-6">
+                      <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-users text-primary me-3 fa-lg"></i>
+                        <div>
+                          <h5 class="mb-0">Inclusive Education</h5>
+                          <small>Co-educational environment</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p>
+                    We take pride in preparing students for higher education and professional careers, with numerous alumni successfully transitioning to colleges and universities nationwide.
+                  </p>
                 </div>
-            `;
-        }
-        
-        function showSuccess(message) {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = `
-                <div class="alert alert-success">
-                    <span>✅</span>
-                    <div>${message}</div>
+                <div class="col-md-4 text-center">
+                  <div class="feature-icon mb-4">
+                    <i class="fas fa-university"></i>
+                  </div>
+                  <h4>Established 1985</h4>
+                  <p class="text-muted">Over 35 years of educational excellence</p>
                 </div>
-            `;
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                if (container.innerHTML.includes('alert-success')) {
-                    container.innerHTML = '';
-                }
-            }, 3000);
-        }
-        
-        function showInfo(message) {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = `
-                <div class="alert alert-info">
-                    <span>ℹ️</span>
-                    <div>${message}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <div id="features-section" class="section-content pt-5">
+      <h2 class="section-title">System Features</h2>
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="card card-custom text-center h-100">
+            <div class="card-custom-header">
+              <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <h4 class="mt-3">Performance Tracking</h4>
+            </div>
+            <div class="card-body">
+              <p class="card-text">Comprehensive monitoring and analysis of student performance across all subjects with detailed progress reports and analytics.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card card-custom text-center h-100">
+            <div class="card-custom-header">
+              <div class="feature-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <h4 class="mt-3">User Management</h4>
+            </div>
+            <div class="card-body">
+              <p class="card-text">Secure role-based access for Teachers, Students, Parents, and Administrators with appropriate permissions and controls.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card card-custom text-center h-100">
+            <div class="card-custom-header">
+              <div class="feature-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <h4 class="mt-3">Report Generation</h4>
+            </div>
+            <div class="card-body">
+              <p class="card-text">Generate professional PDF reports for academic progress, attendance, and performance analysis with automated formatting.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Portals Section -->
+    <div id="portals-section" class="section-content">
+      <div class="portal-section">
+        <div class="container text-center">
+          <h2 class="portal-title section-title mb-4">Access Your Portal</h2>
+          <p class="portal-subtitle lead mb-5">Select your role to access the appropriate portal</p>
+          <div class="portal-buttons-container">
+            <div class="d-flex flex-wrap justify-content-center">
+              <a href="teachers-portal.html" class="btn btn-portal teacher mx-3">
+                <i class="fas fa-chalkboard-teacher me-2"></i> Teachers Portal
+              </a>
+              <a href="student-portal.html" class="btn btn-portal student mx-3">
+                <i class="fas fa-user-graduate me-2"></i> Students Portal
+              </a>
+            </div>
+          </div>
+          <p class="portal-security-note mt-4">
+            <i class="fas fa-shield-alt me-2"></i>Secure login required for all portal access
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Testimonials Section -->
+    <div id="testimonials-section" class="section-content pt-5">
+      <h2 class="section-title">What Our Community Says</h2>
+      <div class="row">
+        <div class="col-lg-6 mb-4">
+          <div class="testimonial-card">
+            <div class="testimonial-text">
+              "Lunzu Secondary School's RMS has revolutionized the way we track student performance. It's intuitive, efficient, and saves valuable time for teachers."
+            </div>
+            <div class="d-flex align-items-center mt-4">
+              <div>
+                <h5 class="mb-1">Mr. D. Basikolo</h5>
+                <p class="text-muted mb-0">Senior Teacher</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+          <div class="testimonial-card">
+            <div class="testimonial-text">
+              "The ability to view my child's progress and fee balance online has made parental involvement much easier. It's a transparent system that builds trust."
+            </div>
+            <div class="d-flex align-items-center mt-4">
+              <div>
+                <h5 class="mb-1">Mrs. A. Banda</h5>
+                <p class="text-muted mb-0">Parent</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+          <div class="testimonial-card">
+            <div class="testimonial-text">
+              "This system reflects the modern standards we aspire to. It's wonderful to see Lunzu Secondary School embracing digital innovation in education."
+            </div>
+            <div class="d-flex align-items-center mt-4">
+              <div>
+                <h5 class="mb-1">Mr. P. Madziakapita</h5>
+                <p class="text-muted mb-0">Parent & Education Advocate</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+          <div class="testimonial-card">
+            <div class="testimonial-text">
+              "The system has significantly reduced administrative workload and improved communication between school and parents. A game-changer for modern education."
+            </div>
+            <div class="d-flex align-items-center mt-4">
+              <div>
+                <h5 class="mb-1">Mr. M. Kamndaya</h5>
+                <p class="text-muted mb-0">Headteacher</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Section -->
+    <div id="contact-section" class="section-content pt-5">
+      <h2 class="section-title">Contact Us</h2>
+      <div class="contact-info">
+        <div class="row">
+          <div class="col-lg-6 mb-4">
+            <h4 class="mb-4"><i class="fas fa-map-marker-alt text-primary me-2"></i>School Location</h4>
+            <div class="mb-4">
+              <h5>Lunzu Secondary School</h5>
+              <p class="mb-1">Private Bag 130, Lunzu</p>
+              <p class="mb-1">Blantyre, Malawi</p>
+            </div>
+            <div class="bg-light p-4 rounded">
+              <p class="mb-3"><i class="fas fa-info-circle text-primary me-2"></i>For detailed location information:</p>
+              <a href="https://maps.app.goo.gl/hyxMqeQ5Jd4EqPBPA" class="btn btn-custom" target="_blank">
+                <i class="fas fa-map-marked-alt me-2"></i>View on Google Maps
+              </a>
+            </div>
+          </div>
+          <div class="col-lg-6 mb-4">
+            <h4 class="mb-4"><i class="fas fa-address-book text-primary me-2"></i>Contact Information</h4>
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-3">
+                <i class="fas fa-envelope text-primary me-3 fa-lg"></i>
+                <div>
+                  <h6 class="mb-0">Email Address</h6>
+                  <a href="mailto:mayeso.kamndaya@gmail.com" class="text-decoration-none">mayeso.kamndaya@gmail.com</a>
                 </div>
-            `;
-        }
-        
-        function clearError() {
-            document.getElementById('resultsContainer').innerHTML = '';
-        }
-        
-        function downloadPDF(base64Data, fileName) {
-            try {
-                if (!base64Data) {
-                    throw new Error('No PDF data received');
-                }
-                
-                console.log('Starting PDF download, data length:', base64Data.length);
-                
-                // Check for required browser features
-                if (typeof atob === 'undefined' || typeof Uint8Array === 'undefined' || 
-                    typeof Blob === 'undefined' || typeof URL === 'undefined') {
-                    throw new Error('Your browser does not support PDF download. Please use Chrome, Firefox, Edge, or Safari.');
-                }
-                
-                // Convert base64 to bytes
-                const byteCharacters = atob(base64Data);
-                const byteNumbers = new Array(byteCharacters.length);
-                
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: 'application/pdf' });
-                
-                // Create download link
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = fileName;
-                link.style.display = 'none';
-                
-                // Trigger download
-                document.body.appendChild(link);
-                link.click();
-                
-                // Clean up
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                }, 100);
-                
-            } catch (error) {
-                console.error('Download error:', error);
-                throw new Error('Failed to download PDF: ' + error.message);
-            }
-        }
-        
-        // ============================================
-        // DATA PERSISTENCE
-        // ============================================
-        function saveFormData() {
-            try {
-                const data = {
-                    studentClass: document.getElementById('studentClass').value,
-                    studentName: document.getElementById('studentName').value,
-                    dateOfBirth: document.getElementById('dateOfBirth').value
-                };
-                
-                localStorage.setItem('lunzu_form_data', JSON.stringify(data));
-                
-                // Update button states whenever form data changes
-                updateButtonStates();
-            } catch (e) {
-                console.error('Error saving form data:', e);
-            }
-        }
-        
-        function loadFormData() {
-            try {
-                const saved = localStorage.getItem('lunzu_form_data');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    if (data.studentClass) {
-                        document.getElementById('studentClass').value = data.studentClass;
-                        
-                        // Trigger class change to load students
-                        setTimeout(() => {
-                            handleClassChange();
-                            
-                            // Set other values after students are loaded
-                            setTimeout(() => {
-                                if (data.studentName) {
-                                    document.getElementById('studentName').value = data.studentName;
-                                }
-                                if (data.dateOfBirth) {
-                                    document.getElementById('dateOfBirth').value = data.dateOfBirth;
-                                }
-                                updateButtonStates();
-                            }, 1500);
-                        }, 100);
-                    }
-                }
-            } catch (e) {
-                console.error('Error loading form data:', e);
-            }
-        }
-        
-        // ============================================
-        // TEST FUNCTIONS
-        // ============================================
-        async function testAPIConnection() {
-            try {
-                console.log('Testing API connection...');
-                const result = await callGAS('test', {});
-                console.log('API test successful:', result);
-                document.getElementById('apiStatus').innerHTML = '✅ Connected to Lunzu Secondary School Server';
-                document.getElementById('apiStatus').style.color = '#38a169';
-            } catch (error) {
-                console.error('API test failed:', error);
-                
-                // Format error message
-                const formattedError = formatErrorMessage(error.message);
-                document.getElementById('apiStatus').innerHTML = '❌ ' + formattedError;
-                document.getElementById('apiStatus').style.color = '#e53e3e';
-                
-                // Show browser help if needed
-                if (isLikelyBrowserCompatibilityError(error.message)) {
-                    setTimeout(() => {
-                        showBrowserHelp();
-                    }, 500);
-                }
-            }
-        }
-        
-        // ============================================
-        // EVENT LISTENERS FOR BUTTON STATES
-        // ============================================
-        // Update button states when form fields change
-        document.getElementById('studentName').addEventListener('change', updateButtonStates);
-        document.getElementById('dateOfBirth').addEventListener('change', updateButtonStates);
-        document.getElementById('studentSearch').addEventListener('input', updateButtonStates);
-    </script>
+              </div>
+              <div class="d-flex align-items-center mb-3">
+                <i class="fas fa-phone text-primary me-3 fa-lg"></i>
+                <div>
+                  <h6 class="mb-0">Phone Number</h6>
+                  <a href="tel:+265884454660" class="text-decoration-none">0884454660</a>
+                </div>
+              </div>
+              <div class="d-flex align-items-center mb-3">
+                <i class="fab fa-whatsapp text-success me-3 fa-lg"></i>
+                <div>
+                  <h6 class="mb-0">WhatsApp</h6>
+                  <a href="https://wa.me/265999746675" class="text-decoration-none" target="_blank">0999746675</a>
+                </div>
+              </div>
+            </div>
+            <div class="bg-light p-4 rounded">
+              <h5><i class="fas fa-life-ring text-primary me-2"></i>Technical Support</h5>
+              <p class="mb-2">For technical issues with the portal system:</p>
+              <a href="https://wa.me/265888866269" class="btn btn-outline-primary" target="_blank">
+                <i class="fab fa-whatsapp me-2"></i>Contact Developer
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-8 text-center text-lg-start mb-4 mb-lg-0">
+          <h3 class="mb-3"><i class="fas fa-school me-2"></i>Lunzu Secondary School</h3>
+          <p class="mb-0">Committed to providing quality education and fostering academic excellence since 1985.</p>
+        </div>
+        <div class="col-lg-4 text-center text-lg-end">
+          <p class="mb-2">&copy; <span id="current-year"></span> Lunzu Secondary School</p>
+          <p class="mb-0">All rights reserved</p>
+        </div>
+      </div>
+      <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+      <div class="row">
+        <div class="col-md-6 text-center text-md-start">
+          <p class="mb-0">
+            <i class="fas fa-certificate me-2"></i>Registered Government Secondary School
+          </p>
+        </div>
+        <div class="col-md-6 text-center text-md-end footer-links">
+          <a href="#" onclick="showSection('contact')" class="me-3">Contact</a>
+          <a href="#" onclick="showSection('about')" class="me-3">About</a>
+          <a href="#" onclick="showSection('portals')">Portals</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Custom JavaScript -->
+  <script>
+    // Set current year in footer
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+    
+    // Section navigation function
+    function showSection(sectionId) {
+      // Hide all sections
+      document.querySelectorAll('.section-content, .hero-section').forEach(section => {
+        section.classList.remove('active-section');
+      });
+      
+      // Show selected section
+      const targetSection = document.getElementById(sectionId + '-section');
+      targetSection.classList.add('active-section');
+      
+      // Scroll to section
+      setTimeout(() => {
+        targetSection.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 50);
+      
+      // Update active nav link
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+      });
+      event.target.classList.add('active');
+    }
+    
+    // Initialize with home section
+    window.addEventListener('DOMContentLoaded', () => {
+      showSection('home');
+    });
+    
+    // Add smooth scrolling to all links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+      });
+    });
+  </script>
 </body>
 </html>
