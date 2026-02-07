@@ -27,7 +27,7 @@
       --dark-bg: #343a40;
       --success-color: #28a745;
       --warning-color: #ffc107;
-      --portal-bg: #1a3a5f;
+      --portal-bg: #0d2846;
     }
     
     * {
@@ -37,6 +37,10 @@
     h1, h2, h3, h4, h5, h6, .navbar-brand {
       font-family: 'Poppins', sans-serif;
       font-weight: 600;
+    }
+    
+    body {
+      padding-top: 76px;
     }
     
     .navbar-custom {
@@ -146,17 +150,19 @@
       min-width: 250px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      font-weight: 600;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.2);
     }
     
     .btn-portal:hover {
       transform: translateY(-5px) scale(1.05);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.4);
     }
     
     .btn-portal.teacher {
-      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
     }
     
     .btn-portal.student {
@@ -210,7 +216,7 @@
     }
     
     .portal-section {
-      background: linear-gradient(135deg, var(--portal-bg) 0%, #0d2846 100%);
+      background: linear-gradient(135deg, var(--portal-bg) 0%, #091c33 100%);
       padding: 80px 0;
       border-radius: 20px;
       margin: 60px 0;
@@ -228,23 +234,40 @@
       background: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10-10-4.477-10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10-10-4.477-10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
     
+    /* IMPROVED TEXT VISIBILITY FOR PORTAL SECTION */
     .portal-title {
       color: #ffffff !important;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
       position: relative;
       z-index: 2;
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
     
     .portal-subtitle {
-      color: rgba(255, 255, 255, 0.95) !important;
+      color: #ffffff !important;
+      opacity: 0.95 !important;
       position: relative;
       z-index: 2;
+      font-size: 1.3rem;
+      font-weight: 500;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
     
     .portal-security-note {
-      color: rgba(255, 255, 255, 0.9) !important;
+      color: #ffffff !important;
+      opacity: 0.9 !important;
       position: relative;
       z-index: 2;
+      font-size: 1.1rem;
+      font-weight: 500;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px 20px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-top: 20px;
     }
     
     .contact-info {
@@ -318,19 +341,35 @@
       z-index: 2;
     }
     
-    /* Portal button hover effects */
+    /* Enhanced portal button hover effects */
     .btn-portal.teacher:hover {
-      background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
-      box-shadow: 0 12px 30px rgba(231, 76, 60, 0.3);
+      background: linear-gradient(135deg, #ff8a80 0%, #ff6b6b 100%);
+      box-shadow: 0 12px 30px rgba(231, 76, 60, 0.5);
     }
     
     .btn-portal.student:hover {
       background: linear-gradient(135deg, #3ae374 0%, #2ecc71 100%);
-      box-shadow: 0 12px 30px rgba(46, 204, 113, 0.3);
+      box-shadow: 0 12px 30px rgba(46, 204, 113, 0.5);
+    }
+    
+    /* Portal glow effect */
+    .portal-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+      z-index: 1;
     }
     
     /* Responsive Design */
     @media (max-width: 768px) {
+      body {
+        padding-top: 66px;
+      }
+      
       .hero-title {
         font-size: 2.5rem;
       }
@@ -345,8 +384,8 @@
       
       .btn-portal {
         min-width: 200px;
-        padding: 15px 30px;
-        margin: 10px 5px;
+        padding: 18px 30px;
+        margin: 12px 5px;
         display: block;
         width: 100%;
         max-width: 300px;
@@ -362,6 +401,14 @@
         padding: 50px 0;
         margin: 40px 0;
       }
+      
+      .portal-title {
+        font-size: 2.2rem;
+      }
+      
+      .portal-subtitle {
+        font-size: 1.1rem;
+      }
     }
     
     @media (max-width: 576px) {
@@ -373,6 +420,8 @@
         display: block;
         width: 100%;
         margin: 10px 0;
+        padding: 16px 25px;
+        font-size: 1.1rem;
       }
       
       .portal-title {
@@ -380,7 +429,12 @@
       }
       
       .portal-subtitle {
-        font-size: 1.1rem;
+        font-size: 1rem;
+      }
+      
+      .portal-security-note {
+        font-size: 0.95rem;
+        padding: 8px 15px;
       }
     }
   </style>
@@ -554,9 +608,10 @@
       </div>
     </div>
 
-    <!-- Portals Section -->
+    <!-- Portals Section - IMPROVED VISIBILITY -->
     <div id="portals-section" class="section-content">
       <div class="portal-section">
+        <div class="portal-glow"></div>
         <div class="container text-center">
           <h2 class="portal-title section-title mb-4">Access Your Portal</h2>
           <p class="portal-subtitle lead mb-5">Select your role to access the appropriate portal</p>
@@ -702,8 +757,13 @@
           <p class="mb-0">Committed to providing quality education and fostering academic excellence since 1985.</p>
         </div>
         <div class="col-lg-4 text-center text-lg-end">
-          <p class="mb-2">&copy; <span id="current-year"></span> Lunzu Secondary School</p>
-          <p class="mb-0">All rights reserved</p>
+          <div class="d-flex justify-content-center justify-content-lg-end align-items-center">
+            <div class="text-end me-3">
+              <div id="temperature" class="fs-5">27°C</div>
+              <div id="time" class="fs-6">3:38 PM</div>
+            </div>
+            <div id="date" class="fs-5">02/07/2026</div>
+          </div>
         </div>
       </div>
       <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
@@ -729,6 +789,23 @@
   <script>
     // Set current year in footer
     document.getElementById('current-year').textContent = new Date().getFullYear();
+    
+    // Update time, date, and temperature
+    function updateDateTime() {
+      const now = new Date();
+      
+      // Format time
+      const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+      document.getElementById('time').textContent = now.toLocaleTimeString('en-US', timeOptions);
+      
+      // Format date
+      const dateOptions = { month: '2-digit', day: '2-digit', year: 'numeric' };
+      document.getElementById('date').textContent = now.toLocaleDateString('en-US', dateOptions);
+    }
+    
+    // Initial call and update every minute
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
     
     // Section navigation function
     function showSection(sectionId) {
