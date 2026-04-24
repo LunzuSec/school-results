@@ -274,15 +274,6 @@
             border-left: 4px solid #ed8936;
         }
         
-        .browser-help {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            display: none;
-        }
-        
         .footer {
             text-align: center;
             padding: 20px;
@@ -493,6 +484,10 @@
                 await loadAvailableTerms();
                 await testAPIConnection();
                 setupForm();
+                
+                // Clear any saved class data on refresh
+                clearSavedClassData();
+                
                 showInitialLoading(false);
             } catch (error) {
                 console.error('Initialization error:', error);
@@ -500,6 +495,18 @@
                 showError('Failed to initialize: ' + error.message);
             }
         };
+        
+        function clearSavedClassData() {
+            // Clear saved class from localStorage
+            localStorage.removeItem('lunzu_selected_class');
+            
+            // Reset class dropdown to default
+            const classSelect = document.getElementById('studentClass');
+            classSelect.value = '';
+            
+            // Reset student-related fields
+            resetStudentFields();
+        }
         
         function showInitialLoading(show, message = 'Loading...') {
             const overlay = document.getElementById('initialLoading');
@@ -575,6 +582,7 @@
                 document.getElementById('academicHeader').textContent = 
                     `${activeTerm.academicYear} ${activeTerm.term} RESULTS`;
                 currentTermKey = activeTerm.key;
+                console.log('Default term loaded:', activeTerm.display);
             }
             
             termSelect.disabled = false;
@@ -595,16 +603,15 @@
                 
                 // Reset student-related fields when term changes
                 resetStudentFields();
-                
-                // Reload students if class is selected
-                const studentClass = document.getElementById('studentClass').value;
-                if (studentClass && studentClass !== "") {
-                    loadStudentNames(studentClass, selectedTerm.key);
-                }
             }
         }
         
         function resetStudentFields() {
+            // Reset class dropdown to default "Select Class"
+            const classSelect = document.getElementById('studentClass');
+            classSelect.value = '';
+            
+            // Reset student search and name fields
             document.getElementById('studentSearch').value = '';
             document.getElementById('studentSearch').disabled = true;
             document.getElementById('studentName').innerHTML = '<option value="" disabled selected>-- Select Class First --</option>';
@@ -648,7 +655,7 @@
                         if (script.parentNode) script.parentNode.removeChild(script);
                         reject(new Error('Request timeout'));
                     }
-                }, 10000); // 10 second timeout for faster response
+                }, 10000);
                 
                 window[callbackName] = function(response) {
                     clearTimeout(timeoutId);
@@ -677,7 +684,10 @@
         // FORM HANDLING
         // ============================================
         function setupForm() {
-            document.getElementById('studentClass').addEventListener('change', saveFormData);
+            document.getElementById('studentClass').addEventListener('change', () => {
+                saveFormData();
+                handleClassChange();
+            });
             document.getElementById('studentName').addEventListener('change', () => {
                 saveFormData();
                 updateButtonStates();
@@ -695,13 +705,39 @@
                 }
             });
             
-            loadFormData();
+            // Only load saved term, NOT class
+            loadSavedTermOnly();
+        }
+        
+        function loadSavedTermOnly() {
+            try {
+                const saved = localStorage.getItem('lunzu_form_data');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    // Only restore term selection, not class
+                    if (data.term && availableTerms.length > 0) {
+                        const termExists = availableTerms.some(t => t.key === data.term);
+                        if (termExists) {
+                            document.getElementById('termSelect').value = data.term;
+                            // Trigger term change to update header but don't load students
+                            const selectedTerm = availableTerms.find(t => t.key === data.term);
+                            if (selectedTerm) {
+                                currentTermKey = selectedTerm.key;
+                                document.getElementById('academicHeader').textContent = 
+                                    `${selectedTerm.academicYear} ${selectedTerm.term} RESULTS`;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading saved term:', e);
+            }
         }
         
         async function handleClassChange() {
             const studentClass = document.getElementById('studentClass').value;
             
-            // Reset student fields
+            // Always reset student fields when class changes
             document.getElementById('studentName').innerHTML = '<option value="" disabled selected>-- Select Class First --</option>';
             document.getElementById('studentName').disabled = true;
             document.getElementById('studentSearch').disabled = true;
@@ -862,7 +898,8 @@
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             const term = document.getElementById('termSelect').value;
-            const isFormValid = studentName && studentClass && dateOfBirth && term && studentName !== "" && studentClass !== "" && dateOfBirth !== "";
+            const isFormValid = studentName && studentClass && dateOfBirth && term && 
+                                studentName !== "" && studentClass !== "" && dateOfBirth !== "";
             
             document.getElementById('viewResultsBtn').disabled = !isFormValid || isLoadingStudents;
             document.getElementById('downloadPdfBtn').disabled = !isFormValid || isLoadingStudents;
@@ -1071,39 +1108,6 @@
                 updateButtonStates();
             } catch (e) {
                 console.error('Error saving form data:', e);
-            }
-        }
-        
-        function loadFormData() {
-            try {
-                const saved = localStorage.getItem('lunzu_form_data');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    if (data.term && availableTerms.length > 0) {
-                        const termExists = availableTerms.some(t => t.key === data.term);
-                        if (termExists) {
-                            document.getElementById('termSelect').value = data.term;
-                            handleTermChange();
-                        }
-                    }
-                    if (data.studentClass) {
-                        document.getElementById('studentClass').value = data.studentClass;
-                        setTimeout(() => {
-                            handleClassChange();
-                            setTimeout(() => {
-                                if (data.studentName && allStudentNames.includes(data.studentName)) {
-                                    document.getElementById('studentName').value = data.studentName;
-                                }
-                                if (data.dateOfBirth) {
-                                    document.getElementById('dateOfBirth').value = data.dateOfBirth;
-                                }
-                                updateButtonStates();
-                            }, 1000);
-                        }, 500);
-                    }
-                }
-            } catch (e) {
-                console.error('Error loading form data:', e);
             }
         }
         
