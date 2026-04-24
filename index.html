@@ -362,6 +362,34 @@
             font-weight: 600;
         }
         
+        /* Initial loading overlay */
+        .initial-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            color: white;
+        }
+        
+        .initial-loading .spinner {
+            width: 60px;
+            height: 60px;
+            border-color: rgba(255,255,255,0.3);
+            border-top-color: #ffd700;
+        }
+        
+        .initial-loading p {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        
         @media (max-width: 600px) {
             body { padding: 10px; }
             .container { border-radius: 10px; }
@@ -376,6 +404,12 @@
     </style>
 </head>
 <body>
+    <!-- Initial Loading Overlay -->
+    <div id="initialLoading" class="initial-loading">
+        <div class="spinner"></div>
+        <p id="initialLoadingText">Loading system configuration...</p>
+    </div>
+    
     <div class="container">
         <div class="header">
             <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" 
@@ -387,12 +421,12 @@
         </div>
         
         <div class="content">
-            <!-- Term Selection (NEW) -->
+            <!-- Term Selection -->
             <div class="form-group">
                 <label for="termSelect">
                     <span class="required-star">*</span> Select Term:
                 </label>
-                <select id="termSelect" required onchange="handleTermChange()">
+                <select id="termSelect" required onchange="handleTermChange()" disabled>
                     <option value="" disabled selected>Loading terms...</option>
                 </select>
                 <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
@@ -420,7 +454,7 @@
                     <label for="studentClass">
                         <span class="required-star">*</span> Class:
                     </label>
-                    <select id="studentClass" required onchange="handleClassChange()">
+                    <select id="studentClass" required onchange="handleClassChange()" disabled>
                         <option value="" disabled selected>Select Class</option>
                         <option value="Form 1">Form 1</option>
                         <option value="Form 2">Form 2</option>
@@ -435,7 +469,7 @@
                 
                 <div id="studentsLoading" class="students-loading">
                     <div class="spinner" style="width: 20px; height: 20px; margin: 0 auto 10px;"></div>
-                    <span>Loading student list...</span>
+                    <span id="studentsLoadingText">Loading student list...</span>
                 </div>
                 
                 <div id="progressContainer" class="progress-container">
@@ -479,7 +513,7 @@
                     <label for="dateOfBirth">
                         <span class="required-star">*</span> Date of Birth:
                     </label>
-                    <input type="date" id="dateOfBirth" required>
+                    <input type="date" id="dateOfBirth" required disabled>
                     <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
                         Format: YYYY-MM-DD (e.g., 2010-05-15)
                     </small>
@@ -510,19 +544,19 @@
                 <p style="margin-bottom: 10px; font-size: 14px; color: #4a5568;">If you're experiencing connection issues, try one of these updated browsers:</p>
                 <div class="browser-list">
                     <div class="browser-item">
-                        <div class="browser-icon chrome">C</div>
+                        <div class="browser-icon chrome">Chrome</div>
                         <div>Google Chrome</div>
                     </div>
                     <div class="browser-item">
-                        <div class="browser-icon firefox">F</div>
+                        <div class="browser-icon firefox">Firefox</div>
                         <div>Mozilla Firefox</div>
                     </div>
                     <div class="browser-item">
-                        <div class="browser-icon edge">E</div>
+                        <div class="browser-icon edge">Edge</div>
                         <div>Microsoft Edge</div>
                     </div>
                     <div class="browser-item">
-                        <div class="browser-icon safari">S</div>
+                        <div class="browser-icon safari">Safari</div>
                         <div>Apple Safari</div>
                     </div>
                 </div>
@@ -557,98 +591,68 @@
         let loadingInterval;
         let availableTerms = [];
         let currentTermKey = null;
-        
-        // ============================================
-        // BROWSER DETECTION
-        // ============================================
-        function detectBrowserIssues() {
-            const userAgent = navigator.userAgent;
-            const issues = [];
-            
-            if (userAgent.indexOf('MSIE') !== -1 || userAgent.indexOf('Trident/') !== -1) {
-                issues.push({
-                    type: 'browser',
-                    message: 'Internet Explorer is not supported. Please use Chrome, Firefox, Edge, or Safari.',
-                    severity: 'high'
-                });
-            }
-            
-            if (userAgent.indexOf('Edge/') !== -1) {
-                const edgeVersion = userAgent.match(/Edge\/(\d+)/);
-                if (edgeVersion && parseInt(edgeVersion[1]) < 79) {
-                    issues.push({
-                        type: 'browser',
-                        message: 'Your Microsoft Edge browser is outdated. Please update to the latest version.',
-                        severity: 'high'
-                    });
-                }
-            }
-            
-            const requiredFeatures = ['Promise', 'fetch', 'URLSearchParams', 'localStorage', 'Blob', 'Uint8Array'];
-            const missingFeatures = requiredFeatures.filter(feature => typeof window[feature] === 'undefined');
-            
-            if (missingFeatures.length > 0) {
-                issues.push({
-                    type: 'features',
-                    message: `Your browser is missing required features. Please update your browser.`,
-                    severity: 'high'
-                });
-            }
-            
-            try {
-                localStorage.setItem('test', 'test');
-                localStorage.removeItem('test');
-            } catch (e) {
-                issues.push({
-                    type: 'storage',
-                    message: 'Local storage appears to be disabled. Please enable cookies.',
-                    severity: 'medium'
-                });
-            }
-            
-            return issues;
-        }
-        
-        function isLikelyBrowserCompatibilityError(errorMessage) {
-            const errorLower = errorMessage.toLowerCase();
-            const browserKeywords = [
-                'access-control', 'cross-origin', 'cors', 'security',
-                'same-origin', 'origin', 'script error', 'jsonp', 'callback'
-            ];
-            return browserKeywords.some(keyword => errorLower.includes(keyword));
-        }
-        
-        function showBrowserHelp() {
-            document.getElementById('browserHelp').style.display = 'block';
-        }
-        
-        function hideBrowserHelp() {
-            document.getElementById('browserHelp').style.display = 'none';
-        }
+        let isInitialized = false;
         
         // ============================================
         // INITIALIZATION
         // ============================================
-        window.onload = function() {
+        window.onload = async function() {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
+            // Show initial loading
+            showInitialLoading(true, "Loading system configuration...");
+            
+            // Check browser compatibility
             const browserIssues = detectBrowserIssues();
             if (browserIssues.length > 0) {
-                const criticalIssue = browserIssues.find(issue => issue.severity === 'critical') || 
-                                     browserIssues.find(issue => issue.severity === 'high') || 
-                                     browserIssues[0];
-                
+                const criticalIssue = browserIssues[0];
                 document.getElementById('apiStatus').innerHTML = `⚠️ ${criticalIssue.message}`;
                 document.getElementById('apiStatus').style.color = '#e53e3e';
                 showBrowserHelp();
                 disableAllInputs();
+                showInitialLoading(false);
                 return;
             }
             
-            loadAvailableTerms();
-            testAPIConnection();
-            setupForm();
+            try {
+                // Load terms first
+                showInitialLoading(true, "Loading available terms...");
+                await loadAvailableTerms();
+                
+                // Test API connection
+                showInitialLoading(true, "Testing connection...");
+                await testAPIConnection();
+                
+                // Setup form
+                setupForm();
+                
+                // Auto-select default class if saved or first class
+                autoSelectDefaultClass();
+                
+                showInitialLoading(false);
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showInitialLoading(false);
+                showError('Failed to initialize: ' + error.message);
+            }
         };
+        
+        function showInitialLoading(show, message = 'Loading...') {
+            const overlay = document.getElementById('initialLoading');
+            const textEl = document.getElementById('initialLoadingText');
+            if (show) {
+                if (textEl) textEl.textContent = message;
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+        
+        function updateInitialLoadingMessage(message) {
+            const textEl = document.getElementById('initialLoadingText');
+            if (textEl) textEl.textContent = message;
+        }
         
         function disableAllInputs() {
             document.getElementById('termSelect').disabled = true;
@@ -660,32 +664,65 @@
             document.getElementById('downloadPdfBtn').disabled = true;
         }
         
+        function enableFormInputs() {
+            document.getElementById('termSelect').disabled = false;
+            document.getElementById('studentClass').disabled = false;
+            document.getElementById('dateOfBirth').disabled = false;
+            // Student search/name enabled after class selection
+        }
+        
+        function detectBrowserIssues() {
+            const userAgent = navigator.userAgent;
+            const issues = [];
+            
+            if (userAgent.indexOf('MSIE') !== -1 || userAgent.indexOf('Trident/') !== -1) {
+                issues.push('Internet Explorer is not supported. Please use Chrome, Firefox, Edge, or Safari.');
+            }
+            
+            if (userAgent.indexOf('Edge/') !== -1) {
+                const edgeVersion = userAgent.match(/Edge\/(\d+)/);
+                if (edgeVersion && parseInt(edgeVersion[1]) < 79) {
+                    issues.push('Your Microsoft Edge browser is outdated. Please update to the latest version.');
+                }
+            }
+            
+            return issues;
+        }
+        
+        function showBrowserHelp() {
+            document.getElementById('browserHelp').style.display = 'block';
+        }
+        
+        function hideBrowserHelp() {
+            document.getElementById('browserHelp').style.display = 'none';
+        }
+        
         // ============================================
         // TERM MANAGEMENT
         // ============================================
         async function loadAvailableTerms() {
-            try {
-                console.log('Loading available terms...');
-                const terms = await callGAS('getAvailableTerms', {});
-                
-                if (terms && Array.isArray(terms) && terms.length > 0) {
-                    availableTerms = terms;
-                    populateTermDropdown(terms);
-                    console.log('Terms loaded:', terms);
-                } else {
-                    console.error('No terms received');
-                    document.getElementById('apiStatus').innerHTML = '❌ Failed to load terms';
+            return new Promise(async (resolve, reject) => {
+                try {
+                    console.log('Loading available terms...');
+                    updateInitialLoadingMessage('Loading available terms...');
+                    
+                    const terms = await callGAS('getAvailableTerms', {});
+                    
+                    if (terms && Array.isArray(terms) && terms.length > 0) {
+                        availableTerms = terms;
+                        populateTermDropdown(terms);
+                        console.log('Terms loaded:', terms.length);
+                        resolve(terms);
+                    } else {
+                        reject(new Error('No terms received from server'));
+                    }
+                } catch (error) {
+                    console.error('Error loading terms:', error);
+                    document.getElementById('apiStatus').innerHTML = '❌ Error loading terms';
                     document.getElementById('apiStatus').style.color = '#e53e3e';
+                    reject(error);
                 }
-            } catch (error) {
-                console.error('Error loading terms:', error);
-                document.getElementById('apiStatus').innerHTML = '❌ Error loading terms: ' + error.message;
-                document.getElementById('apiStatus').style.color = '#e53e3e';
-                
-                if (isLikelyBrowserCompatibilityError(error.message)) {
-                    showBrowserHelp();
-                }
-            }
+            });
         }
         
         function populateTermDropdown(terms) {
@@ -702,6 +739,7 @@
             });
             
             // Create optgroups
+            let activeTermFound = false;
             for (const [year, yearTerms] of Object.entries(grouped)) {
                 const optgroup = document.createElement('optgroup');
                 optgroup.label = year;
@@ -715,6 +753,7 @@
                         currentTermKey = term.key;
                         option.style.fontWeight = 'bold';
                         option.style.backgroundColor = '#e8f5e9';
+                        activeTermFound = true;
                     }
                     optgroup.appendChild(option);
                 });
@@ -722,18 +761,20 @@
                 termSelect.appendChild(optgroup);
             }
             
-            // Update header with default term info
+            // Update header with active term
             const activeTerm = terms.find(t => t.isActive);
             if (activeTerm) {
                 document.getElementById('academicHeader').textContent = 
                     `${activeTerm.academicYear} ${activeTerm.term} RESULTS`;
                 currentTermKey = activeTerm.key;
+                console.log('Active term set to:', activeTerm.display);
             }
+            
+            termSelect.disabled = false;
         }
         
         function handleTermChange() {
             const termSelect = document.getElementById('termSelect');
-            const selectedOption = termSelect.options[termSelect.selectedIndex];
             const selectedTerm = availableTerms.find(t => t.key === termSelect.value);
             
             if (selectedTerm) {
@@ -760,7 +801,6 @@
         }
         
         function resetFormForTermChange() {
-            // Reset student-related fields
             document.getElementById('studentSearch').value = '';
             document.getElementById('studentSearch').disabled = true;
             document.getElementById('studentName').innerHTML = '<option value="" disabled selected>Loading students...</option>';
@@ -770,19 +810,14 @@
             document.getElementById('searchResults').innerHTML = '';
             document.getElementById('resultsContainer').innerHTML = '';
             
-            // Reset loading indicators
             document.getElementById('studentsLoading').style.display = 'none';
             document.getElementById('progressContainer').style.display = 'none';
             document.getElementById('studentsLoaded').style.display = 'none';
             stopProgressAnimation();
             
             allStudentNames = [];
-            
-            // Disable action buttons
             document.getElementById('viewResultsBtn').disabled = true;
             document.getElementById('downloadPdfBtn').disabled = true;
-            
-            // Clear any stored student data for this term
             clearError();
         }
         
@@ -791,7 +826,7 @@
         // ============================================
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
-                const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
                 
                 params.callback = callbackName;
                 params.action = action;
@@ -808,7 +843,16 @@
                 const script = document.createElement('script');
                 script.src = url;
                 
+                const timeoutId = setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        if (script.parentNode) script.parentNode.removeChild(script);
+                        reject(new Error('Request timeout'));
+                    }
+                }, 15000);
+                
                 window[callbackName] = function(response) {
+                    clearTimeout(timeoutId);
                     delete window[callbackName];
                     if (script.parentNode) script.parentNode.removeChild(script);
                     
@@ -820,23 +864,10 @@
                 };
                 
                 script.onerror = function() {
+                    clearTimeout(timeoutId);
                     delete window[callbackName];
                     if (script.parentNode) script.parentNode.removeChild(script);
-                    reject(new Error('Failed to connect to server. Please check your internet connection.'));
-                };
-                
-                const timeoutId = setTimeout(() => {
-                    if (window[callbackName]) {
-                        delete window[callbackName];
-                        if (script.parentNode) script.parentNode.removeChild(script);
-                        reject(new Error('Request timeout. Please try again.'));
-                    }
-                }, 30000);
-                
-                const originalCallback = window[callbackName];
-                window[callbackName] = function(response) {
-                    clearTimeout(timeoutId);
-                    originalCallback(response);
+                    reject(new Error('Connection failed'));
                 };
                 
                 document.head.appendChild(script);
@@ -866,6 +897,19 @@
             });
             
             loadFormData();
+            enableFormInputs();
+        }
+        
+        function autoSelectDefaultClass() {
+            // Optionally auto-select first class or saved class
+            const savedClass = localStorage.getItem('lunzu_selected_class');
+            if (savedClass) {
+                const classSelect = document.getElementById('studentClass');
+                if ([...classSelect.options].some(opt => opt.value === savedClass)) {
+                    classSelect.value = savedClass;
+                    handleClassChange();
+                }
+            }
         }
         
         function handleClassChange() {
@@ -896,12 +940,12 @@
                     allStudentNames = names;
                     populateStudentDropdown(names);
                     completeLoadingProgress();
-                    showInfo(`Loaded ${names.length} student(s) from ${studentClass}`);
+                    showInfo(`✅ Loaded ${names.length} student(s) from ${studentClass}`);
                 } else {
                     allStudentNames = [];
                     populateStudentDropdown([]);
                     completeLoadingProgress();
-                    showInfo('No students found for this class in the selected term');
+                    showInfo('📭 No students found for this class in the selected term');
                 }
             } catch (error) {
                 console.error('Error loading names:', error);
@@ -909,11 +953,6 @@
                 document.getElementById('studentsLoading').style.display = 'none';
                 document.getElementById('progressContainer').style.display = 'none';
                 showError('Failed to load students: ' + error.message);
-                
-                if (isLikelyBrowserCompatibilityError(error.message)) {
-                    showBrowserHelp();
-                }
-                
                 document.getElementById('viewResultsBtn').disabled = true;
                 document.getElementById('downloadPdfBtn').disabled = true;
             }
@@ -926,15 +965,16 @@
             document.getElementById('studentsLoading').style.display = 'block';
             document.getElementById('progressContainer').style.display = 'block';
             document.getElementById('studentsLoaded').style.display = 'none';
+            document.getElementById('studentsLoadingText').textContent = 'Loading student list...';
             
             stopProgressAnimation();
             loadingInterval = setInterval(() => {
                 if (loadingProgress < 90) {
-                    loadingProgress += Math.random() * 5 + 1;
+                    loadingProgress += Math.random() * 8 + 2;
                     if (loadingProgress > 90) loadingProgress = 90;
                     updateProgressBar();
                 }
-            }, 300);
+            }, 200);
         }
         
         function completeLoadingProgress() {
@@ -955,8 +995,8 @@
                 
                 setTimeout(() => {
                     document.getElementById('studentsLoaded').style.display = 'none';
-                }, 3000);
-            }, 500);
+                }, 2500);
+            }, 300);
         }
         
         function stopProgressAnimation() {
@@ -984,7 +1024,7 @@
             defaultOption.value = '';
             defaultOption.disabled = true;
             defaultOption.selected = true;
-            defaultOption.textContent = names.length > 0 ? 'Select Student' : 'No students found';
+            defaultOption.textContent = names.length > 0 ? '-- Select Student --' : '-- No students found --';
             select.appendChild(defaultOption);
             
             names.forEach(name => {
@@ -1065,8 +1105,7 @@
             showLoading('Opening results...');
             
             try {
-                // Open results in new tab with all parameters
-                let resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}&term=${encodeURIComponent(termKey)}`;
+                const resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}&term=${encodeURIComponent(termKey)}`;
                 
                 const newTab = window.open(resultsUrl, '_blank');
                 
@@ -1129,10 +1168,6 @@
             } catch (error) {
                 console.error('Error generating PDF:', error);
                 showError('Failed to generate PDF: ' + error.message);
-                
-                if (isLikelyBrowserCompatibilityError(error.message)) {
-                    showBrowserHelp();
-                }
             } finally {
                 hideLoading();
             }
@@ -1205,6 +1240,11 @@
                     <div>${message}</div>
                 </div>
             `;
+            setTimeout(() => {
+                if (container.innerHTML.includes('alert-info')) {
+                    container.innerHTML = '';
+                }
+            }, 3000);
         }
         
         function clearError() {
@@ -1246,6 +1286,9 @@
                     dateOfBirth: document.getElementById('dateOfBirth').value
                 };
                 localStorage.setItem('lunzu_form_data', JSON.stringify(data));
+                if (data.studentClass) {
+                    localStorage.setItem('lunzu_selected_class', data.studentClass);
+                }
                 updateButtonStates();
             } catch (e) {
                 console.error('Error saving form data:', e);
@@ -1266,12 +1309,14 @@
                     }
                     if (data.studentClass) {
                         document.getElementById('studentClass').value = data.studentClass;
-                        setTimeout(() => handleClassChange(), 500);
                         setTimeout(() => {
-                            if (data.studentName) document.getElementById('studentName').value = data.studentName;
-                            if (data.dateOfBirth) document.getElementById('dateOfBirth').value = data.dateOfBirth;
-                            updateButtonStates();
-                        }, 2000);
+                            handleClassChange();
+                            setTimeout(() => {
+                                if (data.studentName) document.getElementById('studentName').value = data.studentName;
+                                if (data.dateOfBirth) document.getElementById('dateOfBirth').value = data.dateOfBirth;
+                                updateButtonStates();
+                            }, 1500);
+                        }, 500);
                     }
                 }
             } catch (e) {
@@ -1288,11 +1333,8 @@
                 }
             } catch (error) {
                 console.error('API test failed:', error);
-                document.getElementById('apiStatus').innerHTML = '❌ Connection issue: ' + error.message;
-                document.getElementById('apiStatus').style.color = '#e53e3e';
-                if (isLikelyBrowserCompatibilityError(error.message)) {
-                    setTimeout(() => showBrowserHelp(), 500);
-                }
+                document.getElementById('apiStatus').innerHTML = '⚠️ Connection issue - Some features may be slow';
+                document.getElementById('apiStatus').style.color = '#ed8936';
             }
         }
     </script>
