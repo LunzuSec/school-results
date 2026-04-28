@@ -105,6 +105,13 @@
         
         .search-item:hover { background: #f7fafc; }
         
+        .no-results-item {
+            padding: 12px;
+            color: #e53e3e;
+            text-align: center;
+            font-style: italic;
+        }
+        
         .buttons {
             display: flex;
             gap: 15px;
@@ -471,7 +478,6 @@
         let availableTerms = [];
         let currentTermKey = null;
         let loadingStartTime = 0;
-        let isInitialLoad = true;
         
         // ============================================
         // INITIALIZATION
@@ -549,7 +555,6 @@
                 grouped[term.academicYear].push(term);
             });
             
-            let activeTermFound = false;
             let activeTermData = null;
             
             for (const [year, yearTerms] of Object.entries(grouped)) {
@@ -565,7 +570,6 @@
                         currentTermKey = term.key;
                         option.style.fontWeight = 'bold';
                         option.style.backgroundColor = '#e8f5e9';
-                        activeTermFound = true;
                         activeTermData = term;
                     }
                     optgroup.appendChild(option);
@@ -581,7 +585,6 @@
                 currentTermKey = activeTermData.key;
                 console.log('Default term loaded:', activeTermData.display);
             } else if (terms.length > 0) {
-                // If no active term found, select the first term
                 const firstTerm = terms[0];
                 termSelect.value = firstTerm.key;
                 currentTermKey = firstTerm.key;
@@ -599,7 +602,6 @@
             const selectedValue = termSelect.value;
             
             if (!selectedValue) {
-                // If "Select Term" is chosen, reset everything
                 currentTermKey = null;
                 document.getElementById('academicHeader').textContent = 'No term selected';
                 resetAllFields();
@@ -617,17 +619,14 @@
                     showInfo(`Note: Viewing historical results from ${selectedTerm.display}`);
                 }
                 
-                // Reset class and student fields when term changes
                 resetAllFields();
             }
         }
         
         function resetAllFields() {
-            // Reset class dropdown
             const classSelect = document.getElementById('studentClass');
             classSelect.value = '';
             
-            // Reset student search and name fields
             const studentSearch = document.getElementById('studentSearch');
             const studentName = document.getElementById('studentName');
             const dateOfBirth = document.getElementById('dateOfBirth');
@@ -727,7 +726,6 @@
         async function handleClassChange() {
             const studentClass = document.getElementById('studentClass').value;
             
-            // Always reset student fields when class changes
             const studentName = document.getElementById('studentName');
             const studentSearch = document.getElementById('studentSearch');
             
@@ -873,7 +871,8 @@
                 });
                 resultsDiv.style.display = 'block';
             } else {
-                resultsDiv.innerHTML = '<div class="search-item">No students found</div>';
+                // Show "Search result not found" message
+                resultsDiv.innerHTML = '<div class="no-results-item">🔍 No matching students found. Please check the spelling or try a different name.</div>';
                 resultsDiv.style.display = 'block';
             }
         }
@@ -910,9 +909,51 @@
             }
             
             clearError();
-            showLoading('Opening results...');
+            showLoading('Verifying records and opening results...');
             
             try {
+                // First, check if student exists and fee balance status
+                const checkResult = await callGAS('getStudentResults', {
+                    studentName: studentName,
+                    studentClass: studentClass,
+                    dateOfBirth: dateOfBirth,
+                    term: termKey
+                });
+                
+                console.log('Student check response:', checkResult);
+                
+                if (checkResult && checkResult.error) {
+                    // Check if error is fee balance related
+                    if (checkResult.error.toLowerCase().includes('fee') || 
+                        checkResult.error.toLowerCase().includes('balance')) {
+                        showError(`❌ ${checkResult.error}`);
+                        hideLoading();
+                        return;
+                    }
+                    throw new Error(checkResult.error);
+                }
+                
+                if (!checkResult || !checkResult.success) {
+                    showError('Student record not found. Please verify the name, class, and date of birth are correct.');
+                    hideLoading();
+                    return;
+                }
+                
+                // Check fee balance - NEGATIVE balance blocks results
+                // Positive balance (credit) allows results
+                if (checkResult.feeBalance !== undefined && checkResult.feeBalance !== null) {
+                    // NEGATIVE balance means they OWE money - BLOCK access
+                    if (checkResult.feeBalance < 0) {
+                        const amountOwed = Math.abs(checkResult.feeBalance);
+                        showError(`⚠️ RESULTS ACCESS BLOCKED\n\nFee Balance Outstanding: K${amountOwed.toLocaleString()}\n\nPlease clear your fee balance to access results.\nContact accounts department for assistance.`);
+                        hideLoading();
+                        return;
+                    }
+                    // Positive balance (credit) or zero - ALLOW access (no message needed)
+                    console.log(`Fee balance: K${checkResult.feeBalance.toLocaleString()} - Access granted`);
+                }
+                
+                // Proceed to open results in new tab
                 const resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}&term=${encodeURIComponent(termKey)}`;
                 const newTab = window.open(resultsUrl, '_blank');
                 
@@ -927,7 +968,13 @@
                 
             } catch (error) {
                 console.error('Error:', error);
-                showError('Could not open results. Please try again.');
+                if (error.message && (error.message.toLowerCase().includes('fee') || error.message.toLowerCase().includes('balance'))) {
+                    showError(`❌ ${error.message}`);
+                } else if (error.message && error.message.toLowerCase().includes('not found')) {
+                    showError('Student record not found. Please verify the name, class, and date of birth are correct.');
+                } else {
+                    showError('Could not open results. Please try again. ' + error.message);
+                }
             } finally {
                 hideLoading();
             }
@@ -950,9 +997,47 @@
             }
             
             clearError();
-            showLoading('Generating PDF...');
+            showLoading('Verifying records and generating PDF...');
             
             try {
+                // First, check if student exists and fee balance status
+                const checkResult = await callGAS('getStudentResults', {
+                    studentName: studentName,
+                    studentClass: studentClass,
+                    dateOfBirth: dateOfBirth,
+                    term: termKey
+                });
+                
+                console.log('Student check response:', checkResult);
+                
+                if (checkResult && checkResult.error) {
+                    if (checkResult.error.toLowerCase().includes('fee') || 
+                        checkResult.error.toLowerCase().includes('balance')) {
+                        showError(`❌ ${checkResult.error}`);
+                        hideLoading();
+                        return;
+                    }
+                    throw new Error(checkResult.error);
+                }
+                
+                if (!checkResult || !checkResult.success) {
+                    showError('Student record not found. Please verify the name, class, and date of birth are correct.');
+                    hideLoading();
+                    return;
+                }
+                
+                // Check fee balance - NEGATIVE balance blocks PDF download
+                if (checkResult.feeBalance !== undefined && checkResult.feeBalance !== null) {
+                    if (checkResult.feeBalance < 0) {
+                        const amountOwed = Math.abs(checkResult.feeBalance);
+                        showError(`⚠️ PDF DOWNLOAD BLOCKED\n\nFee Balance Outstanding: K${amountOwed.toLocaleString()}\n\nPlease clear your fee balance to download results.\nContact accounts department for assistance.`);
+                        hideLoading();
+                        return;
+                    }
+                    console.log(`Fee balance: K${checkResult.feeBalance.toLocaleString()} - PDF download granted`);
+                }
+                
+                // Proceed to generate PDF
                 const result = await callGAS('generatePDF', {
                     studentName: studentName,
                     studentClass: studentClass,
