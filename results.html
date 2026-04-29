@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Results - Lunzu Secondary School</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Slab:wght@500;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
             --primary-color: #003366;
@@ -17,21 +17,32 @@
             --light-bg: #f8f9fa;
             --border-color: #dee2e6;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background-color: var(--light-bg);
             color: #333;
             padding: 10px;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        
+
         .results-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -39,49 +50,60 @@
             background-color: white;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
             border-radius: 12px;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
         }
-        
+
         .school-header {
             text-align: center;
             margin-bottom: 15px;
             border-bottom: 3px solid var(--primary-color);
             padding-bottom: 12px;
+            flex-shrink: 0;
         }
-        
+
         .school-logo {
             height: 60px;
             margin-bottom: 8px;
             max-width: 100%;
             object-fit: contain;
         }
-        
+
         .school-title {
             font-family: 'Roboto Slab', serif;
             color: var(--primary-color);
             font-weight: 700;
             font-size: 1.3rem;
+            margin-bottom: 4px;
+            line-height: 1.3;
         }
-        
+
         .sub-title {
             color: var(--secondary-color);
             font-size: 0.95rem;
+            margin-bottom: 4px;
+            line-height: 1.2;
         }
-        
+
         .student-info {
             background: linear-gradient(135deg, #f0f4f8 0%, #e3eaf3 100%);
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 12px;
             border-left: 4px solid var(--primary-color);
+            flex-shrink: 0;
         }
-        
+
         .info-label {
             font-weight: 600;
             color: var(--primary-color);
             display: block;
+            margin-bottom: 2px;
             font-size: 0.85rem;
         }
-        
+
         .info-value {
             color: #555;
             font-weight: 500;
@@ -89,7 +111,7 @@
             margin-bottom: 8px;
             font-size: 0.9rem;
         }
-        
+
         .section-title {
             color: var(--primary-color);
             border-bottom: 2px solid var(--accent-color);
@@ -97,50 +119,152 @@
             margin: 15px 0 8px 0;
             font-weight: 700;
             font-size: 1rem;
+            flex-shrink: 0;
         }
-        
+
+        /* Table Container - No fixed height conflicts */
         .table-container {
             width: 100%;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             background: white;
-            overflow-x: auto;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             position: relative;
+            min-height: 300px; /* Minimum height for empty tables */
         }
         
+        /* Table scroll wrapper - Takes maximum available space */
+        .table-scroll-wrapper {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Custom scrollbar */
+        .table-scroll-wrapper::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .table-scroll-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .table-scroll-wrapper::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #555;
+            position: relative;
+        }
+
+        /* Results Table */
         .results-table {
             width: 100%;
             min-width: 700px;
+            border-collapse: separate;
+            border-spacing: 0;
             border-collapse: collapse;
             font-size: 0.9rem;
+            table-layout: fixed;
+            flex-shrink: 0; /* Prevents table from shrinking */
         }
         
+        .results-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
         .results-table thead th {
             background-color: var(--primary-color);
             color: white;
             font-weight: 600;
             padding: 12px 8px;
             text-align: center;
+            white-space: nowrap;
             border-right: 1px solid rgba(255,255,255,0.2);
+            position: sticky;
+            top: 0;
+            font-size: 0.9rem;
         }
-        
+
         .results-table thead th:last-child {
             border-right: none;
         }
-        
+
         .results-table tbody td {
             padding: 10px 8px;
+            vertical-align: middle;
             border-bottom: 1px solid var(--border-color);
+            word-break: break-word;
+            border-right: 1px solid var(--border-color);
             text-align: center;
+            font-size: 0.85rem;
         }
-        
+
         .results-table tbody td:first-child {
             text-align: left;
             font-weight: 600;
         }
+
+        .results-table tbody td:last-child {
+            border-right: none;
+        }
         
         .results-table tbody tr:nth-child(even) {
             background-color: #f9f9f9;
+        }
+
+        .results-table tbody tr:hover {
+            background-color: rgba(0, 51, 102, 0.05);
+        }
+        
+        /* Column widths */
+        .results-table th:nth-child(1),
+        .results-table td:nth-child(1) {
+            width: 25%;
+            min-width: 120px;
+        }
+        
+        .results-table th:nth-child(2),
+        .results-table td:nth-child(2) {
+            width: 12%;
+            min-width: 60px;
+        }
+        
+        .results-table th:nth-child(3),
+        .results-table td:nth-child(3) {
+            width: 13%;
+            min-width: 65px;
+        }
+        
+        .results-table th:nth-child(4),
+        .results-table td:nth-child(4) {
+            width: 15%;
+            min-width: 75px;
+        }
+        
+        .results-table th:nth-child(5),
+        .results-table td:nth-child(5) {
+            width: 15%;
+            min-width: 75px;
+        }
+        
+        .results-table th:nth-child(6),
+        .results-table td:nth-child(6) {
+            width: 20%;
+            min-width: 100px;
         }
         
         .grade-badge {
@@ -149,9 +273,10 @@
             border-radius: 20px;
             font-weight: 600;
             font-size: 0.8rem;
+            text-align: center;
             min-width: 30px;
         }
-        
+
         .grade-A { background-color: #d4edda; color: #155724; }
         .grade-B { background-color: #d1ecf1; color: #0c5460; }
         .grade-C { background-color: #fff3cd; color: #856404; }
@@ -161,44 +286,48 @@
         .grade-4, .grade-5 { background-color: #fff3cd; color: #856404; }
         .grade-6, .grade-7, .grade-8 { background-color: #f8d7da; color: #721c24; }
         .grade-9 { background-color: #dc3545; color: white; }
-        
+
         .remarks-section {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding: 12px;
             border-radius: 8px;
             margin: 12px 0;
             border-left: 4px solid var(--primary-color);
+            flex-shrink: 0;
         }
-        
+
         .footer-section {
             background: linear-gradient(135deg, #f0f4f8 0%, #e3eaf3 100%);
             padding: 12px;
             border-radius: 8px;
             border-top: 3px solid var(--primary-color);
             margin-top: 12px;
+            flex-shrink: 0;
         }
-        
+
         .footer-title {
             font-weight: 600;
             color: var(--primary-color);
             margin-bottom: 6px;
             font-size: 0.9rem;
         }
-        
+
         .footer-info {
             font-size: 0.8rem;
             color: #555;
             margin-bottom: 5px;
+            line-height: 1.4;
         }
-        
+
         .action-buttons {
             margin-top: 20px;
             display: flex;
             justify-content: center;
             gap: 10px;
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
-        
+
         .btn-action {
             padding: 10px 18px;
             border-radius: 8px;
@@ -213,29 +342,35 @@
             font-size: 0.85rem;
             min-width: 120px;
         }
-        
+
         .btn-print {
             background: var(--primary-color);
             color: white;
             border-color: var(--primary-color);
         }
-        
+
+        .btn-print:hover, .btn-print:active {
         .btn-print:hover {
             background: var(--secondary-color);
+            border-color: var(--secondary-color);
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         .btn-close {
             background: transparent;
             color: var(--primary-color);
             border-color: var(--primary-color);
         }
-        
+
+        .btn-close:hover, .btn-close:active {
         .btn-close:hover {
             background: var(--primary-color);
             color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -248,8 +383,9 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            padding: 20px;
         }
-        
+
         .spinner {
             width: 50px;
             height: 50px;
@@ -259,12 +395,12 @@
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         .error-message {
             text-align: center;
             padding: 25px;
@@ -274,13 +410,32 @@
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
-        
+
         .error-icon {
             font-size: 2.5rem;
             color: #dc3545;
             margin-bottom: 15px;
         }
+
+        /* Scroll hint */
+        .scroll-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 51, 102, 0.9);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            display: none;
+            z-index: 10;
+            pointer-events: none;
+            animation: fadeInOut 3s ease-in-out;
+        }
         
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            20%, 80% { opacity: 1; }
         .fee-alert {
             background: #fff3cd;
             border-left: 4px solid #ffc107;
@@ -288,22 +443,196 @@
             margin-bottom: 12px;
             border-radius: 8px;
         }
-        
-        .fee-alert-negative {
-            background: #fed7d7;
-            border-left: 4px solid #e53e3e;
-            color: #742a2a;
-        }
-        
+
+        /* Mobile-specific styles */
         @media (max-width: 768px) {
+            body {
+                padding: 8px;
+            }
+            
+            .results-container {
+                padding: 10px;
+                border-radius: 10px;
+            }
+            
+            .school-header {
+                margin-bottom: 12px;
+                padding-bottom: 10px;
+            }
+            
+            .school-logo {
+                height: 50px;
+            }
+            
+            .school-title {
+                font-size: 1.1rem;
+            }
+            
+            .sub-title {
+                font-size: 0.9rem;
+            }
+            
+            .student-info {
+                padding: 10px;
+            }
+            
+            .info-label {
+                font-size: 0.8rem;
+            }
+            
+            .info-value {
+                font-size: 0.85rem;
+                margin-bottom: 6px;
+            }
+            
+            .section-title {
+                font-size: 0.95rem;
+                margin: 12px 0 6px 0;
+            }
+            
+            .table-container {
+                min-height: 350px;
+            }
+            
+            .results-table {
+                min-width: 650px;
+                font-size: 0.8rem;
+            }
+            
+            .results-table thead th {
+                padding: 10px 6px;
+                font-size: 0.8rem;
+            }
+            
+            .results-table tbody td {
+                padding: 8px 6px;
+                font-size: 0.8rem;
+            }
+            
+            .grade-badge {
+                padding: 3px 8px;
+                font-size: 0.75rem;
+                min-width: 25px;
+            }
+            
+            .remarks-section,
+            .footer-section {
+                padding: 10px;
+            }
+            
+            .footer-title {
+                font-size: 0.85rem;
+            }
+            
+            .footer-info {
+                font-size: 0.75rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 15px;
+            }
+            
+            .btn-action {
+                width: 100%;
+                padding: 10px 12px;
+                font-size: 0.9rem;
+                min-width: auto;
+            }
+            
+            .scroll-hint {
+                display: block;
+            }
             .school-title { font-size: 1.1rem; }
             .sub-title { font-size: 0.9rem; }
             .results-table { min-width: 650px; font-size: 0.8rem; }
             .btn-action { width: 100%; }
             .action-buttons { flex-direction: column; }
         }
-        
+
+        /* Print styles - Remove all constraints */
         @media print {
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+            
+            body {
+                background-color: white;
+                padding: 0;
+                font-size: 10pt;
+                width: 100%;
+                height: auto;
+                overflow: visible !important;
+            }
+            
+            .results-container {
+                max-width: 100%;
+                padding: 0;
+                box-shadow: none;
+                margin: 0;
+                border-radius: 0;
+                width: 100%;
+                overflow: visible !important;
+                display: block;
+            }
+            
+            .school-header {
+                margin-bottom: 8px;
+                padding-bottom: 6px;
+            }
+            
+            .school-logo {
+                height: 35px;
+            }
+            
+            .action-buttons,
+            .btn-action,
+            .loading-overlay,
+            .scroll-hint {
+                display: none !important;
+            }
+            
+            .table-container {
+                border: 1px solid #000 !important;
+                overflow: visible !important;
+                width: 100% !important;
+                display: block;
+                min-height: auto !important;
+                flex: none !important;
+            }
+            
+            .table-scroll-wrapper {
+                overflow: visible !important;
+                width: 100% !important;
+                height: auto !important;
+                display: block;
+                flex: none !important;
+            }
+            
+            .results-table {
+                min-width: 100% !important;
+                width: 100% !important;
+                font-size: 9pt;
+                border: 1px solid #000;
+            }
+            
+            .results-table thead th {
+                padding: 8px 6px;
+                font-size: 9pt;
+            }
+            
+            .results-table tbody td {
+                padding: 6px 5px;
+                font-size: 9pt;
+            }
+            
+            .student-info,
+            .remarks-section,
+            .footer-section {
+                border: 1px solid #000;
+            }
             @page { size: A4; margin: 10mm; }
             .action-buttons, .btn-action, .loading-overlay, .fee-alert { display: none !important; }
             .table-container { overflow: visible !important; }
@@ -312,19 +641,27 @@
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
+        <h4 style="color: var(--primary-color); margin-bottom: 10px;">Loading Student Results</h4>
+        <p style="color: #666; text-align: center; max-width: 300px;">Please wait while we fetch your results...</p>
         <h4 style="color: var(--primary-color);">Loading Student Results</h4>
         <p id="loadingMessage">Please wait...</p>
     </div>
-    
+
+    <!-- Results Container -->
+    <div class="results-container" style="display: none;">
+        <!-- School Header -->
     <div class="results-container" id="resultsContainer" style="display: none;">
         <div class="school-header">
             <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" alt="School Logo" class="school-logo">
             <h1 class="school-title" id="schoolName">LUNZU SECONDARY SCHOOL</h1>
+            <h2 class="sub-title" id="academicHeader">2025-2026 END OF TERM 1 RESULTS</h2>
             <h2 class="sub-title" id="academicHeader">Loading...</h2>
         </div>
-        
+
+        <!-- Student Information -->
         <div id="feeAlertContainer"></div>
         
         <div class="student-info">
@@ -341,10 +678,33 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- Subjects Section -->
         <h3 class="section-title"><i class="fas fa-book-open me-2"></i>SUBJECT PERFORMANCE</h3>
-        
+
+        <!-- Table container -->
         <div class="table-container">
+            <div class="table-scroll-wrapper" id="tableScrollContainer">
+                <!-- Scroll hint -->
+                <div class="scroll-hint">
+                    <i class="fas fa-arrows-alt-h me-1"></i> Scroll horizontally
+                </div>
+                <table class="results-table" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>SUBJECT</th>
+                            <th>SCORE</th>
+                            <th>GRADE</th>
+                            <th>POSITION</th>
+                            <th>AVERAGE</th>
+                            <th>COMMENT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Results will be populated here -->
+                    </tbody>
+                </table>
+            </div>
             <table class="results-table">
                 <thead>
                     <tr>
@@ -357,70 +717,91 @@
                     </tr>
                 </thead>
                 <tbody id="resultsBody">
-                    <tr><td colspan="6" class="text-center py-4">Loading subjects...<\/td><\/tr>
-                <\/tbody>
-            <\/table>
-        <\/div>
-        
+                    <tr><td colspan="6" class="text-center py-4">Loading subjects...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary Row -->
         <div class="row mb-3">
             <div class="col-md-6" id="totalMarksContainer" style="display: none;">
                 <div class="alert alert-primary p-2">
-                    <strong><i class="fas fa-calculator me-2"><\/i>TOTAL MARKS:<\/strong> 
-                    <span id="totalMarks">-<\/span>
-                <\/div>
-            <\/div>
+                    <strong><i class="fas fa-calculator me-2"></i>TOTAL MARKS:</strong> 
+                    <span id="totalMarks" class="ms-2">-</span>
+                    <span id="totalMarks">-</span>
+                </div>
+            </div>
             <div class="col-md-6" id="totalPointsContainer" style="display: none;">
                 <div class="alert alert-primary p-2">
-                    <strong><i class="fas fa-chart-line me-2"><\/i>TOTAL POINTS:<\/strong> 
-                    <span id="totalPoints">-<\/span>
-                <\/div>
-            <\/div>
-        <\/div>
-        
+                    <strong><i class="fas fa-chart-line me-2"></i>TOTAL POINTS:</strong> 
+                    <span id="totalPoints" class="ms-2">-</span>
+                    <span id="totalPoints">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Remarks Section -->
         <div class="remarks-section">
-            <h4><i class="fas fa-comment me-2"><\/i>REMARKS<\/h4>
-            <p id="remarks">-<\/p>
-        <\/div>
-        
+            <h4><i class="fas fa-comment me-2"></i>REMARKS</h4>
+            <p class="mb-0" id="remarks">-</p>
+            <p id="remarks">-</p>
+        </div>
+
+        <!-- Footer Information -->
         <div class="footer-section">
             <div class="row">
                 <div class="col-md-6">
-                    <h5 class="footer-title"><i class="fas fa-money-bill-wave me-2"><\/i>SCHOOL FEES<\/h5>
-                    <p class="footer-info" id="feesInfo">-<\/p>
-                    <p class="footer-info" id="accountInfo">-<\/p>
-                <\/div>
+                    <h5 class="footer-title"><i class="fas fa-money-bill-wave me-2"></i>SCHOOL FEES</h5>
+                    <p class="footer-info" id="feesInfo">-</p>
+                    <p class="footer-info" id="accountInfo">-</p>
+                    <p class="footer-info"><i class="fas fa-university me-2"></i>ACC TYPE: CURRENT | BANK: FDH | LUNZU BRANCH</p>
+                </div>
                 <div class="col-md-6">
-                    <h5 class="footer-title"><i class="fas fa-calendar-alt me-2"><\/i>IMPORTANT DATES<\/h5>
-                    <p class="footer-info"><strong>Next Term Starts:<\/strong> <span id="nextTermStart">-<\/span><\/p>
-                    <h5 class="footer-title mt-3"><i class="fas fa-map-marker-alt me-2"><\/i>SCHOOL ADDRESS<\/h5>
-                    <p class="footer-info" id="schoolAddress">-<\/p>
-                    <h5 class="footer-title mt-3"><i class="fas fa-info-circle me-2"><\/i>GOVERNMENT POLICY<\/h5>
-                    <p class="footer-info" id="governmentPolicy">-<\/p>
-                <\/div>
-            <\/div>
-        <\/div>
-        
+                    <h5 class="footer-title"><i class="fas fa-calendar-alt me-2"></i>IMPORTANT DATES</h5>
+                    <p class="footer-info"><strong>Next Term Starts:</strong> <span id="nextTermStart">05/01/2026</span></p>
+                    
+                    <p class="footer-info"><strong>Next Term Starts:</strong> <span id="nextTermStart">-</span></p>
+                    <h5 class="footer-title mt-3"><i class="fas fa-map-marker-alt me-2"></i>SCHOOL ADDRESS</h5>
+                    <p class="footer-info" id="schoolAddress">Private bag 130, Lunzu</p>
+                    
+                    <p class="footer-info" id="schoolAddress">-</p>
+                    <h5 class="footer-title mt-3"><i class="fas fa-info-circle me-2"></i>GOVERNMENT POLICY</h5>
+                    <p class="footer-info" id="governmentPolicy">The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.</p>
+                    <p class="footer-info" id="governmentPolicy">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
         <div class="action-buttons">
             <button onclick="printResults()" class="btn-action btn-print">
-                <i class="fas fa-print"><\/i> Print Results
-            <\/button>
+                <i class="fas fa-print"></i> Print Results
+            </button>
             <button onclick="closeWindow()" class="btn-action btn-close">
-                <i class="fas fa-times"><\/i> Close Window
-            <\/button>
+                <i class="fas fa-times"></i> Close Window
+            </button>
+            <button onclick="downloadPDF()" class="btn-action btn-print">
             <button onclick="downloadPDF()" class="btn-action btn-print" id="downloadPdfBtn">
-                <i class="fas fa-download"><\/i> Download PDF
-            <\/button>
-        <\/div>
-    <\/div>
-    
-    <div id="errorContainer" style="display: none;"><\/div>
+                <i class="fas fa-download"></i> Download PDF
+            </button>
+        </div>
+    </div>
 
+    <!-- Error Container -->
+    <div id="errorContainer" style="display: none;"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Main JavaScript -->
     <script>
+        // Configuration
         // ============================================
         // CONFIGURATION
         // ============================================
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
-        
+
+        // URL Parameters
         // Cache for results to prevent duplicate loads
         let cachedResults = null;
         let isGeneratingPDF = false;
@@ -431,16 +812,107 @@
         const studentClass = urlParams.get('class');
         const dateOfBirth = urlParams.get('dob');
         const termKey = urlParams.get('term');
+
+        // Global variables
+        let studentResults = null;
+        let systemConfig = null;
         
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Page loaded with params:', { studentName, studentClass, dateOfBirth });
+            
+            if (studentName && studentClass && dateOfBirth) {
+                await loadStudentResults(studentName, studentClass, dateOfBirth);
+            } else {
+                showError('Missing student information. Please go back to the main portal and try again.');
+            }
+        });
+        
+        // Load student results from Google Apps Script
+        async function loadStudentResults(name, className, dob) {
+            try {
+                showLoading();
+                
+                // Get system configuration first
+                systemConfig = await getSystemConfigFromServer();
+                console.log('System config loaded:', systemConfig);
+                
+                // Call Google Apps Script API for student results
+                const response = await callGASAPI('getStudentResults', {
+                    studentName: name,
+                    studentClass: className,
+                    dateOfBirth: dob
+                });
+                
+                console.log('API Response:', response);
+                
+                if (response.error) {
+                    throw new Error(response.error);
+                }
+                
+                if (!response.success) {
+                    throw new Error(response.message || 'Failed to retrieve results');
+                }
+                
+                // Store results globally
+                studentResults = response;
+                
+                // Populate results on the page with system config
+                populateResults(response, systemConfig);
+                hideLoading();
+                
+                // Setup scroll hint
+                setupScrollHint();
+                
+            } catch (error) {
+                console.error('Error loading results:', error);
+                showError('Failed to load results: ' + error.message);
+                hideLoading();
+            }
+        }
+        
+        // Get system config from Google Apps Script
+        async function getSystemConfigFromServer() {
+            try {
+                const response = await callGASAPI('getSystemConfig', {});
+                console.log('System config response:', response);
+                return response || {};
+            } catch (error) {
+                console.warn('Failed to get system config, using defaults:', error);
+                return {
+                    academicYear: "2025-2026",
+                    term: "END OF TERM 1",
+                    examType: "RESULTS",
+                    schoolName: "LUNZU SECONDARY SCHOOL",
+                    schoolNameODL: "LUNZU OPEN SECONDARY SCHOOL",
+                    nextTermStart: "05/01/2026",
+                    schoolAddress: "Private bag 130, Lunzu",
+                    governmentPolicy: "The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.",
+                    contacts: {
+                        regular: {
+                            fees: "BOARDING FEES PER TERM: K165,000",
+                            accountNumber: "129 00000 98673"
+                        },
+                        odl: {
+                            fees: "SCHOOL FEES PER TERM: K40,000",
+                            accountNumber: "129 00000 41337"
+                        }
+                    }
+                };
+            }
+        }
+        
+        // Call Google Apps Script API with JSONP
         // ============================================
         // OPTIMIZED API CALL - Single function
         // ============================================
         function callGASAPI(action, params = {}) {
             return new Promise((resolve, reject) => {
+                const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
                 params.callback = callbackName;
                 params.action = action;
-                
+
                 let url = GAS_URL + '?';
                 const urlParams = [];
                 for (const key in params) {
@@ -449,10 +921,13 @@
                     }
                 }
                 url += urlParams.join('&');
+
+                console.log('Making API call to:', url.substring(0, 100) + '...');
                 
                 const script = document.createElement('script');
                 script.src = url;
-                
+
+                // Timeout after 15 seconds (reduced from 30)
                 const timeoutId = setTimeout(() => {
                     if (window[callbackName]) {
                         delete window[callbackName];
@@ -462,28 +937,49 @@
                 }, 15000);
                 
                 window[callbackName] = function(response) {
+                    console.log('API callback received:', response);
                     clearTimeout(timeoutId);
                     delete window[callbackName];
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
                     if (script.parentNode) script.parentNode.removeChild(script);
-                    
+
                     if (response && response.error) {
                         reject(new Error(response.error));
                     } else {
                         resolve(response);
                     }
                 };
-                
+
                 script.onerror = function() {
+                    console.error('Script loading failed');
                     clearTimeout(timeoutId);
                     delete window[callbackName];
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    reject(new Error('Failed to connect to server. Please check your internet connection.'));
                     if (script.parentNode) script.parentNode.removeChild(script);
                     reject(new Error('Connection failed. Please check your internet.'));
                 };
+
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        if (script.parentNode) {
+                            script.parentNode.removeChild(script);
+                        }
+                        reject(new Error('Request timeout. Please try again.'));
+                    }
+                }, 30000);
                 
                 document.head.appendChild(script);
             });
         }
-        
+
+        // Populate results on the page
+        function populateResults(results, systemConfig) {
         // ============================================
         // LOAD RESULTS - Single API call
         // ============================================
@@ -494,9 +990,17 @@
             }
             
             try {
+                console.log('Populating results:', results);
+                console.log('System config:', systemConfig);
                 showLoading(true);
                 updateLoadingMessage('Fetching your results...');
-                
+
+                // Update school name for ODL
+                if (results.studentClass && results.studentClass.includes("ODL")) {
+                    document.getElementById('schoolName').textContent = systemConfig.schoolNameODL || "LUNZU OPEN SECONDARY SCHOOL";
+                } else {
+                    document.getElementById('schoolName').textContent = systemConfig.schoolName || "LUNZU SECONDARY SCHOOL";
+                // Single API call for all data
                 const response = await callGASAPI('getStudentResults', {
                     studentName: studentName,
                     studentClass: studentClass,
@@ -507,13 +1011,57 @@
                 if (!response || response.error) {
                     throw new Error(response?.error || 'Failed to load results');
                 }
-                
+
+                // Update academic header
+                const academicHeader = `${systemConfig.academicYear || '2025-2026'} ${systemConfig.term || 'END OF TERM 1'} ${systemConfig.examType || 'RESULTS'}`;
+                document.getElementById('academicHeader').textContent = academicHeader;
                 if (!response.success) {
                     throw new Error(response.message || 'No results found');
                 }
-                
+
+                // Update student info
+                document.getElementById('studentName').textContent = results.name || '-';
+                document.getElementById('dob').textContent = results.dob || '-';
+                document.getElementById('studentClass').textContent = results.studentClass || '-';
+                document.getElementById('studentCount').textContent = results.studentCount || '-';
+                document.getElementById('examSitters').textContent = results.examSitters || '-';
+                document.getElementById('overallPosition').textContent = results.additionalInfo?.overallPosition || '-';
+                // Cache results
                 cachedResults = response;
+
+                // Update subjects table
+                const resultsBody = document.getElementById('resultsBody');
+                resultsBody.innerHTML = '';
+                // Render immediately
                 renderResults(response);
+
+                if (results.subjects && results.subjects.length > 0) {
+                    results.subjects.forEach(subject => {
+                        const score = subject.score !== null && subject.score !== undefined && subject.score !== "" ? 
+                            Math.round(subject.score) : "";
+                        
+                        const gradeAndComment = score !== "" ? 
+                            getGradeAndComment(parseFloat(score), results.studentClass) : 
+                            { grade: "", comment: "" };
+                        
+                        const grade = gradeAndComment.grade;
+                        const comment = gradeAndComment.comment;
+                        const position = subject.position || "-";
+                        const average = subject.average ? Math.round(subject.average) : "-";
+                        
+                        const gradeClass = getGradeClass(grade);
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><strong>${subject.name || '-'}</strong></td>
+                            <td>${score || '-'}</td>
+                            <td><span class="grade-badge ${gradeClass}">${grade || '-'}</span></td>
+                            <td>${position}</td>
+                            <td>${average}</td>
+                            <td>${comment || '-'}</td>
+                        `;
+                        resultsBody.appendChild(row);
+                    });
                 showLoading(false);
                 
             } catch (error) {
@@ -542,23 +1090,15 @@
             const headerText = term ? `${academicYear} ${term} ${examType}` : `${academicYear} ${examType}`;
             document.getElementById('academicHeader').textContent = headerText.trim();
             
-            // FEE BALANCE WARNING - FIXED: Only show for NEGATIVE balances (money owed)
-            // Positive balance means overpayment/credit - NO warning needed
-            if (results.feeBalance !== undefined && results.feeBalance !== null) {
-                if (results.feeBalance < 0) {
-                    const amountOwed = Math.abs(results.feeBalance);
-                    document.getElementById('feeAlertContainer').innerHTML = `
-                        <div class="fee-alert fee-alert-negative">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>⚠️ FEE BALANCE OUTSTANDING:</strong> You have a fee balance of K${amountOwed.toLocaleString()}. 
-                            Please clear your fees to avoid issues with future results.
-                            <br><small>Contact accounts department for payment arrangements.</small>
-                        </div>
-                    `;
-                } else {
-                    // Positive or zero balance - clear any alert (no message)
-                    document.getElementById('feeAlertContainer').innerHTML = '';
-                }
+            // Fee balance warning
+            if (results.feeBalance > 0) {
+                document.getElementById('feeAlertContainer').innerHTML = `
+                    <div class="fee-alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Fee Balance Alert:</strong> You have a fee balance of K${results.feeBalance.toLocaleString()}. 
+                        Please clear your fees.
+                    </div>
+                `;
             }
             
             // Student info - batch update
@@ -584,18 +1124,50 @@
                     const score = (subject.score && subject.score !== "") ? Math.round(subject.score) : "";
                     const gradeAndComment = score ? getGradeAndComment(parseFloat(score), results.studentClass) : { grade: "", comment: "" };
                     const gradeClass = getGradeClass(gradeAndComment.grade);
-                    
+
+                    // Add summary row
+                    if (results.additionalInfo?.totalMarks) {
+                        document.getElementById('totalMarksContainer').style.display = 'block';
+                        document.getElementById('totalMarks').textContent = results.additionalInfo.totalMarks;
+                        document.getElementById('totalPointsContainer').style.display = 'none';
+                    } else if (results.additionalInfo?.totalPoints) {
+                        document.getElementById('totalPointsContainer').style.display = 'block';
+                        document.getElementById('totalPoints').textContent = results.additionalInfo.totalPoints;
+                        document.getElementById('totalMarksContainer').style.display = 'none';
+                    }
+                } else {
+                    resultsBody.innerHTML = `
                     html += `
                         <tr>
-                            <td style="text-align: left;"><strong>${escapeHtml(subject.name || '-')}<\/strong><\/td>
-                            <td>${score || '-'}<\/td>
-                            <td>${gradeAndComment.grade ? `<span class="grade-badge ${gradeClass}">${gradeAndComment.grade}<\/span>` : '-'}<\/td>
-                            <td>${subject.position || '-'}<\/td>
-                            <td>${subject.average ? Math.round(subject.average) : '-'}<\/td>
-                            <td>${gradeAndComment.comment || '-'}<\/td>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                No subject data available
+                            </td>
+                            <td style="text-align: left;"><strong>${escapeHtml(subject.name || '-')}</strong></td>
+                            <td>${score || '-'}</td>
+                            <td>${gradeAndComment.grade ? `<span class="grade-badge ${gradeClass}">${gradeAndComment.grade}</span>` : '-'}</td>
+                            <td>${subject.position || '-'}</td>
+                            <td>${subject.average ? Math.round(subject.average) : '-'}</td>
+                            <td>${gradeAndComment.comment || '-'}</td>
                         </tr>
                     `;
                 }
+                
+                // Update remarks
+                document.getElementById('remarks').textContent = results.additionalInfo?.remarks || 'No remarks available.';
+                
+                // Update fees information based on class type
+                let contactInfo;
+                if (results.studentClass && results.studentClass.includes("ODL")) {
+                    contactInfo = systemConfig.contacts?.odl || {
+                        fees: "SCHOOL FEES PER TERM: K40,000",
+                        accountNumber: "129 00000 41337"
+                    };
+                } else {
+                    contactInfo = systemConfig.contacts?.regular || {
+                        fees: "BOARDING FEES PER TERM: K165,000",
+                        accountNumber: "129 00000 98673"
+                    };
                 resultsBody.innerHTML = html;
                 
                 // Show totals
@@ -608,18 +1180,69 @@
                     document.getElementById('totalPoints').textContent = results.additionalInfo.totalPoints;
                     document.getElementById('totalMarksContainer').style.display = 'none';
                 }
+                
+                document.getElementById('feesInfo').textContent = contactInfo.fees;
+                document.getElementById('accountInfo').textContent = "SCHOOL ACC NO.: " + contactInfo.accountNumber;
+                
+                // Update other system information
+                document.getElementById('nextTermStart').textContent = systemConfig.nextTermStart || "05/01/2026";
+                document.getElementById('schoolAddress').textContent = systemConfig.schoolAddress || "Private bag 130, Lunzu";
+                document.getElementById('governmentPolicy').textContent = systemConfig.governmentPolicy || "The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.";
+                
+                // Show the results container
+                document.querySelector('.results-container').style.display = 'flex';
+                
+                // Update page title
+                document.title = `${results.name || 'Student'} - Results - ${document.getElementById('schoolName').textContent}`;
+                
+            } catch (error) {
+                console.error('Error populating results:', error);
+                throw error;
             } else {
-                resultsBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No subject data available<\/td><\/tr>';
+                resultsBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No subject data available</td></tr>';
             }
-            
+        }
+        
+        // Setup scroll hint
+        function setupScrollHint() {
+            const scrollContainer = document.getElementById('tableScrollContainer');
+            const hint = scrollContainer.querySelector('.scroll-hint');
+
+            if (!scrollContainer || !hint) return;
             // Remarks
             document.getElementById('remarks').textContent = results.additionalInfo?.remarks || 'No remarks available.';
-            
+
+            // Check if horizontal scrolling is needed
+            const needsHorizontalScroll = scrollContainer.scrollWidth > scrollContainer.clientWidth;
             // Fees info
             const contactInfo = isODL ? 
                 (config.contacts?.odl || { fees: "SCHOOL FEES PER TERM: K40,000", accountNumber: "129 00000 41337" }) :
                 (config.contacts?.regular || { fees: "BOARDING FEES PER TERM: K165,000", accountNumber: "129 00000 98673" });
-            
+
+            if (needsHorizontalScroll) {
+                // Show hint
+                hint.style.display = 'block';
+                
+                // Hide hint after scrolling or after 5 seconds
+                setTimeout(() => {
+                    hint.style.opacity = '0';
+                    setTimeout(() => {
+                        hint.style.display = 'none';
+                    }, 1000);
+                }, 5000);
+                
+                // Hide hint when user scrolls horizontally
+                scrollContainer.addEventListener('scroll', function() {
+                    if (hint.style.display === 'block') {
+                        hint.style.opacity = '0';
+                        setTimeout(() => {
+                            hint.style.display = 'none';
+                        }, 300);
+                    }
+                });
+            } else {
+                hint.style.display = 'none';
+            }
             document.getElementById('feesInfo').textContent = contactInfo.fees;
             document.getElementById('accountInfo').textContent = "SCHOOL ACC NO.: " + contactInfo.accountNumber;
             
@@ -642,13 +1265,18 @@
             div.textContent = text;
             return div.innerHTML;
         }
-        
+
+        // Get grade and comment based on score and class
         function getGradeAndComment(score, studentClass) {
+            if (score === null || score === undefined || isNaN(score)) {
+                return { grade: '', comment: '' };
+            }
             if (!score || isNaN(score)) return { grade: '', comment: '' };
-            
+
             const roundedScore = Math.round(score);
             const isLowerForm = ["Form 1", "Form 2", "Form 1 ODL", "Form 2 ODL"].includes(studentClass);
-            
+
+            if (["Form 1", "Form 2", "Form 1 ODL", "Form 2 ODL"].includes(studentClass)) {
             if (isLowerForm) {
                 if (roundedScore >= 85) return { grade: 'A', comment: 'EXCELLENT' };
                 if (roundedScore >= 70) return { grade: 'B', comment: 'VERY GOOD' };
@@ -667,9 +1295,23 @@
                 return { grade: '9', comment: 'FAIL' };
             }
         }
-        
+
+        // Get CSS class for grade badge
         function getGradeClass(grade) {
             if (!grade) return '';
+            
+            switch(grade.toString().toUpperCase()) {
+                case 'A': return 'grade-A';
+                case 'B': return 'grade-B';
+                case 'C': return 'grade-C';
+                case 'D': return 'grade-D';
+                case 'F': return 'grade-F';
+                case '1': case '2': case '3': return 'grade-1';
+                case '4': case '5': return 'grade-4';
+                case '6': case '7': case '8': return 'grade-6';
+                case '9': return 'grade-9';
+                default: return '';
+            }
             const g = grade.toString().toUpperCase();
             const map = {
                 'A': 'grade-A', 'B': 'grade-B', 'C': 'grade-C', 'D': 'grade-D', 'F': 'grade-F',
@@ -678,7 +1320,59 @@
             };
             return map[g] || '';
         }
-        
+
+        // Print results
+        function printResults() {
+            // Add print-specific styles
+            const printStyle = document.createElement('style');
+            printStyle.textContent = `
+                @media print {
+                    body * {
+                        visibility: hidden;
+                        overflow: visible !important;
+                        width: 100% !important;
+                    }
+                    .results-container, .results-container * {
+                        visibility: visible;
+                    }
+                    .results-container {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                        height: auto !important;
+                    }
+                    .table-container {
+                        overflow: visible !important;
+                        width: 100% !important;
+                        border: 1px solid #000 !important;
+                        min-height: auto !important;
+                        max-height: none !important;
+                        flex: none !important;
+                    }
+                    .table-scroll-wrapper {
+                        overflow: visible !important;
+                        width: 100% !important;
+                        height: auto !important;
+                        max-height: none !important;
+                        display: block;
+                        flex: none !important;
+                    }
+                    .results-table {
+                        min-width: 100% !important;
+                        width: 100% !important;
+                    }
+                    .action-buttons,
+                    .btn-action,
+                    .loading-overlay,
+                    .scroll-hint {
+                        display: none !important;
+                    }
+                }
         // ============================================
         // UI FUNCTIONS
         // ============================================
@@ -696,27 +1390,38 @@
             const errorContainer = document.getElementById('errorContainer');
             errorContainer.innerHTML = `
                 <div class="error-message">
-                    <div class="error-icon"><i class="fas fa-exclamation-triangle"><\/i><\/div>
-                    <h4 style="color: #dc3545;">Error Loading Results<\/h4>
-                    <p>${escapeHtml(message)}<\/p>
+                    <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <h4 style="color: #dc3545;">Error Loading Results</h4>
+                    <p>${escapeHtml(message)}</p>
                     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
                         <button onclick="window.location.href='https://lunzusec.github.io/School_results/'" class="btn-action btn-close">
-                            <i class="fas fa-arrow-left"><\/i> Go Back
-                        <\/button>
+                            <i class="fas fa-arrow-left"></i> Go Back
+                        </button>
                         <button onclick="location.reload()" class="btn-action btn-print">
-                            <i class="fas fa-redo"><\/i> Try Again
-                        <\/button>
-                    <\/div>
-                <\/div>
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
+                </div>
             `;
+            document.head.appendChild(printStyle);
+            
+            // Trigger print
             errorContainer.style.display = 'block';
             document.getElementById('resultsContainer').style.display = 'none';
         }
         
         function printResults() {
             window.print();
+            
+            // Clean up after printing
+            setTimeout(() => {
+                if (printStyle.parentNode) {
+                    document.head.removeChild(printStyle);
+                }
+            }, 100);
         }
-        
+
+        // Download PDF
         function closeWindow() {
             if (window.history.length > 1) {
                 window.history.back();
@@ -726,11 +1431,13 @@
         }
         
         async function downloadPDF() {
+            if (!studentResults || !systemConfig) {
+                alert('Results not loaded yet. Please wait.');
             if (!cachedResults || isGeneratingPDF) {
                 if (!cachedResults) alert('Results not loaded yet. Please wait.');
                 return;
             }
-            
+
             isGeneratingPDF = true;
             const btn = document.getElementById('downloadPdfBtn');
             const originalText = btn.innerHTML;
@@ -738,16 +1445,37 @@
             btn.disabled = true;
             
             try {
+                // Disable download button and show loading
+                const downloadBtn = document.querySelector('[onclick="downloadPDF()"]');
+                const originalText = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+                downloadBtn.disabled = true;
                 showLoading(true);
                 updateLoadingMessage('Generating PDF...');
-                
+
+                // Call Google Apps Script to generate PDF
                 const pdfResponse = await callGASAPI('generatePDF', {
+                    studentName: studentResults.name,
+                    studentClass: studentResults.studentClass,
+                    dateOfBirth: studentResults.dob
                     studentName: cachedResults.name,
                     studentClass: cachedResults.studentClass,
                     dateOfBirth: cachedResults.dob,
                     term: cachedResults.termKey
                 });
+
+                console.log('PDF response:', pdfResponse);
                 
+                if (pdfResponse && pdfResponse.error) {
+                    throw new Error(pdfResponse.error);
+                }
+                
+                // Download the PDF
+                if (typeof pdfResponse === 'string' && pdfResponse.length > 0) {
+                    downloadBase64AsPDF(
+                        pdfResponse, 
+                        `${studentResults.name.replace(/\s+/g, '_')}_${studentResults.studentClass.replace(/\s+/g, '_')}_${systemConfig.academicYear.replace(/\s+/g, '_')}_Results.pdf`
+                    );
                 if (pdfResponse && !pdfResponse.error) {
                     const termSuffix = (cachedResults.term || 'Results').replace(/\s+/g, '_');
                     const fileName = `${cachedResults.name.replace(/\s+/g, '_')}_${cachedResults.studentClass.replace(/\s+/g, '_')}_${termSuffix}.pdf`;
@@ -771,35 +1499,148 @@
                     }, 100);
                     alert('PDF downloaded successfully!');
                 } else {
+                    throw new Error('Invalid PDF data received');
                     throw new Error(pdfResponse?.error || 'Failed to generate PDF');
                 }
+                
             } catch (error) {
+                console.error('Error downloading PDF:', error);
                 alert('Failed to generate PDF: ' + error.message);
             } finally {
+                // Re-enable download button
+                const downloadBtn = document.querySelector('[onclick="downloadPDF()"]');
+                if (downloadBtn) {
+                    downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
+                    downloadBtn.disabled = false;
+                }
                 isGeneratingPDF = false;
                 btn.innerHTML = originalText;
                 btn.disabled = false;
                 showLoading(false);
             }
         }
+
+        // Helper function to download base64 as PDF
+        function downloadBase64AsPDF(base64Data, fileName) {
+            try {
+                // Convert base64 to blob
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+                
+                // Create download link
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                link.style.display = 'none';
+                
+                // Trigger download
+                document.body.appendChild(link);
+                link.click();
+                
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                throw new Error('Failed to download PDF: ' + error.message);
+            }
+        }
         
+        // Close window or go back
+        function closeWindow() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.close();
+            }
+        }
+        
+        // Show loading overlay
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('errorContainer').style.display = 'none';
+            if (document.querySelector('.results-container')) {
+                document.querySelector('.results-container').style.display = 'none';
+            }
+        }
+        
+        // Hide loading overlay
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        // Show error message
+        function showError(message) {
+            hideLoading();
+            
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `
+                <div class="error-message">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h4 style="color: #dc3545; margin-bottom: 15px;">Error Loading Results</h4>
+                    <p style="color: #666; margin-bottom: 20px;">${message}</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="window.location.href='https://lunzusec.github.io/School_results/'" class="btn-action btn-close" style="min-width: 120px;">
+                            <i class="fas fa-arrow-left me-1"></i> Go Back
+                        </button>
+                        <button onclick="location.reload()" class="btn-action btn-print" style="min-width: 120px;">
+                            <i class="fas fa-redo me-1"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+            `;
+            errorContainer.style.display = 'block';
+        }
         // ============================================
         // INITIALIZE
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             loadResults();
         });
-        
+
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
+            // Ctrl+P or Cmd+P to print
             if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
                 e.preventDefault();
                 printResults();
             }
+            // Escape to close
             if (e.key === 'Escape') {
                 closeWindow();
             }
         });
-    <\/script>
-<\/body>
-<\/html>
+        
+        // Handle browser back button
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                location.reload();
+            }
+        });
+        
+        // Handle offline/online status
+        window.addEventListener('offline', function() {
+            showError('You are offline. Please check your internet connection and try again.');
+        });
+        
+        window.addEventListener('online', function() {
+            if (studentName && studentClass && dateOfBirth) {
+                loadStudentResults(studentName, studentClass, dateOfBirth);
+            }
+        });
+    </script>
+</body>
+</html>
