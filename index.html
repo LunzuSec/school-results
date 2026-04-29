@@ -180,38 +180,6 @@
             box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
         }
         
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 30px 0;
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #4299e1;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
-        .small-spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid #e2e8f0;
-            border-top: 3px solid #4299e1;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
         .students-loading {
             text-align: center;
             padding: 15px;
@@ -275,12 +243,6 @@
             border-left: 4px solid #4299e1;
         }
         
-        .alert-warning {
-            background: #feebc8;
-            color: #744210;
-            border-left: 4px solid #ed8936;
-        }
-        
         .footer {
             text-align: center;
             padding: 20px;
@@ -313,8 +275,16 @@
         .initial-loading .spinner {
             width: 60px;
             height: 60px;
-            border-color: rgba(255,255,255,0.3);
-            border-top-color: #ffd700;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .initial-loading p {
@@ -391,7 +361,7 @@
                 
                 <!-- Student Loading Indicator -->
                 <div id="studentsLoading" class="students-loading">
-                    <div class="small-spinner"></div>
+                    <div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>
                     <span id="studentsLoadingText">Loading student list...</span>
                 </div>
                 
@@ -445,11 +415,6 @@
                     </button>
                 </div>
             </form>
-            
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p id="loadingText">Processing...</p>
-            </div>
             
             <div id="resultsContainer"></div>
         </div>
@@ -540,7 +505,6 @@
             const termSelect = document.getElementById('termSelect');
             termSelect.innerHTML = '';
             
-            // Add default option
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.disabled = true;
@@ -578,7 +542,6 @@
                 termSelect.appendChild(optgroup);
             }
             
-            // Update header with active term
             if (activeTermData) {
                 document.getElementById('academicHeader').textContent = 
                     `${activeTermData.academicYear} ${activeTermData.term} RESULTS`;
@@ -593,7 +556,6 @@
                 console.log('First term loaded as default:', firstTerm.display);
             }
             
-            // Enable class dropdown now that term is loaded
             document.getElementById('studentClass').disabled = false;
         }
         
@@ -871,14 +833,13 @@
                 });
                 resultsDiv.style.display = 'block';
             } else {
-                // Show "Search result not found" message
                 resultsDiv.innerHTML = '<div class="no-results-item">🔍 No matching students found. Please check the spelling or try a different name.</div>';
                 resultsDiv.style.display = 'block';
             }
         }
         
         // ============================================
-        // MAIN ACTIONS
+        // MAIN ACTIONS - Opens in New Tab (No loading indicators on main form)
         // ============================================
         function updateButtonStates() {
             const studentName = document.getElementById('studentName').value;
@@ -909,75 +870,19 @@
             }
             
             clearError();
-            showLoading('Verifying records and opening results...');
             
-            try {
-                // First, check if student exists and fee balance status
-                const checkResult = await callGAS('getStudentResults', {
-                    studentName: studentName,
-                    studentClass: studentClass,
-                    dateOfBirth: dateOfBirth,
-                    term: termKey
-                });
-                
-                console.log('Student check response:', checkResult);
-                
-                if (checkResult && checkResult.error) {
-                    // Check if error is fee balance related
-                    if (checkResult.error.toLowerCase().includes('fee') || 
-                        checkResult.error.toLowerCase().includes('balance')) {
-                        showError(`❌ ${checkResult.error}`);
-                        hideLoading();
-                        return;
-                    }
-                    throw new Error(checkResult.error);
-                }
-                
-                if (!checkResult || !checkResult.success) {
-                    showError('Student record not found. Please verify the name, class, and date of birth are correct.');
-                    hideLoading();
-                    return;
-                }
-                
-                // Check fee balance - NEGATIVE balance blocks results
-                // Positive balance (credit) allows results
-                if (checkResult.feeBalance !== undefined && checkResult.feeBalance !== null) {
-                    // NEGATIVE balance means they OWE money - BLOCK access
-                    if (checkResult.feeBalance < 0) {
-                        const amountOwed = Math.abs(checkResult.feeBalance);
-                        showError(`⚠️ RESULTS ACCESS BLOCKED\n\nFee Balance Outstanding: K${amountOwed.toLocaleString()}\n\nPlease clear your fee balance to access results.\nContact accounts department for assistance.`);
-                        hideLoading();
-                        return;
-                    }
-                    // Positive balance (credit) or zero - ALLOW access (no message needed)
-                    console.log(`Fee balance: K${checkResult.feeBalance.toLocaleString()} - Access granted`);
-                }
-                
-                // Proceed to open results in new tab
-                const resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}&term=${encodeURIComponent(termKey)}`;
-                const newTab = window.open(resultsUrl, '_blank');
-                
-                if (!newTab) {
-                    showError('Please allow pop-ups to view results.');
-                    hideLoading();
-                    return;
-                }
-                
-                newTab.focus();
-                showSuccess('Opening results in new tab...');
-                
-            } catch (error) {
-                console.error('Error:', error);
-                if (error.message && (error.message.toLowerCase().includes('fee') || error.message.toLowerCase().includes('balance'))) {
-                    showError(`❌ ${error.message}`);
-                } else if (error.message && error.message.toLowerCase().includes('not found')) {
-                    showError('Student record not found. Please verify the name, class, and date of birth are correct.');
-                } else {
-                    showError('Could not open results. Please try again. ' + error.message);
-                }
-            } finally {
-                hideLoading();
+            // Simply open the results in a new tab - let results.html handle its own loading
+            const resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}&term=${encodeURIComponent(termKey)}`;
+            const newTab = window.open(resultsUrl, '_blank');
+            
+            if (!newTab) {
+                showError('Please allow pop-ups to view results.');
+                return;
             }
+            
+            newTab.focus();
+            showSuccess('Opening results in new tab...');
+            setTimeout(() => clearError(), 2000);
         }
         
         async function downloadResultsAsPDF() {
@@ -997,47 +902,9 @@
             }
             
             clearError();
-            showLoading('Verifying records and generating PDF...');
+            showInfo('Generating PDF, please wait...');
             
             try {
-                // First, check if student exists and fee balance status
-                const checkResult = await callGAS('getStudentResults', {
-                    studentName: studentName,
-                    studentClass: studentClass,
-                    dateOfBirth: dateOfBirth,
-                    term: termKey
-                });
-                
-                console.log('Student check response:', checkResult);
-                
-                if (checkResult && checkResult.error) {
-                    if (checkResult.error.toLowerCase().includes('fee') || 
-                        checkResult.error.toLowerCase().includes('balance')) {
-                        showError(`❌ ${checkResult.error}`);
-                        hideLoading();
-                        return;
-                    }
-                    throw new Error(checkResult.error);
-                }
-                
-                if (!checkResult || !checkResult.success) {
-                    showError('Student record not found. Please verify the name, class, and date of birth are correct.');
-                    hideLoading();
-                    return;
-                }
-                
-                // Check fee balance - NEGATIVE balance blocks PDF download
-                if (checkResult.feeBalance !== undefined && checkResult.feeBalance !== null) {
-                    if (checkResult.feeBalance < 0) {
-                        const amountOwed = Math.abs(checkResult.feeBalance);
-                        showError(`⚠️ PDF DOWNLOAD BLOCKED\n\nFee Balance Outstanding: K${amountOwed.toLocaleString()}\n\nPlease clear your fee balance to download results.\nContact accounts department for assistance.`);
-                        hideLoading();
-                        return;
-                    }
-                    console.log(`Fee balance: K${checkResult.feeBalance.toLocaleString()} - PDF download granted`);
-                }
-                
-                // Proceed to generate PDF
                 const result = await callGAS('generatePDF', {
                     studentName: studentName,
                     studentClass: studentClass,
@@ -1055,12 +922,11 @@
                 
                 downloadPDF(result, fileName);
                 showSuccess('PDF downloaded successfully!');
+                setTimeout(() => clearError(), 3000);
                 
             } catch (error) {
                 console.error('Error generating PDF:', error);
                 showError('Failed to generate PDF: ' + error.message);
-            } finally {
-                hideLoading();
             }
         }
         
@@ -1088,17 +954,6 @@
             return date instanceof Date && !isNaN(date);
         }
         
-        function showLoading(message) {
-            const loading = document.getElementById('loading');
-            const loadingText = document.getElementById('loadingText');
-            loadingText.textContent = message;
-            loading.style.display = 'block';
-        }
-        
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-        }
-        
         function showError(message) {
             const container = document.getElementById('resultsContainer');
             container.innerHTML = `
@@ -1107,6 +962,11 @@
                     <div><strong>Error:</strong> ${message.replace(/\n/g, '<br>')}</div>
                 </div>
             `;
+            setTimeout(() => {
+                if (container.innerHTML.includes('alert-error')) {
+                    container.innerHTML = '';
+                }
+            }, 5000);
         }
         
         function showSuccess(message) {
@@ -1140,7 +1000,12 @@
         }
         
         function clearError() {
-            document.getElementById('resultsContainer').innerHTML = '';
+            const container = document.getElementById('resultsContainer');
+            if (container.innerHTML !== '') {
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 3000);
+            }
         }
         
         function downloadPDF(base64Data, fileName) {
