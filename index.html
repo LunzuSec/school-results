@@ -180,6 +180,34 @@
             box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
         }
         
+        .progress-container {
+            margin: 15px 0;
+            display: none;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+            border-radius: 4px;
+        }
+        
         .students-loading {
             text-align: center;
             padding: 15px;
@@ -214,6 +242,21 @@
         .students-loaded span {
             color: #22543d;
             font-weight: 500;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #4299e1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .alert {
@@ -272,7 +315,7 @@
             color: white;
         }
         
-        .initial-loading .spinner {
+        .initial-loading .big-spinner {
             width: 60px;
             height: 60px;
             border: 4px solid rgba(255,255,255,0.3);
@@ -280,11 +323,6 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
         
         .initial-loading p {
@@ -307,7 +345,7 @@
 <body>
     <!-- Initial Loading Overlay -->
     <div id="initialLoading" class="initial-loading">
-        <div class="spinner"></div>
+        <div class="big-spinner"></div>
         <p id="initialLoadingText">Loading system configuration...</p>
     </div>
     
@@ -359,9 +397,20 @@
                     </select>
                 </div>
                 
+                <!-- Progress Bar for Loading Students -->
+                <div id="progressContainer" class="progress-container">
+                    <div class="progress-label">
+                        <span id="progressLabel">Loading students...</span>
+                        <span id="progressText">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                </div>
+                
                 <!-- Student Loading Indicator -->
                 <div id="studentsLoading" class="students-loading">
-                    <div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>
+                    <div class="spinner"></div>
                     <span id="studentsLoadingText">Loading student list...</span>
                 </div>
                 
@@ -443,6 +492,8 @@
         let availableTerms = [];
         let currentTermKey = null;
         let loadingStartTime = 0;
+        let loadingInterval = null;
+        let loadingProgress = 0;
         
         // ============================================
         // INITIALIZATION
@@ -601,6 +652,7 @@
             
             document.getElementById('searchResults').style.display = 'none';
             document.getElementById('resultsContainer').innerHTML = '';
+            document.getElementById('progressContainer').style.display = 'none';
             document.getElementById('studentsLoading').style.display = 'none';
             document.getElementById('studentsLoaded').style.display = 'none';
             
@@ -608,6 +660,63 @@
             document.getElementById('viewResultsBtn').disabled = true;
             document.getElementById('downloadPdfBtn').disabled = true;
             clearError();
+            stopProgressAnimation();
+        }
+        
+        // ============================================
+        // PROGRESS BAR FUNCTIONS
+        // ============================================
+        function startProgressAnimation() {
+            loadingProgress = 0;
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressLabel = document.getElementById('progressLabel');
+            
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = '0%';
+            progressLabel.textContent = 'Loading students...';
+            
+            stopProgressAnimation();
+            loadingInterval = setInterval(() => {
+                if (loadingProgress < 90) {
+                    loadingProgress += Math.random() * 8 + 2;
+                    if (loadingProgress > 90) loadingProgress = 90;
+                    progressFill.style.width = loadingProgress + '%';
+                    progressText.textContent = Math.round(loadingProgress) + '%';
+                }
+            }, 200);
+        }
+        
+        function completeProgressAnimation(success = true, message = '', loadTime = 0) {
+            if (loadingInterval) {
+                clearInterval(loadingInterval);
+                loadingInterval = null;
+            }
+            
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressLabel = document.getElementById('progressLabel');
+            
+            if (success) {
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+                progressLabel.textContent = message || 'Complete!';
+                
+                setTimeout(() => {
+                    document.getElementById('progressContainer').style.display = 'none';
+                }, 1000);
+            } else {
+                document.getElementById('progressContainer').style.display = 'none';
+            }
+        }
+        
+        function stopProgressAnimation() {
+            if (loadingInterval) {
+                clearInterval(loadingInterval);
+                loadingInterval = null;
+            }
         }
         
         // ============================================
@@ -708,7 +817,7 @@
         }
         
         // ============================================
-        // STUDENT DATA LOADING
+        // STUDENT DATA LOADING WITH PROGRESS BAR
         // ============================================
         async function loadStudentNames(studentClass, termKey) {
             if (isLoadingStudents) return;
@@ -716,11 +825,8 @@
             isLoadingStudents = true;
             loadingStartTime = Date.now();
             
-            const loadingDiv = document.getElementById('studentsLoading');
-            const loadingText = document.getElementById('studentsLoadingText');
-            loadingDiv.style.display = 'flex';
-            loadingText.textContent = `Loading students from ${studentClass}...`;
-            
+            // Show progress bar
+            startProgressAnimation();
             document.getElementById('studentsLoaded').style.display = 'none';
             
             try {
@@ -738,7 +844,8 @@
                     allStudentNames = names;
                     populateStudentDropdown(names);
                     
-                    loadingDiv.style.display = 'none';
+                    completeProgressAnimation(true, `Loaded ${names.length} students!`, loadTime);
+                    
                     const loadedDiv = document.getElementById('studentsLoaded');
                     const loadedText = document.getElementById('studentsLoadedText');
                     loadedText.innerHTML = `✅ Loaded ${names.length} student(s) from ${studentClass} (${loadTime}ms)`;
@@ -757,7 +864,7 @@
                     allStudentNames = [];
                     populateStudentDropdown([]);
                     
-                    loadingDiv.style.display = 'none';
+                    completeProgressAnimation(false);
                     showInfo(`No students found for ${studentClass} in the selected term`);
                     document.getElementById('studentSearch').disabled = true;
                     document.getElementById('studentName').disabled = true;
@@ -765,7 +872,7 @@
                 
             } catch (error) {
                 console.error('Error loading names:', error);
-                loadingDiv.style.display = 'none';
+                completeProgressAnimation(false);
                 showError('Failed to load students: ' + error.message);
                 document.getElementById('viewResultsBtn').disabled = true;
                 document.getElementById('downloadPdfBtn').disabled = true;
@@ -839,7 +946,7 @@
         }
         
         // ============================================
-        // MAIN ACTIONS - Opens in New Tab (No loading indicators on main form)
+        // MAIN ACTIONS
         // ============================================
         function updateButtonStates() {
             const studentName = document.getElementById('studentName').value;
@@ -853,7 +960,8 @@
             document.getElementById('downloadPdfBtn').disabled = !isFormValid || isLoadingStudents;
         }
         
-        async function getResults() {
+        // View Results - Opens in new tab (no loading on main form)
+        function getResults() {
             if (!validateForm()) {
                 showError('Please fill in all required fields.');
                 return;
@@ -871,7 +979,7 @@
             
             clearError();
             
-            // Simply open the results in a new tab - let results.html handle its own loading
+            // Open results in new tab - let results.html handle its own loading
             const resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}&term=${encodeURIComponent(termKey)}`;
             const newTab = window.open(resultsUrl, '_blank');
             
@@ -885,6 +993,7 @@
             setTimeout(() => clearError(), 2000);
         }
         
+        // Download PDF - Shows progress on main form
         async function downloadResultsAsPDF() {
             if (!validateForm()) {
                 showError('Please fill in all required fields.');
