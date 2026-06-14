@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunzu Secondary School - Fee Report Portal</title>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a3c6e 0%, #2c5282 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .logo {
+            max-width: 120px;
+            margin-bottom: 15px;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        h2 { font-size: 18px; color: #ffd700; margin-bottom: 5px; }
+        h3 { font-size: 16px; color: #cbd5e0; }
+        
+        .content { padding: 30px; }
+        .form-group { margin-bottom: 25px; }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2d3748;
+            font-size: 16px;
+        }
+        
+        .required-star {
+            color: #e53e3e;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        select:disabled, input:disabled {
+            background-color: #f7fafc;
+            color: #a0aec0;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        
+        .btn-primary:disabled {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .btn-primary:not(:disabled):hover {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            color: white;
+        }
+        
+        .btn-secondary:not(:disabled):hover {
+            background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+        }
+        
+        .btn-back {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 85, 104, 0.3);
+        }
+        
+        .progress-container {
+            margin: 15px 0;
+            display: none;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+            border-radius: 4px;
+        }
+        
+        .students-loading {
+            text-align: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #4299e1;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .students-loaded {
+            text-align: center;
+            padding: 15px;
+            background: #f0fff4;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #38a169;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #4299e1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #e53e3e;
+        }
+        
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #38a169;
+        }
+        
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #4299e1;
+            text-decoration: none;
+        }
+        
+        .initial-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            color: white;
+        }
+        
+        .initial-loading .big-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { border-radius: 10px; }
+            .header { padding: 20px 15px; }
+            .content { padding: 20px; }
+            .btn { min-width: 100%; }
+            .buttons { flex-direction: column; }
+            h1 { font-size: 20px; }
+            h2 { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Initial Loading Overlay -->
+    <div id="initialLoading" class="initial-loading">
+        <div class="big-spinner"></div>
+        <p id="initialLoadingText">Loading fee portal configuration...</p>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" 
+                 alt="Malawi Government Logo" 
+                 class="logo">
+            <h1>LUNZU SECONDARY SCHOOL</h1>
+            <h2 id="termHeader">Comprehensive Fee Report Portal</h2>
+            <h3>Office of the Bursar</h3>
+        </div>
+        
+        <div class="content">
+            <!-- Term Selection -->
+            <div class="form-group">
+                <label for="termSelect">
+                    <span class="required-star">*</span> Select Term:
+                </label>
+                <select id="termSelect" required onchange="handleTermChange()">
+                    <option value="" disabled selected>Loading terms...</option>
+                </select>
+                <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
+                    Select which term's fee records you want to view
+                </small>
+            </div>
+            
+            <!-- API Status -->
+            <div style="text-align:center;margin:10px 0;padding:10px;background:#f7fafc;border-radius:8px;">
+                <span id="apiStatus">Checking connection...</span>
+            </div>
+            
+            <!-- Form -->
+            <form id="feeForm">
+                <div class="form-group">
+                    <label for="studentClass">
+                        <span class="required-star">*</span> Class:
+                    </label>
+                    <select id="studentClass" required onchange="handleClassChange()" disabled>
+                        <option value="" disabled selected>Select Class</option>
+                        <option value="Form 1">Form 1</option>
+                        <option value="Form 2">Form 2</option>
+                        <option value="Form 3">Form 3</option>
+                        <option value="Form 4">Form 4</option>
+                        <option value="Form 1 ODL">Form 1 ODL</option>
+                        <option value="Form 2 ODL">Form 2 ODL</option>
+                        <option value="Form 3 ODL">Form 3 ODL</option>
+                        <option value="Form 4 ODL">Form 4 ODL</option>
+                    </select>
+                </div>
+                
+                <!-- Progress Bar for Loading Students -->
+                <div id="progressContainer" class="progress-container">
+                    <div class="progress-label">
+                        <span id="progressLabel">Loading fee records...</span>
+                        <span id="progressText">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                </div>
+                
+                <!-- Student Loading Indicator -->
+                <div id="studentsLoading" class="students-loading">
+                    <div class="spinner"></div>
+                    <span id="studentsLoadingText">Loading fee records...</span>
+                </div>
+                
+                <div id="studentsLoaded" class="students-loaded">
+                    <span>✅</span>
+                    <span id="studentsLoadedText">Ready to generate report</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="studentName">
+                        <span class="required-star">*</span> Student Name:
+                    </label>
+                    <select id="studentName" required disabled>
+                        <option value="" disabled selected>-- Select Class First --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dateOfBirth">
+                        <span class="required-star">*</span> Date of Birth:
+                    </label>
+                    <input type="date" id="dateOfBirth" required>
+                    <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
+                        Format: YYYY-MM-DD (e.g., 2010-05-15) - Used to verify your identity
+                    </small>
+                </div>
+                
+                <div class="buttons">
+                    <button type="button" class="btn btn-primary" onclick="generateFeeReport()" id="generateReportBtn" disabled>
+                        <span>💰</span> Generate Fee Report
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.reload()">
+                        <span>🔄</span> Reset Form
+                    </button>
+                    <button type="button" class="btn btn-back" onclick="goToResultsPortal()">
+                        <span>📊</span> Go to Results Portal
+                    </button>
+                </div>
+            </form>
+            
+            <div id="reportContainer"></div>
+            
+            <div class="info-note" style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 13px;">
+                <strong>📌 Important Information:</strong><br>
+                • This report shows your complete fee payment history for the selected term<br>
+                • Includes installment breakdown, outstanding balances, and next due dates<br>
+                • For any discrepancies, please contact the accounts office using the information in the report<br>
+                • Payment receipts should be kept for future reference
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© <span id="currentYear"></span> Lunzu Secondary School - Office of the Bursar</p>
+            <p>For fee inquiries: 
+                <a href="https://wa.me/265888866269" target="_blank">
+                    WhatsApp: +265 888 866 269
+                </a>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
+        
+        // ============================================
+        // GLOBAL VARIABLES
+        // ============================================
+        let availableTerms = [];
+        let currentTermKey = null;
+        let isLoadingStudents = false;
+        let loadingInterval = null;
+        let loadingProgress = 0;
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        window.onload = async function() {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            showInitialLoading(true, "Loading fee portal configuration...");
+            
+            try {
+                await loadAvailableTerms();
+                await testAPIConnection();
+                setupForm();
+                showInitialLoading(false);
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showInitialLoading(false);
+                showError('Failed to initialize: ' + error.message);
+            }
+        };
+        
+        function showInitialLoading(show, message = 'Loading...') {
+            const overlay = document.getElementById('initialLoading');
+            const textEl = document.getElementById('initialLoadingText');
+            if (show) {
+                if (textEl) textEl.textContent = message;
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+        
+        // ============================================
+        // TERM MANAGEMENT
+        // ============================================
+        async function loadAvailableTerms() {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    console.log('Loading available terms...');
+                    const terms = await callGAS('getAvailableTerms', {});
+                    
+                    if (terms && Array.isArray(terms) && terms.length > 0) {
+                        availableTerms = terms;
+                        populateTermDropdown(terms);
+                        console.log('Terms loaded:', terms.length);
+                        resolve(terms);
+                    } else {
+                        reject(new Error('No terms received from server'));
+                    }
+                } catch (error) {
+                    console.error('Error loading terms:', error);
+                    document.getElementById('apiStatus').innerHTML = '❌ Error loading terms';
+                    document.getElementById('apiStatus').style.color = '#e53e3e';
+                    reject(error);
+                }
+            });
+        }
+        
+        function populateTermDropdown(terms) {
+            const termSelect = document.getElementById('termSelect');
+            termSelect.innerHTML = '';
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.disabled = true;
+            defaultOption.textContent = '-- Select Term --';
+            termSelect.appendChild(defaultOption);
+            
+            const grouped = {};
+            terms.forEach(term => {
+                if (!grouped[term.academicYear]) {
+                    grouped[term.academicYear] = [];
+                }
+                grouped[term.academicYear].push(term);
+            });
+            
+            let activeTermData = null;
+            
+            for (const [year, yearTerms] of Object.entries(grouped)) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = year;
+                
+                yearTerms.forEach(term => {
+                    const option = document.createElement('option');
+                    option.value = term.key;
+                    option.textContent = term.display;
+                    if (term.isActive) {
+                        option.selected = true;
+                        currentTermKey = term.key;
+                        option.style.fontWeight = 'bold';
+                        option.style.backgroundColor = '#e8f5e9';
+                        activeTermData = term;
+                    }
+                    optgroup.appendChild(option);
+                });
+                
+                termSelect.appendChild(optgroup);
+            }
+            
+            if (activeTermData) {
+                document.getElementById('termHeader').textContent = 
+                    `${activeTermData.academicYear} ${activeTermData.term} Fee Report`;
+                currentTermKey = activeTermData.key;
+                console.log('Default term loaded:', activeTermData.display);
+            } else if (terms.length > 0) {
+                const firstTerm = terms[0];
+                termSelect.value = firstTerm.key;
+                currentTermKey = firstTerm.key;
+                document.getElementById('termHeader').textContent = 
+                    `${firstTerm.academicYear} ${firstTerm.term} Fee Report`;
+                console.log('First term loaded as default:', firstTerm.display);
+            }
+            
+            document.getElementById('studentClass').disabled = false;
+        }
+        
+        function handleTermChange() {
+            const termSelect = document.getElementById('termSelect');
+            const selectedValue = termSelect.value;
+            
+            if (!selectedValue) {
+                currentTermKey = null;
+                document.getElementById('termHeader').textContent = 'Comprehensive Fee Report Portal';
+                resetAllFields();
+                return;
+            }
+            
+            const selectedTerm = availableTerms.find(t => t.key === selectedValue);
+            
+            if (selectedTerm) {
+                currentTermKey = selectedTerm.key;
+                document.getElementById('termHeader').textContent = 
+                    `${selectedTerm.academicYear} ${selectedTerm.term} Fee Report`;
+                resetAllFields();
+            }
+        }
+        
+        function resetAllFields() {
+            const classSelect = document.getElementById('studentClass');
+            classSelect.value = '';
+            
+            const studentName = document.getElementById('studentName');
+            const dateOfBirth = document.getElementById('dateOfBirth');
+            
+            studentName.innerHTML = '<option value="" disabled selected>-- Select Class First --</option>';
+            studentName.disabled = true;
+            dateOfBirth.value = '';
+            
+            document.getElementById('reportContainer').innerHTML = '';
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('studentsLoading').style.display = 'none';
+            document.getElementById('studentsLoaded').style.display = 'none';
+            
+            document.getElementById('generateReportBtn').disabled = true;
+            clearError();
+            stopProgressAnimation();
+        }
+        
+        // ============================================
+        // PROGRESS BAR FUNCTIONS
+        // ============================================
+        function startProgressAnimation(message = 'Loading fee records...') {
+            loadingProgress = 0;
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressLabel = document.getElementById('progressLabel');
+            
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = '0%';
+            progressLabel.textContent = message;
+            
+            stopProgressAnimation();
+            loadingInterval = setInterval(() => {
+                if (loadingProgress < 90) {
+                    loadingProgress += Math.random() * 8 + 2;
+                    if (loadingProgress > 90) loadingProgress = 90;
+                    progressFill.style.width = loadingProgress + '%';
+                    progressText.textContent = Math.round(loadingProgress) + '%';
+                }
+            }, 200);
+        }
+        
+        function completeProgressAnimation(success = true, message = '', loadTime = 0) {
+            if (loadingInterval) {
+                clearInterval(loadingInterval);
+                loadingInterval = null;
+            }
+            
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressLabel = document.getElementById('progressLabel');
+            
+            if (success) {
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+                progressLabel.textContent = message || 'Complete!';
+                
+                setTimeout(() => {
+                    document.getElementById('progressContainer').style.display = 'none';
+                }, 1000);
+            } else {
+                document.getElementById('progressContainer').style.display = 'none';
+            }
+        }
+        
+        function stopProgressAnimation() {
+            if (loadingInterval) {
+                clearInterval(loadingInterval);
+                loadingInterval = null;
+            }
+        }
+        
+        // ============================================
+        // API CALLS
+        // ============================================
+        function callGAS(action, params = {}) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+                params.callback = callbackName;
+                params.action = action;
+                
+                let url = GAS_URL + '?';
+                const urlParams = [];
+                for (const key in params) {
+                    if (params[key] !== undefined && params[key] !== null) {
+                        urlParams.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+                    }
+                }
+                url += urlParams.join('&');
+                
+                const script = document.createElement('script');
+                script.src = url;
+                
+                const timeoutId = setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        if (script.parentNode) script.parentNode.removeChild(script);
+                        reject(new Error('Request timeout'));
+                    }
+                }, 15000);
+                
+                window[callbackName] = function(response) {
+                    clearTimeout(timeoutId);
+                    delete window[callbackName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                    
+                    if (response && response.error) {
+                        reject(new Error(response.error));
+                    } else {
+                        resolve(response);
+                    }
+                };
+                
+                script.onerror = function() {
+                    clearTimeout(timeoutId);
+                    delete window[callbackName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                    reject(new Error('Connection failed'));
+                };
+                
+                document.head.appendChild(script);
+            });
+        }
+        
+        // ============================================
+        // FORM HANDLING
+        // ============================================
+        function setupForm() {
+            document.getElementById('studentClass').addEventListener('change', handleClassChange);
+            document.getElementById('studentName').addEventListener('change', () => {
+                updateButtonState();
+            });
+            document.getElementById('dateOfBirth').addEventListener('change', () => {
+                updateButtonState();
+            });
+            document.getElementById('termSelect').addEventListener('change', () => {
+                updateButtonState();
+            });
+        }
+        
+        async function handleClassChange() {
+            const studentClass = document.getElementById('studentClass').value;
+            
+            const studentName = document.getElementById('studentName');
+            studentName.innerHTML = '<option value="" disabled selected>-- Select Class First --</option>';
+            studentName.disabled = true;
+            document.getElementById('dateOfBirth').value = '';
+            document.getElementById('reportContainer').innerHTML = '';
+            document.getElementById('generateReportBtn').disabled = true;
+            
+            if (studentClass && studentClass !== "" && currentTermKey) {
+                await loadStudentNames(studentClass, currentTermKey);
+            } else if (studentClass && !currentTermKey) {
+                showError('Please select a term first.');
+            }
+        }
+        
+        // Load student names from fee sheet
+        async function loadStudentNames(studentClass, termKey) {
+            if (isLoadingStudents) return;
+            
+            isLoadingStudents = true;
+            
+            // Show progress bar
+            startProgressAnimation(`Loading students from ${studentClass}...`);
+            document.getElementById('studentsLoaded').style.display = 'none';
+            document.getElementById('studentsLoading').style.display = 'flex';
+            
+            try {
+                console.log(`Loading students for ${studentClass} with term ${termKey}`);
+                
+                const names = await callGAS('getStudentNames', { 
+                    studentClass: studentClass,
+                    term: termKey
+                });
+                
+                if (Array.isArray(names) && names.length > 0) {
+                    populateStudentDropdown(names);
+                    
+                    completeProgressAnimation(true, `Loaded ${names.length} student(s) from ${studentClass}`, 0);
+                    
+                    const loadedDiv = document.getElementById('studentsLoaded');
+                    const loadedText = document.getElementById('studentsLoadedText');
+                    loadedText.innerHTML = `✅ Loaded ${names.length} student(s) from ${studentClass}`;
+                    loadedDiv.style.display = 'flex';
+                    
+                    document.getElementById('studentName').disabled = false;
+                    
+                    setTimeout(() => {
+                        if (loadedDiv.style.display === 'flex') {
+                            loadedDiv.style.display = 'none';
+                        }
+                    }, 2000);
+                    
+                } else {
+                    populateStudentDropdown([]);
+                    
+                    completeProgressAnimation(false);
+                    showInfo(`No students found for ${studentClass} in the selected term`);
+                    document.getElementById('studentName').disabled = true;
+                }
+                
+            } catch (error) {
+                console.error('Error loading names:', error);
+                completeProgressAnimation(false);
+                showError('Failed to load students: ' + error.message);
+                document.getElementById('generateReportBtn').disabled = true;
+            } finally {
+                isLoadingStudents = false;
+                document.getElementById('studentsLoading').style.display = 'none';
+                updateButtonState();
+            }
+        }
+        
+        function populateStudentDropdown(names) {
+            const select = document.getElementById('studentName');
+            select.innerHTML = '';
+            
+            if (names.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.disabled = true;
+                option.selected = true;
+                option.textContent = '-- No students found --';
+                select.appendChild(option);
+            } else {
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                defaultOption.textContent = `-- Select Student (${names.length} available) --`;
+                select.appendChild(defaultOption);
+                
+                names.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
+                });
+            }
+        }
+        
+        // ============================================
+        // MAIN ACTION - GENERATE FEE REPORT
+        // ============================================
+        async function generateFeeReport() {
+            if (!validateForm()) {
+                showError('Please fill in all required fields.');
+                return;
+            }
+            
+            const studentName = document.getElementById('studentName').value.trim();
+            const studentClass = document.getElementById('studentClass').value;
+            const dateOfBirth = document.getElementById('dateOfBirth').value;
+            const termKey = document.getElementById('termSelect').value;
+            
+            if (!isValidDate(dateOfBirth)) {
+                showError('Please enter a valid date (YYYY-MM-DD).');
+                return;
+            }
+            
+            clearError();
+            
+            // Show loading state
+            const btn = document.getElementById('generateReportBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span> Generating Fee Report...';
+            btn.disabled = true;
+            
+            startProgressAnimation('Generating comprehensive fee report...');
+            
+            try {
+                const result = await callGAS('getFeeReport', {
+                    studentName: studentName,
+                    studentClass: studentClass,
+                    dateOfBirth: dateOfBirth,
+                    term: termKey
+                });
+                
+                completeProgressAnimation(true, 'Report generated successfully!');
+                
+                if (result && result.error) {
+                    throw new Error(result.error);
+                }
+                
+                if (result && result.success) {
+                    displayFeeReport(result);
+                    showSuccess('Fee report generated successfully!');
+                } else {
+                    throw new Error(result.error || 'Failed to generate fee report');
+                }
+                
+            } catch (error) {
+                console.error('Error generating fee report:', error);
+                completeProgressAnimation(false);
+                showError('Failed to generate fee report: ' + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                setTimeout(() => {
+                    if (document.getElementById('progressContainer').style.display === 'block') {
+                        document.getElementById('progressContainer').style.display = 'none';
+                    }
+                }, 1000);
+            }
+        }
+        
+        // ============================================
+        // DISPLAY FEE REPORT
+        // ============================================
+        function displayFeeReport(report) {
+            const container = document.getElementById('reportContainer');
+            
+            const statusClass = report.paymentStatus === 'FULLY PAID' ? 'status-paid' : 
+                               (report.paymentStatus === 'PARTIALLY PAID' ? 'status-partial' : 'status-unpaid');
+            
+            let installmentsHtml = '';
+            if (report.installments && report.installments.length > 0) {
+                installmentsHtml = `
+                    <div class="card" style="background: white; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div class="card-header" style="background: #f8f9fa; padding: 15px 20px; border-bottom: 2px solid #e0e0e0; font-weight: bold;">
+                            📅 Installment Payment History
+                        </div>
+                        <div class="card-body" style="padding: 20px;">
+                            <table class="installment-table" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f5f5f5;">
+                                        <th style="padding: 12px; text-align: left;">Installment</th>
+                                        <th style="padding: 12px; text-align: left;">Amount Paid</th>
+                                        <th style="padding: 12px; text-align: left;">Payment Date</th>
+                                        <th style="padding: 12px; text-align: left;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${report.installments.map(inst => `
+                                        <tr>
+                                            <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">Installment ${inst.number} of 3</td>
+                                            <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #4caf50; font-weight: bold;">K${inst.amount.toLocaleString()}</td>
+                                            <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">${inst.date || 'Date not recorded'}</td>
+                                            <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;"><span style="background: #4caf50; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px;">PAID</span></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } else {
+                installmentsHtml = `
+                    <div class="card" style="background: white; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div class="card-header" style="background: #f8f9fa; padding: 15px 20px; border-bottom: 2px solid #e0e0e0; font-weight: bold;">
+                            📅 Installment Payment History
+                        </div>
+                        <div class="card-body" style="padding: 20px; text-align: center; color: #999;">
+                            No installment payments recorded for this term.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            let nextDueHtml = '';
+            if (report.nextDueInfo && report.nextDueInfo.hasNextDue) {
+                nextDueHtml = `
+                    <div class="card" style="background: white; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div class="card-header" style="background: #f8f9fa; padding: 15px 20px; border-bottom: 2px solid #e0e0e0; font-weight: bold;">
+                            ⏰ Pending Payment
+                        </div>
+                        <div class="card-body" style="padding: 20px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #ff9800;">K${report.nextDueInfo.amountDue.toLocaleString()}</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Next Installment Amount</div>
+                                </div>
+                                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #ff9800;">${report.nextDueInfo.nextInstallmentNumber} of 3</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Installment Number</div>
+                                </div>
+                                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #f44336;">K${report.nextDueInfo.totalRemainingAmount.toLocaleString()}</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Total Remaining</div>
+                                </div>
+                            </div>
+                            ${report.nextDueInfo.suggestedDateMessage ? `
+                            <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 8px;">
+                                <strong>📌 ${report.nextDueInfo.suggestedDateMessage}</strong>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = `
+                <div style="margin-top: 30px;">
+                    <!-- Student Info Card -->
+                    <div style="background: white; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="background: linear-gradient(135deg, #1a237e, #0d47a1); color: white; padding: 15px 20px;">
+                            <strong>📋 STUDENT INFORMATION</strong>
+                        </div>
+                        <div style="padding: 20px; display: flex; flex-wrap: wrap; justify-content: space-between;">
+                            <div style="padding: 10px 20px;">
+                                <div style="font-size: 12px; color: #666; text-transform: uppercase;">Student Name</div>
+                                <div style="font-size: 18px; font-weight: bold; color: #333;">${escapeHtml(report.studentName)}</div>
+                            </div>
+                            <div style="padding: 10px 20px;">
+                                <div style="font-size: 12px; color: #666; text-transform: uppercase;">Class</div>
+                                <div style="font-size: 18px; font-weight: bold; color: #333;">${escapeHtml(report.studentClass)}</div>
+                            </div>
+                            <div style="padding: 10px 20px;">
+                                <div style="font-size: 12px; color: #666; text-transform: uppercase;">Payment Status</div>
+                                <div style="font-size: 18px; font-weight: bold;">
+                                    <span style="background: ${report.statusColor === 'green' ? '#4caf50' : (report.statusColor === 'orange' ? '#ff9800' : '#f44336')}; color: white; padding: 4px 15px; border-radius: 30px; font-size: 14px; display: inline-block;">
+                                        ${report.paymentStatus}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fee Summary Card -->
+                    <div style="background: white; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="background: #f8f9fa; padding: 15px 20px; border-bottom: 2px solid #e0e0e0; font-weight: bold;">
+                            💰 FEE SUMMARY
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #1a237e;">K${report.feesPerTerm.toLocaleString()}</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Term Fees</div>
+                                </div>
+                                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #4caf50;">K${report.totalPaidThisTerm.toLocaleString()}</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Total Paid (This Term)</div>
+                                </div>
+                                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                                    <div style="font-size: 24px; font-weight: bold; ${report.previousBalance > 0 ? 'color: #f44336' : 'color: #4caf50'};">K${Math.abs(report.previousBalance).toLocaleString()}</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Previous Balance</div>
+                                </div>
+                                <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                                    <div style="font-size: 28px; font-weight: bold; ${report.cumulativeBalance > 0 ? 'color: #f44336' : 'color: #4caf50'};">K${Math.abs(report.cumulativeBalance).toLocaleString()}</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Cumulative Balance</div>
+                                </div>
+                            </div>
+                            ${report.statusMessage ? `
+                            <div style="margin-top: 15px; padding: 12px; background: ${report.paymentStatus === 'FULLY PAID' ? '#e8f5e9' : '#ffebee'}; border-left: 4px solid ${report.paymentStatus === 'FULLY PAID' ? '#4caf50' : '#f44336'}; border-radius: 8px;">
+                                <strong>Status Note:</strong> ${escapeHtml(report.statusMessage)}
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    ${installmentsHtml}
+                    
+                    ${nextDueHtml}
+                    
+                    <!-- Payment Instructions -->
+                    <div style="background: white; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="background: #f8f9fa; padding: 15px 20px; border-bottom: 2px solid #e0e0e0; font-weight: bold;">
+                            💳 PAYMENT INSTRUCTIONS
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                                <div>
+                                    <strong>Bank Details:</strong><br>
+                                    ${escapeHtml(report.bankInfo || 'FDH Bank, Lunzu Branch')}<br><br>
+                                    <strong>Account Number:</strong><br>
+                                    ${escapeHtml(report.contactInfo?.accountNumber || '129 00000 98673')}
+                                </div>
+                                <div>
+                                    <strong>Contact for Fee Queries:</strong><br>
+                                    Phone: ${escapeHtml(report.contactInfo?.phone1 || 'N/A')}<br>
+                                    ${report.contactInfo?.phone2 ? `Alternate: ${escapeHtml(report.contactInfo.phone2)}<br>` : ''}
+                                    ${report.contactInfo?.whatsapp ? `WhatsApp: ${escapeHtml(report.contactInfo.whatsapp)}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Policy Information -->
+                    <div style="padding: 15px; background: #fff3e0; border-left: 4px solid #ff9800; border-radius: 8px; margin-top: 20px;">
+                        <strong>📋 Fee Policy Information</strong><br>
+                        ${escapeHtml(report.governmentPolicy || 'The grace period for payment of school fees is 2 weeks from the beginning of each term. No fees, no admission.')}
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="text-align: center; padding: 20px; font-size: 11px; color: #999; border-top: 1px solid #e0e0e0; margin-top: 20px;">
+                        Report generated on: ${new Date(report.reportGenerated).toLocaleString()}<br>
+                        This is an official fee statement from Lunzu Secondary School - Office of the Bursar
+                    </div>
+                </div>
+            `;
+            
+            // Scroll to report
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
+        function updateButtonState() {
+            const studentName = document.getElementById('studentName').value;
+            const studentClass = document.getElementById('studentClass').value;
+            const dateOfBirth = document.getElementById('dateOfBirth').value;
+            const term = document.getElementById('termSelect').value;
+            const isFormValid = studentName && studentClass && dateOfBirth && term && 
+                                studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
+            
+            document.getElementById('generateReportBtn').disabled = !isFormValid || isLoadingStudents;
+        }
+        
+        function validateForm() {
+            const studentName = document.getElementById('studentName').value;
+            const studentClass = document.getElementById('studentClass').value;
+            const dateOfBirth = document.getElementById('dateOfBirth').value;
+            const term = document.getElementById('termSelect').value;
+            
+            return studentName && studentClass && dateOfBirth && term && 
+                   studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
+        }
+        
+        function isValidDate(dateString) {
+            const regex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!regex.test(dateString)) return false;
+            const date = new Date(dateString);
+            return date instanceof Date && !isNaN(date);
+        }
+        
+        function showError(message) {
+            const container = document.getElementById('reportContainer');
+            container.innerHTML = `
+                <div class="alert alert-error" style="margin-top: 20px;">
+                    <span>❌</span>
+                    <div><strong>Error:</strong> ${message.replace(/\n/g, '<br>')}</div>
+                </div>
+            `;
+            setTimeout(() => {
+                if (container.innerHTML.includes('alert-error')) {
+                    // Don't clear if there's other content
+                    if (container.innerHTML.includes('Fee Summary')) return;
+                    container.innerHTML = '';
+                }
+            }, 8000);
+        }
+        
+        function showSuccess(message) {
+            const container = document.getElementById('reportContainer');
+            const existingSuccess = container.querySelector('.alert-success');
+            if (existingSuccess) return;
+            
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert alert-success';
+            successDiv.style.marginTop = '20px';
+            successDiv.innerHTML = `<span>✅</span><div>${message}</div>`;
+            container.appendChild(successDiv);
+            
+            setTimeout(() => {
+                if (successDiv.parentNode) successDiv.remove();
+            }, 5000);
+        }
+        
+        function showInfo(message) {
+            const container = document.getElementById('reportContainer');
+            container.innerHTML = `
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    <span>ℹ️</span>
+                    <div>${message}</div>
+                </div>
+            `;
+            setTimeout(() => {
+                if (container.innerHTML.includes('alert-info')) {
+                    container.innerHTML = '';
+                }
+            }, 5000);
+        }
+        
+        function clearError() {
+            const container = document.getElementById('reportContainer');
+            const errorDiv = container.querySelector('.alert-error');
+            if (errorDiv) errorDiv.remove();
+        }
+        
+        function goToResultsPortal() {
+            window.location.href = 'results-portal.html';
+        }
+        
+        async function testAPIConnection() {
+            try {
+                const result = await callGAS('test', {});
+                if (result && result.success) {
+                    document.getElementById('apiStatus').innerHTML = '✅ Connected to Server';
+                    document.getElementById('apiStatus').style.color = '#38a169';
+                }
+            } catch (error) {
+                console.error('API test failed:', error);
+                document.getElementById('apiStatus').innerHTML = '⚠️ Connection slow - Features may load slower';
+                document.getElementById('apiStatus').style.color = '#ed8936';
+            }
+        }
+    </script>
+</body>
+</html>
