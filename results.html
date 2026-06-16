@@ -282,24 +282,11 @@
         }
         
         .fee-alert {
-            padding: 10px;
-            margin-bottom: 12px;
-            border-radius: 8px;
-        }
-        
-        .fee-alert-danger {
             background: #ffebee;
             border-left: 4px solid #f44336;
-        }
-        
-        .fee-alert-success {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
-        }
-        
-        .fee-alert-info {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
         }
         
         @media (max-width: 768px) {
@@ -556,32 +543,24 @@
             document.getElementById('academicHeader').textContent = headerText.trim();
             
             // ============================================
-            // FEE BALANCE WARNING - FIXED
+            // FEE BALANCE WARNING - SIMPLIFIED
             // ONLY show warning if balance is NEGATIVE (less than 0)
+            // If balance >= 0, show nothing
             // ============================================
             const feeAlertContainer = document.getElementById('feeAlertContainer');
             
             if (results.feeBalance < 0) {
                 var amountOwed = Math.abs(results.feeBalance);
                 feeAlertContainer.innerHTML = `
-                    <div class="fee-alert fee-alert-danger">
+                    <div class="fee-alert">
                         <i class="fas fa-exclamation-triangle me-2" style="color: #f44336;"></i>
                         <strong style="color: #c62828;">OUTSTANDING FEE BALANCE:</strong> 
                         <span style="color: #c62828;">You have an outstanding balance of K${amountOwed.toLocaleString()}.</span>
                         <br><span style="font-size: 13px; color: #666;">Please clear your fee balance to access results.</span>
                     </div>
                 `;
-            } else if (results.feeBalance > 0) {
-                // Show a positive message for credit balance (NO warning)
-                feeAlertContainer.innerHTML = `
-                    <div class="fee-alert fee-alert-success">
-                        <i class="fas fa-check-circle me-2" style="color: #4caf50;"></i>
-                        <strong style="color: #2e7d32;">FEE STATUS:</strong>
-                        <span style="color: #2e7d32;">You have a credit balance of K${results.feeBalance.toLocaleString()}.</span>
-                    </div>
-                `;
             } else {
-                // Balance is zero - show nothing
+                // Balance is zero or positive (credit) - show nothing
                 feeAlertContainer.innerHTML = '';
             }
             
