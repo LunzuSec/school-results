@@ -6,384 +6,486 @@
     <title>Lunzu Secondary School - Results Portal</title>
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
             min-height: 100vh;
             padding: 20px;
+            background: #0a1628;
+            position: relative;
+            overflow-x: hidden;
         }
-        
+
+        /* ---- Animated Background Canvas (Academic/Certificate theme) ---- */
+        #bg-canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        #bg-canvas-container canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ---- Glass-morphism container ---- */
         .container {
-            max-width: 800px;
+            position: relative;
+            z-index: 1;
+            max-width: 820px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(14px) saturate(180%);
+            -webkit-backdrop-filter: blur(14px) saturate(180%);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 215, 0, 0.2);
             overflow: hidden;
         }
-        
+
+        /* ---- Header ---- */
         .header {
-            background: linear-gradient(135deg, #1a3c6e 0%, #2c5282 100%);
+            background: rgba(10, 30, 50, 0.6);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             color: white;
-            padding: 25px;
+            padding: 22px 20px 18px;
             text-align: center;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.25);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
-        
+
         .logo {
-            max-width: 120px;
-            margin-bottom: 15px;
-            background: white;
-            padding: 8px;
-            border-radius: 8px;
+            max-width: 100px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 5px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
-        
-        h1 { font-size: 24px; margin-bottom: 8px; }
-        h2 { font-size: 18px; color: #ffd700; margin-bottom: 5px; }
-        h3 { font-size: 16px; color: #cbd5e0; }
-        
-        .content { padding: 30px; }
-        .form-group { margin-bottom: 25px; }
-        
+
+        h1 {
+            font-size: 26px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            color: #fff;
+        }
+
+        h2 {
+            font-size: 19px;
+            color: #fcd34d;
+            margin-top: 4px;
+            font-weight: 500;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        h3 {
+            font-size: 15px;
+            color: #d1e0f0;
+            margin-top: 2px;
+            font-weight: 300;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ---- Content ---- */
+        .content {
+            padding: 28px 26px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
         label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #2d3748;
-            font-size: 16px;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #f0f4fa;
+            font-size: 15px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         }
-        
+
         .required-star {
-            color: #e53e3e;
+            color: #fbbf24;
+            margin-right: 2px;
         }
-        
+
         select, input {
             width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            padding: 13px 15px;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            color: #fff;
+            transition: 0.25s ease;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
         }
-        
+
+        select option {
+            background: #1a2a3a;
+            color: #fff;
+        }
+
         select:disabled, input:disabled {
-            background-color: #f7fafc;
-            color: #a0aec0;
+            background: rgba(200, 200, 200, 0.10);
+            color: #cbd5e1;
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.6;
         }
-        
+
         select:focus, input:focus {
             outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+            border-color: #fbbf24;
+            background: rgba(255, 255, 255, 0.20);
+            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.12), inset 0 2px 6px rgba(0, 0, 0, 0.1);
         }
-        
-        .search-container { position: relative; }
-        
+
+        select:hover:not(:disabled), input:hover:not(:disabled) {
+            border-color: rgba(255, 215, 0, 0.4);
+        }
+
+        /* ---- Search Container ---- */
+        .search-container {
+            position: relative;
+        }
+
         .search-results {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-            background: white;
-            border: 2px solid #4299e1;
+            background: rgba(20, 35, 55, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1.5px solid rgba(255, 215, 0, 0.2);
             border-top: none;
-            border-radius: 0 0 8px 8px;
+            border-radius: 0 0 14px 14px;
             max-height: 200px;
             overflow-y: auto;
             z-index: 1000;
             display: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
-        
+
         .search-item {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             cursor: pointer;
+            color: #e2e8f0;
+            transition: 0.15s;
         }
-        
-        .search-item:hover { background: #f7fafc; }
-        
+
+        .search-item:hover {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
         .no-results-item {
-            padding: 12px;
-            color: #e53e3e;
+            padding: 12px 16px;
+            color: #f87171;
             text-align: center;
             font-style: italic;
         }
-        
+
+        /* ---- Buttons ---- */
         .buttons {
             display: flex;
-            gap: 15px;
-            margin-top: 30px;
+            gap: 14px;
+            margin-top: 28px;
             flex-wrap: wrap;
         }
-        
+
         .btn {
             flex: 1;
-            min-width: 200px;
-            padding: 16px;
+            min-width: 170px;
+            padding: 15px 18px;
             border: none;
-            border-radius: 8px;
+            border-radius: 14px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: all 0.3s ease;
+            transition: 0.2s ease;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.10);
         }
-        
+
         .btn-primary {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            background: rgba(37, 99, 235, 0.7);
             color: white;
         }
-        
         .btn-primary:disabled {
-            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            background: rgba(100, 116, 139, 0.4);
             cursor: not-allowed;
-            opacity: 0.6;
+            opacity: 0.5;
+            box-shadow: none;
         }
-        
         .btn-primary:not(:disabled):hover {
-            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+            transform: translateY(-3px);
+            background: rgba(37, 99, 235, 0.9);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
+            border-color: rgba(255, 215, 0, 0.3);
         }
-        
+
         .btn-secondary {
-            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+            background: rgba(22, 163, 74, 0.7);
             color: white;
         }
-        
         .btn-secondary:disabled {
-            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            background: rgba(100, 116, 139, 0.4);
             cursor: not-allowed;
-            opacity: 0.6;
+            opacity: 0.5;
         }
-        
         .btn-secondary:not(:disabled):hover {
-            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 85, 104, 0.3);
+            transform: translateY(-3px);
+            background: rgba(22, 163, 74, 0.9);
+            box-shadow: 0 12px 28px rgba(22, 163, 74, 0.3);
         }
-        
+
         .btn-back {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            background: rgba(71, 85, 105, 0.7);
             color: white;
         }
-        
         .btn-back:hover {
-            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+            transform: translateY(-3px);
+            background: rgba(71, 85, 105, 0.9);
+            box-shadow: 0 12px 28px rgba(71, 85, 105, 0.3);
         }
-        
+
+        /* ---- Progress & Status ---- */
         .progress-container {
-            margin: 15px 0;
+            margin: 16px 0 8px 0;
             display: none;
         }
-        
         .progress-label {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
             font-size: 14px;
-            color: #4a5568;
+            color: #f0f4fa;
+            font-weight: 500;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+            margin-bottom: 4px;
         }
-        
         .progress-bar {
-            height: 8px;
-            background-color: #e2e8f0;
-            border-radius: 4px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
             overflow: hidden;
+            backdrop-filter: blur(2px);
         }
-        
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
             width: 0%;
-            transition: width 0.5s ease-in-out;
-            border-radius: 4px;
+            transition: width 0.4s ease;
+            border-radius: 20px;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
         }
-        
+
+        .students-loading, .students-loaded {
+            text-align: center;
+            padding: 14px;
+            border-radius: 14px;
+            margin: 12px 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
         .students-loading {
-            text-align: center;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 8px;
-            margin: 10px 0;
-            border-left: 4px solid #4299e1;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            background: rgba(59, 130, 246, 0.20);
+            color: #dbeafe;
         }
-        
-        .students-loading span {
-            color: #2c5282;
-            font-weight: 500;
-        }
-        
         .students-loaded {
-            text-align: center;
-            padding: 15px;
-            background: #f0fff4;
-            border-radius: 8px;
-            margin: 10px 0;
-            border-left: 4px solid #38a169;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            background: rgba(34, 197, 94, 0.15);
+            color: #dcfce7;
         }
-        
-        .students-loaded span {
-            color: #22543d;
-            font-weight: 500;
-        }
-        
+
         .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid #e2e8f0;
-            border-top: 3px solid #4299e1;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            border-top: 3px solid #fbbf24;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
             display: inline-block;
         }
-        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
+        /* ---- Alerts ---- */
         .alert {
-            padding: 15px;
-            border-radius: 8px;
+            padding: 16px 20px;
+            border-radius: 14px;
             margin: 20px 0;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
-        
         .alert-error {
-            background: #fed7d7;
-            color: #742a2a;
-            border-left: 4px solid #e53e3e;
+            background: rgba(220, 38, 38, 0.25);
+            color: #fee2e2;
+            border-left: 5px solid #dc2626;
         }
-        
         .alert-success {
-            background: #c6f6d5;
-            color: #22543d;
-            border-left: 4px solid #38a169;
+            background: rgba(22, 163, 74, 0.20);
+            color: #dcfce7;
+            border-left: 5px solid #16a34a;
         }
-        
         .alert-info {
-            background: #bee3f8;
-            color: #2c5282;
-            border-left: 4px solid #4299e1;
+            background: rgba(37, 99, 235, 0.20);
+            color: #dbeafe;
+            border-left: 5px solid #3b82f6;
         }
-        
+
+        /* ---- Footer ---- */
         .footer {
             text-align: center;
-            padding: 20px;
-            background: #f7fafc;
-            border-top: 1px solid #e2e8f0;
-            color: #718096;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            color: #d1d9e6;
             font-size: 14px;
         }
-        
         .footer a {
-            color: #4299e1;
+            color: #fbbf24;
             text-decoration: none;
+            font-weight: 500;
         }
-        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ---- Initial Loading ---- */
         .initial-loading {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(10, 22, 40, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 2000;
+            z-index: 9999;
             color: white;
         }
-        
         .initial-loading .big-spinner {
             width: 60px;
             height: 60px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid #ffd700;
+            border: 5px solid rgba(255, 255, 255, 0.08);
+            border-top: 5px solid #fbbf24;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 20px;
         }
-        
         .initial-loading p {
-            margin-top: 20px;
             font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            color: #e2e8f0;
         }
-        
+
+        /* ---- API Status ---- */
+        #apiStatus {
+            color: #e2e8f0;
+            font-weight: 400;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ---- Responsive ---- */
         @media (max-width: 600px) {
             body { padding: 10px; }
-            .container { border-radius: 10px; }
-            .header { padding: 20px 15px; }
-            .content { padding: 20px; }
+            .container { border-radius: 18px; }
+            .header { padding: 16px 12px; }
+            .content { padding: 18px 14px; }
             .btn { min-width: 100%; }
             .buttons { flex-direction: column; }
-            h1 { font-size: 20px; }
+            h1 { font-size: 21px; }
             h2 { font-size: 16px; }
+            .logo { max-width: 80px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- Background Canvas (Academic/Certificate theme) -->
+    <div id="bg-canvas-container">
+        <canvas id="bgCanvas"></canvas>
+    </div>
+
     <!-- Initial Loading Overlay -->
     <div id="initialLoading" class="initial-loading">
         <div class="big-spinner"></div>
         <p id="initialLoadingText">Loading system configuration...</p>
     </div>
-    
+
+    <!-- Main Container -->
     <div class="container">
         <div class="header">
-            <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" 
-                 alt="Malawi Government Logo" 
-                 class="logo">
+            <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" alt="Malawi Government Logo" class="logo">
             <h1>LUNZU SECONDARY SCHOOL</h1>
             <h2 id="academicHeader">Loading academic year...</h2>
             <h3>Student Results Portal</h3>
         </div>
-        
+
         <div class="content">
             <!-- Term Selection -->
             <div class="form-group">
-                <label for="termSelect">
-                    <span class="required-star">*</span> Select Term:
-                </label>
+                <label for="termSelect"><span class="required-star">*</span> Select Term:</label>
                 <select id="termSelect" required onchange="handleTermChange()">
                     <option value="" disabled selected>Loading terms...</option>
                 </select>
-                <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
+                <small style="color: #bcc9db; font-size: 12px; display: block; margin-top: 5px; opacity: 0.8;">
                     Select which term's results you want to view
                 </small>
             </div>
-            
+
             <!-- API Status -->
-            <div style="text-align:center;margin:10px 0;padding:10px;background:#f7fafc;border-radius:8px;">
+            <div style="text-align:center; margin:10px 0; padding:10px; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(4px);">
                 <span id="apiStatus">Checking connection...</span>
             </div>
-            
+
             <!-- Form -->
-            <form id="studentForm">
+            <form id="studentForm" autocomplete="off">
                 <div class="form-group">
-                    <label for="studentClass">
-                        <span class="required-star">*</span> Class:
-                    </label>
+                    <label for="studentClass"><span class="required-star">*</span> Class:</label>
                     <select id="studentClass" required onchange="handleClassChange()" disabled>
                         <option value="" disabled selected>Select Class</option>
                         <option value="Form 1">Form 1</option>
@@ -396,8 +498,8 @@
                         <option value="Form 4 ODL">Form 4 ODL</option>
                     </select>
                 </div>
-                
-                <!-- Progress Bar for Loading Students -->
+
+                <!-- Progress Bar -->
                 <div id="progressContainer" class="progress-container">
                     <div class="progress-label">
                         <span id="progressLabel">Loading students...</span>
@@ -407,22 +509,19 @@
                         <div id="progressFill" class="progress-fill"></div>
                     </div>
                 </div>
-                
-                <!-- Student Loading Indicator -->
+
                 <div id="studentsLoading" class="students-loading">
                     <div class="spinner"></div>
                     <span id="studentsLoadingText">Loading student list...</span>
                 </div>
-                
+
                 <div id="studentsLoaded" class="students-loaded">
                     <span>✅</span>
                     <span id="studentsLoadedText">Students loaded successfully!</span>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="studentSearch">
-                        Search Student:
-                    </label>
+                    <label for="studentSearch">Search Student:</label>
                     <div class="search-container">
                         <input type="text" 
                                id="studentSearch" 
@@ -432,26 +531,22 @@
                         <div id="searchResults" class="search-results"></div>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="studentName">
-                        <span class="required-star">*</span> Student Name:
-                    </label>
+                    <label for="studentName"><span class="required-star">*</span> Student Name:</label>
                     <select id="studentName" required disabled>
                         <option value="" disabled selected>-- Select Class First --</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="dateOfBirth">
-                        <span class="required-star">*</span> Date of Birth:
-                    </label>
+                    <label for="dateOfBirth"><span class="required-star">*</span> Date of Birth:</label>
                     <input type="date" id="dateOfBirth" required>
-                    <small style="color: #718096; font-size: 12px; display: block; margin-top: 5px;">
+                    <small style="color: #bcc9db; font-size: 12px; display: block; margin-top: 5px; opacity: 0.8;">
                         Format: YYYY-MM-DD (e.g., 2010-05-15)
                     </small>
                 </div>
-                
+
                 <div class="buttons">
                     <button type="button" class="btn btn-primary" onclick="getResults()" id="viewResultsBtn" disabled>
                         <span>👁️</span> View Results
@@ -464,29 +559,131 @@
                     </button>
                 </div>
             </form>
-            
+
             <div id="resultsContainer"></div>
         </div>
-        
+
         <div class="footer">
             <p>© <span id="currentYear"></span> Lunzu Secondary School - Examination Department</p>
             <p>For support: 
-                <a href="https://wa.me/265888866269" target="_blank">
-                    WhatsApp: +265 888 866 269
-                </a>
+                <a href="https://wa.me/265888866269" target="_blank">WhatsApp: +265 888 866 269</a>
             </p>
         </div>
     </div>
-    
+
     <script>
-        // ============================================
-        // CONFIGURATION
-        // ============================================
+        // ============================================================
+        // 1. ANIMATED BACKGROUND (Academic / Certificate theme)
+        // ============================================================
+        (function initBackground() {
+            const canvas = document.getElementById('bgCanvas');
+            const container = document.getElementById('bg-canvas-container');
+            const ctx = canvas.getContext('2d');
+            let w, h;
+            let items = [];
+            const ITEM_COUNT = 30;
+
+            const symbols = ['🎓', '📜', '📘', '📚', '🏆', '⭐', '📖', '✏️', '📝', '🏅', '🔬', '🧪', '📐', '🧮', '🌍', '⚛️'];
+
+            function resizeCanvas() {
+                const rect = container.getBoundingClientRect();
+                canvas.width = rect.width || window.innerWidth;
+                canvas.height = rect.height || window.innerHeight;
+                w = canvas.width;
+                h = canvas.height;
+            }
+
+            function randomItem() {
+                return {
+                    x: Math.random() * w,
+                    y: Math.random() * h - 20,
+                    size: 34 + Math.random() * 42,
+                    speedX: (Math.random() - 0.5) * 0.6,
+                    speedY: 0.12 + Math.random() * 0.5,
+                    rotation: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 0.02,
+                    opacity: 0.18 + Math.random() * 0.30,
+                    symbol: symbols[Math.floor(Math.random() * symbols.length)],
+                    phase: Math.random() * 100,
+                };
+            }
+
+            function initItems() {
+                items = [];
+                for (let i = 0; i < ITEM_COUNT; i++) {
+                    items.push(randomItem());
+                }
+            }
+
+            function drawItems() {
+                ctx.clearRect(0, 0, w, h);
+
+                // Soft vignette
+                const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
+                grad.addColorStop(0, 'rgba(10, 22, 40, 0.05)');
+                grad.addColorStop(1, 'rgba(10, 22, 40, 0.40)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                items.forEach(item => {
+                    ctx.save();
+                    ctx.translate(item.x, item.y);
+                    ctx.rotate(item.rotation * Math.PI / 180);
+                    ctx.globalAlpha = item.opacity;
+                    ctx.font = `${item.size}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                    ctx.shadowBlur = 20;
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+                    ctx.shadowBlur = 22;
+                    ctx.fillText(item.symbol, 0, 0);
+
+                    // Small accent
+                    ctx.shadowBlur = 0;
+                    ctx.font = `${item.size * 0.3}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+                    ctx.fillStyle = 'rgba(255,215,0,0.10)';
+                    ctx.fillText('✦', item.size * 0.25, -item.size * 0.2);
+                    ctx.restore();
+
+                    // Update position
+                    item.x += item.speedX + Math.sin(item.phase + performance.now() * 0.0002) * 0.15;
+                    item.y += item.speedY * 0.3 + Math.sin(item.phase + performance.now() * 0.00035) * 0.12;
+                    item.rotation += item.rotSpeed;
+
+                    if (item.x > w + 60) item.x = -60;
+                    if (item.x < -60) item.x = w + 60;
+                    if (item.y > h + 60) item.y = -60;
+                    if (item.y < -60) item.y = h + 60;
+                });
+
+                requestAnimationFrame(drawItems);
+            }
+
+            function startBackground() {
+                resizeCanvas();
+                initItems();
+                drawItems();
+            }
+
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                items.forEach(item => {
+                    item.x = Math.min(Math.max(item.x, 0), w);
+                    item.y = Math.min(Math.max(item.y, 0), h);
+                });
+            });
+
+            startBackground();
+        })();
+
+        // ============================================================
+        // 2. MAIN APPLICATION LOGIC
+        // ============================================================
+
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
-        
-        // ============================================
-        // GLOBAL VARIABLES
-        // ============================================
+
         let allStudentNames = [];
         let isLoadingStudents = false;
         let availableTerms = [];
@@ -494,15 +691,10 @@
         let loadingStartTime = 0;
         let loadingInterval = null;
         let loadingProgress = 0;
-        
-        // ============================================
-        // INITIALIZATION
-        // ============================================
+
         window.onload = async function() {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
-            
             showInitialLoading(true, "Loading system configuration...");
-            
             try {
                 await loadAvailableTerms();
                 await testAPIConnection();
@@ -514,7 +706,7 @@
                 showError('Failed to initialize: ' + error.message);
             }
         };
-        
+
         function showInitialLoading(show, message = 'Loading...') {
             const overlay = document.getElementById('initialLoading');
             const textEl = document.getElementById('initialLoadingText');
@@ -525,16 +717,13 @@
                 overlay.style.display = 'none';
             }
         }
-        
-        // ============================================
-        // TERM MANAGEMENT
-        // ============================================
+
+        // ----- TERM MANAGEMENT -----
         async function loadAvailableTerms() {
             return new Promise(async (resolve, reject) => {
                 try {
                     console.log('Loading available terms...');
                     const terms = await callGAS('getAvailableTerms', {});
-                    
                     if (terms && Array.isArray(terms) && terms.length > 0) {
                         availableTerms = terms;
                         populateTermDropdown(terms);
@@ -546,36 +735,32 @@
                 } catch (error) {
                     console.error('Error loading terms:', error);
                     document.getElementById('apiStatus').innerHTML = '❌ Error loading terms';
-                    document.getElementById('apiStatus').style.color = '#e53e3e';
+                    document.getElementById('apiStatus').style.color = '#f87171';
                     reject(error);
                 }
             });
         }
-        
+
         function populateTermDropdown(terms) {
             const termSelect = document.getElementById('termSelect');
             termSelect.innerHTML = '';
-            
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.disabled = true;
             defaultOption.textContent = '-- Select Term --';
             termSelect.appendChild(defaultOption);
-            
+
             const grouped = {};
             terms.forEach(term => {
-                if (!grouped[term.academicYear]) {
-                    grouped[term.academicYear] = [];
-                }
+                if (!grouped[term.academicYear]) grouped[term.academicYear] = [];
                 grouped[term.academicYear].push(term);
             });
-            
+
             let activeTermData = null;
-            
             for (const [year, yearTerms] of Object.entries(grouped)) {
                 const optgroup = document.createElement('optgroup');
                 optgroup.label = year;
-                
+                optgroup.style.background = 'rgba(30, 50, 70, 0.8)';
                 yearTerms.forEach(term => {
                     const option = document.createElement('option');
                     option.value = term.key;
@@ -584,100 +769,82 @@
                         option.selected = true;
                         currentTermKey = term.key;
                         option.style.fontWeight = 'bold';
-                        option.style.backgroundColor = '#e8f5e9';
+                        option.style.background = 'rgba(251, 191, 36, 0.15)';
                         activeTermData = term;
                     }
                     optgroup.appendChild(option);
                 });
-                
                 termSelect.appendChild(optgroup);
             }
-            
+
             if (activeTermData) {
-                document.getElementById('academicHeader').textContent = 
+                document.getElementById('academicHeader').textContent =
                     `${activeTermData.academicYear} ${activeTermData.term} RESULTS`;
                 currentTermKey = activeTermData.key;
-                console.log('Default term loaded:', activeTermData.display);
             } else if (terms.length > 0) {
                 const firstTerm = terms[0];
                 termSelect.value = firstTerm.key;
                 currentTermKey = firstTerm.key;
-                document.getElementById('academicHeader').textContent = 
+                document.getElementById('academicHeader').textContent =
                     `${firstTerm.academicYear} ${firstTerm.term} RESULTS`;
-                console.log('First term loaded as default:', firstTerm.display);
             }
-            
             document.getElementById('studentClass').disabled = false;
         }
-        
+
         function handleTermChange() {
             const termSelect = document.getElementById('termSelect');
             const selectedValue = termSelect.value;
-            
             if (!selectedValue) {
                 currentTermKey = null;
                 document.getElementById('academicHeader').textContent = 'No term selected';
                 resetAllFields();
                 return;
             }
-            
             const selectedTerm = availableTerms.find(t => t.key === selectedValue);
-            
             if (selectedTerm) {
                 currentTermKey = selectedTerm.key;
-                document.getElementById('academicHeader').textContent = 
+                document.getElementById('academicHeader').textContent =
                     `${selectedTerm.academicYear} ${selectedTerm.term} RESULTS`;
-                
                 if (!selectedTerm.isActive) {
                     showInfo(`Note: Viewing historical results from ${selectedTerm.display}`);
                 }
-                
                 resetAllFields();
             }
         }
-        
+
         function resetAllFields() {
-            const classSelect = document.getElementById('studentClass');
-            classSelect.value = '';
-            
+            document.getElementById('studentClass').value = '';
             const studentSearch = document.getElementById('studentSearch');
             const studentName = document.getElementById('studentName');
             const dateOfBirth = document.getElementById('dateOfBirth');
-            
             studentSearch.value = '';
             studentSearch.disabled = true;
             studentName.innerHTML = '<option value="" disabled selected>-- Select Class First --</option>';
             studentName.disabled = true;
             dateOfBirth.value = '';
-            
             document.getElementById('searchResults').style.display = 'none';
             document.getElementById('resultsContainer').innerHTML = '';
             document.getElementById('progressContainer').style.display = 'none';
             document.getElementById('studentsLoading').style.display = 'none';
             document.getElementById('studentsLoaded').style.display = 'none';
-            
             allStudentNames = [];
             document.getElementById('viewResultsBtn').disabled = true;
             document.getElementById('downloadPdfBtn').disabled = true;
             clearError();
             stopProgressAnimation();
         }
-        
-        // ============================================
-        // PROGRESS BAR FUNCTIONS
-        // ============================================
+
+        // ----- PROGRESS BAR -----
         function startProgressAnimation() {
             loadingProgress = 0;
             const progressContainer = document.getElementById('progressContainer');
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
             const progressLabel = document.getElementById('progressLabel');
-            
             progressContainer.style.display = 'block';
             progressFill.style.width = '0%';
             progressText.textContent = '0%';
             progressLabel.textContent = 'Loading students...';
-            
             stopProgressAnimation();
             loadingInterval = setInterval(() => {
                 if (loadingProgress < 90) {
@@ -688,22 +855,19 @@
                 }
             }, 200);
         }
-        
+
         function completeProgressAnimation(success = true, message = '', loadTime = 0) {
             if (loadingInterval) {
                 clearInterval(loadingInterval);
                 loadingInterval = null;
             }
-            
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
             const progressLabel = document.getElementById('progressLabel');
-            
             if (success) {
                 progressFill.style.width = '100%';
                 progressText.textContent = '100%';
                 progressLabel.textContent = message || 'Complete!';
-                
                 setTimeout(() => {
                     document.getElementById('progressContainer').style.display = 'none';
                 }, 1000);
@@ -711,23 +875,21 @@
                 document.getElementById('progressContainer').style.display = 'none';
             }
         }
-        
+
         function stopProgressAnimation() {
             if (loadingInterval) {
                 clearInterval(loadingInterval);
                 loadingInterval = null;
             }
         }
-        
-        // ============================================
-        // API CALLS
-        // ============================================
+
+        // ----- API CALLS (JSONP) -----
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
                 const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
                 params.callback = callbackName;
                 params.action = action;
-                
+
                 let url = GAS_URL + '?';
                 const urlParams = [];
                 for (const key in params) {
@@ -736,10 +898,9 @@
                     }
                 }
                 url += urlParams.join('&');
-                
+
                 const script = document.createElement('script');
                 script.src = url;
-                
                 const timeoutId = setTimeout(() => {
                     if (window[callbackName]) {
                         delete window[callbackName];
@@ -747,33 +908,28 @@
                         reject(new Error('Request timeout'));
                     }
                 }, 15000);
-                
+
                 window[callbackName] = function(response) {
                     clearTimeout(timeoutId);
                     delete window[callbackName];
                     if (script.parentNode) script.parentNode.removeChild(script);
-                    
                     if (response && response.error) {
                         reject(new Error(response.error));
                     } else {
                         resolve(response);
                     }
                 };
-                
                 script.onerror = function() {
                     clearTimeout(timeoutId);
                     delete window[callbackName];
                     if (script.parentNode) script.parentNode.removeChild(script);
                     reject(new Error('Connection failed'));
                 };
-                
                 document.head.appendChild(script);
             });
         }
-        
-        // ============================================
-        // FORM HANDLING
-        // ============================================
+
+        // ----- FORM HANDLING -----
         function setupForm() {
             document.getElementById('studentClass').addEventListener('change', handleClassChange);
             document.getElementById('studentName').addEventListener('change', () => {
@@ -785,7 +941,7 @@
                 updateButtonStates();
             });
             document.getElementById('termSelect').addEventListener('change', saveFormData);
-            
+
             document.addEventListener('click', function(event) {
                 const searchResults = document.getElementById('searchResults');
                 if (searchResults.style.display === 'block' && !event.target.closest('.search-container')) {
@@ -793,13 +949,11 @@
                 }
             });
         }
-        
+
         async function handleClassChange() {
             const studentClass = document.getElementById('studentClass').value;
-            
             const studentName = document.getElementById('studentName');
             const studentSearch = document.getElementById('studentSearch');
-            
             studentName.innerHTML = '<option value="" disabled selected>-- Select Class First --</option>';
             studentName.disabled = true;
             studentSearch.disabled = true;
@@ -808,68 +962,52 @@
             document.getElementById('resultsContainer').innerHTML = '';
             document.getElementById('viewResultsBtn').disabled = true;
             document.getElementById('downloadPdfBtn').disabled = true;
-            
+
             if (studentClass && studentClass !== "" && currentTermKey) {
                 await loadStudentNames(studentClass, currentTermKey);
             } else if (studentClass && !currentTermKey) {
                 showError('Please select a term first.');
             }
         }
-        
-        // ============================================
-        // STUDENT DATA LOADING WITH PROGRESS BAR
-        // ============================================
+
+        // ----- LOAD STUDENT NAMES -----
         async function loadStudentNames(studentClass, termKey) {
             if (isLoadingStudents) return;
-            
             isLoadingStudents = true;
             loadingStartTime = Date.now();
-            
-            // Show progress bar
             startProgressAnimation();
             document.getElementById('studentsLoaded').style.display = 'none';
-            
+
             try {
                 console.log(`Loading students for ${studentClass} with term ${termKey}`);
-                
-                const names = await callGAS('getStudentNames', { 
+                const names = await callGAS('getStudentNames', {
                     studentClass: studentClass,
                     term: termKey
                 });
-                
                 const loadTime = Date.now() - loadingStartTime;
                 console.log(`Loaded ${names?.length || 0} students in ${loadTime}ms`);
-                
+
                 if (Array.isArray(names) && names.length > 0) {
                     allStudentNames = names;
                     populateStudentDropdown(names);
-                    
                     completeProgressAnimation(true, `Loaded ${names.length} students!`, loadTime);
-                    
                     const loadedDiv = document.getElementById('studentsLoaded');
                     const loadedText = document.getElementById('studentsLoadedText');
                     loadedText.innerHTML = `✅ Loaded ${names.length} student(s) from ${studentClass} (${loadTime}ms)`;
                     loadedDiv.style.display = 'flex';
-                    
                     document.getElementById('studentSearch').disabled = false;
                     document.getElementById('studentName').disabled = false;
-                    
                     setTimeout(() => {
-                        if (loadedDiv.style.display === 'flex') {
-                            loadedDiv.style.display = 'none';
-                        }
+                        if (loadedDiv.style.display === 'flex') loadedDiv.style.display = 'none';
                     }, 2000);
-                    
                 } else {
                     allStudentNames = [];
                     populateStudentDropdown([]);
-                    
                     completeProgressAnimation(false);
                     showInfo(`No students found for ${studentClass} in the selected term`);
                     document.getElementById('studentSearch').disabled = true;
                     document.getElementById('studentName').disabled = true;
                 }
-                
             } catch (error) {
                 console.error('Error loading names:', error);
                 completeProgressAnimation(false);
@@ -881,11 +1019,10 @@
                 updateButtonStates();
             }
         }
-        
+
         function populateStudentDropdown(names) {
             const select = document.getElementById('studentName');
             select.innerHTML = '';
-            
             if (names.length === 0) {
                 const option = document.createElement('option');
                 option.value = '';
@@ -900,7 +1037,6 @@
                 defaultOption.selected = true;
                 defaultOption.textContent = `-- Select Student (${names.length} available) --`;
                 select.appendChild(defaultOption);
-                
                 names.forEach(name => {
                     const option = document.createElement('option');
                     option.value = name;
@@ -909,20 +1045,17 @@
                 });
             }
         }
-        
+
         function handleSearchInput() {
             const query = document.getElementById('studentSearch').value.toLowerCase().trim();
             const resultsDiv = document.getElementById('searchResults');
-            
             if (!query || allStudentNames.length === 0) {
                 resultsDiv.style.display = 'none';
                 return;
             }
-            
-            const filtered = allStudentNames.filter(name => 
+            const filtered = allStudentNames.filter(name =>
                 name.toLowerCase().includes(query)
             ).slice(0, 10);
-            
             if (filtered.length > 0) {
                 resultsDiv.innerHTML = '';
                 filtered.forEach(name => {
@@ -944,75 +1077,64 @@
                 resultsDiv.style.display = 'block';
             }
         }
-        
-        // ============================================
-        // MAIN ACTIONS
-        // ============================================
+
+        // ----- MAIN ACTIONS -----
         function updateButtonStates() {
             const studentName = document.getElementById('studentName').value;
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             const term = document.getElementById('termSelect').value;
-            const isFormValid = studentName && studentClass && dateOfBirth && term && 
-                                studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
-            
+            const isFormValid = studentName && studentClass && dateOfBirth && term &&
+                studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
             document.getElementById('viewResultsBtn').disabled = !isFormValid || isLoadingStudents;
             document.getElementById('downloadPdfBtn').disabled = !isFormValid || isLoadingStudents;
         }
-        
-        // View Results - Opens in new tab (no loading on main form)
+
         function getResults() {
             if (!validateForm()) {
                 showError('Please fill in all required fields.');
                 return;
             }
-            
             const studentName = document.getElementById('studentName').value.trim();
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             const termKey = document.getElementById('termSelect').value;
-            
+
             if (!isValidDate(dateOfBirth)) {
                 showError('Please enter a valid date (YYYY-MM-DD).');
                 return;
             }
-            
             clearError();
-            
-            // Open results in new tab - let results.html handle its own loading
-            const resultsUrl = `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}&term=${encodeURIComponent(termKey)}`;
+
+            const resultsUrl =
+                `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}&term=${encodeURIComponent(termKey)}`;
             const newTab = window.open(resultsUrl, '_blank');
-            
             if (!newTab) {
                 showError('Please allow pop-ups to view results.');
                 return;
             }
-            
             newTab.focus();
             showSuccess('Opening results in new tab...');
             setTimeout(() => clearError(), 2000);
         }
-        
-        // Download PDF - Shows progress on main form
+
         async function downloadResultsAsPDF() {
             if (!validateForm()) {
                 showError('Please fill in all required fields.');
                 return;
             }
-            
             const studentName = document.getElementById('studentName').value.trim();
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             const termKey = document.getElementById('termSelect').value;
-            
+
             if (!isValidDate(dateOfBirth)) {
                 showError('Please enter a valid date (YYYY-MM-DD).');
                 return;
             }
-            
             clearError();
             showInfo('Generating PDF, please wait...');
-            
+
             try {
                 const result = await callGAS('generatePDF', {
                     studentName: studentName,
@@ -1020,107 +1142,98 @@
                     dateOfBirth: dateOfBirth,
                     term: termKey
                 });
-                
                 if (result && result.error) {
                     throw new Error(result.error);
                 }
-                
                 const selectedTerm = availableTerms.find(t => t.key === termKey);
                 const termSuffix = selectedTerm ? selectedTerm.term.replace(/\s+/g, '_') : 'Results';
-                const fileName = `${studentName.replace(/\s+/g, '_')}_${studentClass.replace(/\s+/g, '_')}_${termSuffix}.pdf`;
-                
+                const fileName =
+                    `${studentName.replace(/\s+/g, '_')}_${studentClass.replace(/\s+/g, '_')}_${termSuffix}.pdf`;
                 downloadPDF(result, fileName);
                 showSuccess('PDF downloaded successfully!');
                 setTimeout(() => clearError(), 3000);
-                
             } catch (error) {
                 console.error('Error generating PDF:', error);
                 showError('Failed to generate PDF: ' + error.message);
             }
         }
-        
+
         function goToStudentPortal() {
             window.location.href = 'https://lunzusec.github.io/School_results/student-portal.html';
         }
-        
-        // ============================================
-        // HELPER FUNCTIONS
-        // ============================================
+
+        // ----- HELPERS -----
         function validateForm() {
             const studentName = document.getElementById('studentName').value;
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             const term = document.getElementById('termSelect').value;
-            
-            return studentName && studentClass && dateOfBirth && term && 
-                   studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
+            return studentName && studentClass && dateOfBirth && term &&
+                studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
         }
-        
+
         function isValidDate(dateString) {
             const regex = /^\d{4}-\d{2}-\d{2}$/;
             if (!regex.test(dateString)) return false;
             const date = new Date(dateString);
             return date instanceof Date && !isNaN(date);
         }
-        
+
         function showError(message) {
             const container = document.getElementById('resultsContainer');
             container.innerHTML = `
-                <div class="alert alert-error">
-                    <span>❌</span>
-                    <div><strong>Error:</strong> ${message.replace(/\n/g, '<br>')}</div>
-                </div>
-            `;
+                    <div class="alert alert-error">
+                        <span>❌</span>
+                        <div><strong>Error:</strong> ${message.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
             setTimeout(() => {
                 if (container.innerHTML.includes('alert-error')) {
                     container.innerHTML = '';
                 }
             }, 5000);
         }
-        
+
         function showSuccess(message) {
             const container = document.getElementById('resultsContainer');
             container.innerHTML = `
-                <div class="alert alert-success">
-                    <span>✅</span>
-                    <div>${message}</div>
-                </div>
-            `;
+                    <div class="alert alert-success">
+                        <span>✅</span>
+                        <div>${message}</div>
+                    </div>
+                `;
             setTimeout(() => {
                 if (container.innerHTML.includes('alert-success')) {
                     container.innerHTML = '';
                 }
             }, 3000);
         }
-        
+
         function showInfo(message) {
             const container = document.getElementById('resultsContainer');
             container.innerHTML = `
-                <div class="alert alert-info">
-                    <span>ℹ️</span>
-                    <div>${message}</div>
-                </div>
-            `;
+                    <div class="alert alert-info">
+                        <span>ℹ️</span>
+                        <div>${message}</div>
+                    </div>
+                `;
             setTimeout(() => {
                 if (container.innerHTML.includes('alert-info')) {
                     container.innerHTML = '';
                 }
             }, 3000);
         }
-        
+
         function clearError() {
             const container = document.getElementById('resultsContainer');
             if (container.innerHTML !== '') {
-                setTimeout(() => {
-                    container.innerHTML = '';
-                }, 3000);
+                setTimeout(() => { container.innerHTML = ''; }, 3000);
             }
         }
-        
+
         function downloadPDF(base64Data, fileName) {
             try {
                 if (!base64Data) throw new Error('No PDF data received');
-                
                 const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {
@@ -1142,7 +1255,7 @@
                 throw new Error('Failed to download PDF: ' + error.message);
             }
         }
-        
+
         function saveFormData() {
             try {
                 const data = {
@@ -1157,18 +1270,18 @@
                 console.error('Error saving form data:', e);
             }
         }
-        
+
         async function testAPIConnection() {
             try {
                 const result = await callGAS('test', {});
                 if (result && result.success) {
                     document.getElementById('apiStatus').innerHTML = '✅ Connected to Server';
-                    document.getElementById('apiStatus').style.color = '#38a169';
+                    document.getElementById('apiStatus').style.color = '#86efac';
                 }
             } catch (error) {
                 console.error('API test failed:', error);
                 document.getElementById('apiStatus').innerHTML = '⚠️ Connection slow - Features may load slower';
-                document.getElementById('apiStatus').style.color = '#ed8936';
+                document.getElementById('apiStatus').style.color = '#fcd34d';
             }
         }
     </script>
