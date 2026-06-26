@@ -415,19 +415,23 @@
         // ============================================
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
         
-        // Cache for results to prevent duplicate loads
         let cachedResults = null;
         let isGeneratingPDF = false;
+        let isAdminMode = false;
         
-        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const studentName = urlParams.get('name');
         const studentClass = urlParams.get('class');
         const dateOfBirth = urlParams.get('dob');
         const termKey = urlParams.get('term');
+        const adminParam = urlParams.get('admin');
+        
+        if (adminParam === 'true') {
+            isAdminMode = true;
+        }
         
         // ============================================
-        // OPTIMIZED API CALL - Single function
+        // API CALL
         // ============================================
         function callGASAPI(action, params = {}) {
             return new Promise((resolve, reject) => {
@@ -447,7 +451,6 @@
                 const script = document.createElement('script');
                 script.src = url;
                 
-                // Timeout after 15 seconds (reduced from 30)
                 const timeoutId = setTimeout(() => {
                     if (window[callbackName]) {
                         delete window[callbackName];
@@ -480,10 +483,10 @@
         }
         
         // ============================================
-        // LOAD RESULTS - Single API call
+        // LOAD RESULTS
         // ============================================
         async function loadResults() {
-            if (!studentName || !studentClass || !dateOfBirth) {
+            if (!studentName || !studentClass) {
                 showError('Missing student information.');
                 return;
             }
@@ -492,13 +495,25 @@
                 showLoading(true);
                 updateLoadingMessage('Fetching your results...');
                 
-                // Single API call for all data
-                const response = await callGASAPI('getStudentResults', {
-                    studentName: studentName,
-                    studentClass: studentClass,
-                    dateOfBirth: dateOfBirth,
-                    term: termKey
-                });
+                let response;
+                if (isAdminMode) {
+                    response = await callGASAPI('getStudentResultsAdmin', {
+                        studentName: studentName,
+                        studentClass: studentClass,
+                        term: termKey
+                    });
+                } else {
+                    if (!dateOfBirth) {
+                        throw new Error('Date of Birth is required.');
+                    }
+                    response = await callGASAPI('getStudentResults', {
+                        studentName: studentName,
+                        studentClass: studentClass,
+                        dateOfBirth: dateOfBirth,
+                        term: termKey,
+                        isAdmin: false
+                    });
+                }
                 
                 if (!response || response.error) {
                     throw new Error(response?.error || 'Failed to load results');
@@ -508,12 +523,8 @@
                     throw new Error(response.message || 'No results found');
                 }
                 
-                // Cache results
                 cachedResults = response;
-                
-                // Render immediately
                 renderResults(response);
-                
                 showLoading(false);
                 
             } catch (error) {
@@ -524,32 +535,25 @@
         }
         
         // ============================================
-        // RENDER RESULTS - Optimized DOM updates
+        // RENDER RESULTS
         // ============================================
         function renderResults(results) {
             const config = results.termConfig || {};
             
-            // Update school name
             const isODL = results.studentClass && results.studentClass.includes("ODL");
             document.getElementById('schoolName').textContent = isODL ? 
                 (config.schoolNameODL || "LUNZU OPEN SECONDARY SCHOOL") : 
                 (config.schoolName || "LUNZU SECONDARY SCHOOL");
             
-            // Build academic header
             const academicYear = results.academicYear || config.academicYear || '2025-2026';
             const term = results.term || config.term || '';
             const examType = config.examType || 'RESULTS';
             const headerText = term ? `${academicYear} ${term} ${examType}` : `${academicYear} ${examType}`;
             document.getElementById('academicHeader').textContent = headerText.trim();
             
-            // ============================================
-            // FEE BALANCE WARNING - SIMPLIFIED
-            // ONLY show warning if balance is NEGATIVE (less than 0)
-            // If balance >= 0, show nothing
-            // ============================================
+            // Fee Alert - Only show for normal users with negative balance
             const feeAlertContainer = document.getElementById('feeAlertContainer');
-            
-            if (results.feeBalance < 0) {
+            if (!results.isAdmin && results.feeBalance < 0) {
                 var amountOwed = Math.abs(results.feeBalance);
                 feeAlertContainer.innerHTML = `
                     <div class="fee-alert">
@@ -560,14 +564,13 @@
                     </div>
                 `;
             } else {
-                // Balance is zero or positive (credit) - show nothing
                 feeAlertContainer.innerHTML = '';
             }
             
-            // Student info - batch update
+            // Student info
             const studentInfo = {
                 studentName: results.name,
-                dob: results.dob,
+                dob: results.dob || 'N/A',
                 studentClass: results.studentClass,
                 studentCount: results.studentCount,
                 examSitters: results.examSitters,
@@ -579,7 +582,7 @@
                 if (el) el.textContent = value || '-';
             }
             
-            // Subject table - build HTML string for faster rendering
+            // Subject table
             const resultsBody = document.getElementById('resultsBody');
             if (results.subjects && results.subjects.length > 0) {
                 let html = '';
@@ -601,7 +604,6 @@
                 }
                 resultsBody.innerHTML = html;
                 
-                // Show totals
                 if (results.additionalInfo?.totalMarks) {
                     document.getElementById('totalMarksContainer').style.display = 'block';
                     document.getElementById('totalMarks').textContent = results.additionalInfo.totalMarks;
@@ -631,7 +633,6 @@
             document.getElementById('schoolAddress').textContent = config.schoolAddress || "Private bag 130, Lunzu";
             document.getElementById('governmentPolicy').textContent = config.governmentPolicy || "The grace period for payment of school fees is 2 weeks from the beginning of each term.";
             
-            // Show container
             document.getElementById('resultsContainer').style.display = 'block';
             document.title = `${results.name} - ${headerText}`;
         }
@@ -744,12 +745,22 @@
                 showLoading(true);
                 updateLoadingMessage('Generating PDF...');
                 
-                const pdfResponse = await callGASAPI('generatePDF', {
-                    studentName: cachedResults.name,
-                    studentClass: cachedResults.studentClass,
-                    dateOfBirth: cachedResults.dob,
-                    term: cachedResults.termKey
-                });
+                let pdfResponse;
+                if (isAdminMode) {
+                    pdfResponse = await callGASAPI('generatePDFAdmin', {
+                        studentName: cachedResults.name,
+                        studentClass: cachedResults.studentClass,
+                        term: cachedResults.termKey
+                    });
+                } else {
+                    pdfResponse = await callGASAPI('generatePDF', {
+                        studentName: cachedResults.name,
+                        studentClass: cachedResults.studentClass,
+                        dateOfBirth: cachedResults.dob,
+                        term: cachedResults.termKey,
+                        isAdmin: false
+                    });
+                }
                 
                 if (pdfResponse && !pdfResponse.error) {
                     const termSuffix = (cachedResults.term || 'Results').replace(/\s+/g, '_');
@@ -793,7 +804,6 @@
             loadResults();
         });
         
-        // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
                 e.preventDefault();
