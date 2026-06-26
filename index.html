@@ -21,7 +21,6 @@
             overflow-x: hidden;
         }
 
-        /* ---- Animated Background Canvas (Academic/Certificate theme) ---- */
         #bg-canvas-container {
             position: fixed;
             top: 0;
@@ -38,7 +37,6 @@
             object-fit: cover;
         }
 
-        /* ---- Glass-morphism container ---- */
         .container {
             position: relative;
             z-index: 1;
@@ -53,7 +51,6 @@
             overflow: hidden;
         }
 
-        /* ---- Header ---- */
         .header {
             background: rgba(10, 30, 50, 0.6);
             backdrop-filter: blur(6px);
@@ -98,7 +95,6 @@
             text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
 
-        /* ---- Content ---- */
         .content {
             padding: 28px 26px;
             background: rgba(255, 255, 255, 0.06);
@@ -161,7 +157,6 @@
             border-color: rgba(255, 215, 0, 0.4);
         }
 
-        /* ---- Search Container ---- */
         .search-container {
             position: relative;
         }
@@ -204,7 +199,6 @@
             font-style: italic;
         }
 
-        /* ---- Buttons ---- */
         .buttons {
             display: flex;
             gap: 14px;
@@ -264,6 +258,20 @@
             box-shadow: 0 12px 28px rgba(22, 163, 74, 0.3);
         }
 
+        .btn-admin {
+            background: rgba(139, 92, 246, 0.7);
+            color: white;
+        }
+        .btn-admin:hover {
+            transform: translateY(-3px);
+            background: rgba(139, 92, 246, 0.9);
+            box-shadow: 0 12px 28px rgba(139, 92, 246, 0.3);
+        }
+        .btn-admin.active {
+            background: rgba(124, 58, 237, 0.9);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
         .btn-back {
             background: rgba(71, 85, 105, 0.7);
             color: white;
@@ -274,7 +282,6 @@
             box-shadow: 0 12px 28px rgba(71, 85, 105, 0.3);
         }
 
-        /* ---- Progress & Status ---- */
         .progress-container {
             margin: 16px 0 8px 0;
             display: none;
@@ -340,7 +347,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* ---- Alerts ---- */
         .alert {
             padding: 16px 20px;
             border-radius: 14px;
@@ -368,8 +374,17 @@
             color: #dbeafe;
             border-left: 5px solid #3b82f6;
         }
+        .alert-admin {
+            background: rgba(139, 92, 246, 0.20);
+            color: #e9d5ff;
+            border-left: 5px solid #8b5cf6;
+        }
+        .alert-warning {
+            background: rgba(234, 179, 8, 0.20);
+            color: #fef3c7;
+            border-left: 5px solid #eab308;
+        }
 
-        /* ---- Footer ---- */
         .footer {
             text-align: center;
             padding: 16px;
@@ -389,7 +404,6 @@
             text-decoration: underline;
         }
 
-        /* ---- Initial Loading ---- */
         .initial-loading {
             position: fixed;
             top: 0;
@@ -422,14 +436,146 @@
             color: #e2e8f0;
         }
 
-        /* ---- API Status ---- */
         #apiStatus {
             color: #e2e8f0;
             font-weight: 400;
             text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
         }
 
-        /* ---- Responsive ---- */
+        .admin-badge {
+            display: inline-block;
+            background: #8b5cf6;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
+        .admin-notice {
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            color: #e9d5ff;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-notice.show {
+            display: flex;
+        }
+
+        .dob-required {
+            color: #fbbf24;
+            font-size: 12px;
+            display: block;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+        .dob-required.hidden {
+            display: none;
+        }
+
+        /* Password Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-box {
+            background: rgba(20, 35, 55, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+        .modal-box h3 {
+            color: #fbbf24;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .modal-box p {
+            color: #d1d9e6;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .modal-box input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        .modal-box input:focus {
+            outline: none;
+            border-color: #fbbf24;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .modal-box .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .modal-box .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .modal-box .btn-confirm {
+            background: rgba(139, 92, 246, 0.8);
+            color: white;
+        }
+        .modal-box .btn-confirm:hover {
+            background: rgba(139, 92, 246, 1);
+        }
+        .modal-box .btn-cancel {
+            background: rgba(100, 116, 139, 0.5);
+            color: white;
+        }
+        .modal-box .btn-cancel:hover {
+            background: rgba(100, 116, 139, 0.7);
+        }
+        .modal-box .error-msg {
+            color: #f87171;
+            font-size: 13px;
+            text-align: center;
+            display: none;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+        .modal-box .error-msg.show {
+            display: block;
+        }
+
         @media (max-width: 600px) {
             body { padding: 10px; }
             .container { border-radius: 18px; }
@@ -440,14 +586,28 @@
             h1 { font-size: 21px; }
             h2 { font-size: 16px; }
             .logo { max-width: 80px; }
+            .modal-box { padding: 20px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Background Canvas (Academic/Certificate theme) -->
     <div id="bg-canvas-container">
         <canvas id="bgCanvas"></canvas>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="adminModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3><i class="fas fa-user-shield"></i> Admin Access</h3>
+            <p>Enter the admin password to enable administrative mode.</p>
+            <input type="password" id="adminPasswordInput" placeholder="Enter password" maxlength="20">
+            <div id="modalError" class="error-msg">Incorrect password. Please try again.</div>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeAdminModal()">Cancel</button>
+                <button class="btn-confirm" onclick="confirmAdminPassword()">Unlock</button>
+            </div>
+        </div>
     </div>
 
     <!-- Initial Loading Overlay -->
@@ -466,7 +626,6 @@
         </div>
 
         <div class="content">
-            <!-- Term Selection -->
             <div class="form-group">
                 <label for="termSelect"><span class="required-star">*</span> Select Term:</label>
                 <select id="termSelect" required onchange="handleTermChange()">
@@ -477,12 +636,16 @@
                 </small>
             </div>
 
-            <!-- API Status -->
             <div style="text-align:center; margin:10px 0; padding:10px; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(4px);">
                 <span id="apiStatus">Checking connection...</span>
             </div>
 
-            <!-- Form -->
+            <!-- Admin Notice -->
+            <div id="adminNotice" class="admin-notice">
+                <span>🔑</span>
+                <span><strong>Admin Mode Active:</strong> Date of Birth is not required. Fee checking is bypassed.</span>
+            </div>
+
             <form id="studentForm" autocomplete="off">
                 <div class="form-group">
                     <label for="studentClass"><span class="required-star">*</span> Class:</label>
@@ -499,7 +662,6 @@
                     </select>
                 </div>
 
-                <!-- Progress Bar -->
                 <div id="progressContainer" class="progress-container">
                     <div class="progress-label">
                         <span id="progressLabel">Loading students...</span>
@@ -540,11 +702,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="dateOfBirth"><span class="required-star">*</span> Date of Birth:</label>
-                    <input type="date" id="dateOfBirth" required>
-                    <small style="color: #bcc9db; font-size: 12px; display: block; margin-top: 5px; opacity: 0.8;">
-                        Format: YYYY-MM-DD (e.g., 2010-05-15)
-                    </small>
+                    <label for="dateOfBirth">
+                        <span class="required-star" id="dobStar">*</span> Date of Birth:
+                        <span id="dobAdminLabel" style="display:none; color:#8b5cf6; font-weight:400;">(Not required in Admin Mode)</span>
+                    </label>
+                    <input type="date" id="dateOfBirth">
+                    <small class="dob-required" id="dobRequiredText">Format: YYYY-MM-DD (e.g., 2010-05-15)</small>
                 </div>
 
                 <div class="buttons">
@@ -553,6 +716,9 @@
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="downloadResultsAsPDF()" id="downloadPdfBtn" disabled>
                         <span>📥</span> Download PDF
+                    </button>
+                    <button type="button" class="btn btn-admin" onclick="openAdminModal()" id="adminModeBtn">
+                        <span>🔑</span> <span id="adminModeText">Admin Mode</span>
                     </button>
                     <button type="button" class="btn btn-back" onclick="goToStudentPortal()">
                         <span>←</span> Back to Student Portal
@@ -573,7 +739,7 @@
 
     <script>
         // ============================================================
-        // 1. ANIMATED BACKGROUND (Academic / Certificate theme)
+        // 1. ANIMATED BACKGROUND
         // ============================================================
         (function initBackground() {
             const canvas = document.getElementById('bgCanvas');
@@ -618,7 +784,6 @@
             function drawItems() {
                 ctx.clearRect(0, 0, w, h);
 
-                // Soft vignette
                 const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
                 grad.addColorStop(0, 'rgba(10, 22, 40, 0.05)');
                 grad.addColorStop(1, 'rgba(10, 22, 40, 0.40)');
@@ -640,14 +805,12 @@
                     ctx.shadowBlur = 22;
                     ctx.fillText(item.symbol, 0, 0);
 
-                    // Small accent
                     ctx.shadowBlur = 0;
                     ctx.font = `${item.size * 0.3}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
                     ctx.fillStyle = 'rgba(255,215,0,0.10)';
                     ctx.fillText('✦', item.size * 0.25, -item.size * 0.2);
                     ctx.restore();
 
-                    // Update position
                     item.x += item.speedX + Math.sin(item.phase + performance.now() * 0.0002) * 0.15;
                     item.y += item.speedY * 0.3 + Math.sin(item.phase + performance.now() * 0.00035) * 0.12;
                     item.rotation += item.rotSpeed;
@@ -691,6 +854,7 @@
         let loadingStartTime = 0;
         let loadingInterval = null;
         let loadingProgress = 0;
+        let isAdminMode = false;
 
         window.onload = async function() {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
@@ -700,6 +864,7 @@
                 await testAPIConnection();
                 setupForm();
                 showInitialLoading(false);
+                updateAdminUI();
             } catch (error) {
                 console.error('Initialization error:', error);
                 showInitialLoading(false);
@@ -715,6 +880,101 @@
                 overlay.style.display = 'flex';
             } else {
                 overlay.style.display = 'none';
+            }
+        }
+
+        // ----- ADMIN MODE WITH PASSWORD -----
+        function openAdminModal() {
+            if (isAdminMode) {
+                // If already in admin mode, just disable it
+                isAdminMode = false;
+                updateAdminUI();
+                showInfo('🔒 Admin mode disabled');
+                setTimeout(() => clearError(), 2000);
+                return;
+            }
+            document.getElementById('adminModal').classList.add('show');
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('modalError').classList.remove('show');
+            document.getElementById('adminPasswordInput').focus();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.remove('show');
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('modalError').classList.remove('show');
+        }
+
+        async function confirmAdminPassword() {
+            const password = document.getElementById('adminPasswordInput').value.trim();
+            if (!password) {
+                document.getElementById('modalError').textContent = 'Please enter a password.';
+                document.getElementById('modalError').classList.add('show');
+                return;
+            }
+
+            try {
+                const result = await callGAS('verifyAdmin', { password: password });
+                if (result && result.success) {
+                    isAdminMode = true;
+                    updateAdminUI();
+                    closeAdminModal();
+                    showSuccess('🔑 Admin mode activated successfully!');
+                    setTimeout(() => clearError(), 3000);
+                } else {
+                    document.getElementById('modalError').textContent = 'Incorrect password. Please try again.';
+                    document.getElementById('modalError').classList.add('show');
+                    document.getElementById('adminPasswordInput').value = '';
+                    document.getElementById('adminPasswordInput').focus();
+                }
+            } catch (error) {
+                document.getElementById('modalError').textContent = 'Error verifying password: ' + error.message;
+                document.getElementById('modalError').classList.add('show');
+            }
+        }
+
+        // Enter key on password input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('adminPasswordInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    confirmAdminPassword();
+                }
+                if (e.key === 'Escape') {
+                    closeAdminModal();
+                }
+            });
+        });
+
+        function updateAdminUI() {
+            const btnText = document.getElementById('adminModeText');
+            const btn = document.getElementById('adminModeBtn');
+            const notice = document.getElementById('adminNotice');
+            const dobInput = document.getElementById('dateOfBirth');
+            const dobStar = document.getElementById('dobStar');
+            const dobAdminLabel = document.getElementById('dobAdminLabel');
+            const dobRequiredText = document.getElementById('dobRequiredText');
+
+            if (isAdminMode) {
+                btnText.textContent = '🔓 Admin ON';
+                btn.classList.add('active');
+                notice.classList.add('show');
+                dobInput.disabled = true;
+                dobInput.value = '';
+                dobInput.placeholder = 'Not required in Admin Mode';
+                dobStar.style.display = 'none';
+                dobAdminLabel.style.display = 'inline';
+                dobRequiredText.classList.add('hidden');
+                updateButtonStates();
+            } else {
+                btnText.textContent = '🔒 Admin Mode';
+                btn.classList.remove('active');
+                notice.classList.remove('show');
+                dobInput.disabled = false;
+                dobInput.placeholder = '';
+                dobStar.style.display = 'inline';
+                dobAdminLabel.style.display = 'none';
+                dobRequiredText.classList.remove('hidden');
+                updateButtonStates();
             }
         }
 
@@ -821,7 +1081,9 @@
             studentSearch.disabled = true;
             studentName.innerHTML = '<option value="" disabled selected>-- Select Class First --</option>';
             studentName.disabled = true;
-            dateOfBirth.value = '';
+            if (!isAdminMode) {
+                dateOfBirth.value = '';
+            }
             document.getElementById('searchResults').style.display = 'none';
             document.getElementById('resultsContainer').innerHTML = '';
             document.getElementById('progressContainer').style.display = 'none';
@@ -883,7 +1145,7 @@
             }
         }
 
-        // ----- API CALLS (JSONP) -----
+        // ----- API CALLS -----
         function callGAS(action, params = {}) {
             return new Promise((resolve, reject) => {
                 const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
@@ -958,7 +1220,9 @@
             studentName.disabled = true;
             studentSearch.disabled = true;
             studentSearch.value = '';
-            document.getElementById('dateOfBirth').value = '';
+            if (!isAdminMode) {
+                document.getElementById('dateOfBirth').value = '';
+            }
             document.getElementById('resultsContainer').innerHTML = '';
             document.getElementById('viewResultsBtn').disabled = true;
             document.getElementById('downloadPdfBtn').disabled = true;
@@ -1084,8 +1348,16 @@
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             const term = document.getElementById('termSelect').value;
-            const isFormValid = studentName && studentClass && dateOfBirth && term &&
-                studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
+            
+            let isFormValid;
+            if (isAdminMode) {
+                isFormValid = studentName && studentClass && term &&
+                    studentName !== "" && studentClass !== "" && term !== "";
+            } else {
+                isFormValid = studentName && studentClass && dateOfBirth && term &&
+                    studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
+            }
+            
             document.getElementById('viewResultsBtn').disabled = !isFormValid || isLoadingStudents;
             document.getElementById('downloadPdfBtn').disabled = !isFormValid || isLoadingStudents;
         }
@@ -1095,19 +1367,28 @@
                 showError('Please fill in all required fields.');
                 return;
             }
+            
             const studentName = document.getElementById('studentName').value.trim();
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             const termKey = document.getElementById('termSelect').value;
 
-            if (!isValidDate(dateOfBirth)) {
-                showError('Please enter a valid date (YYYY-MM-DD).');
-                return;
+            if (!isAdminMode) {
+                if (!isValidDate(dateOfBirth)) {
+                    showError('Please enter a valid date (YYYY-MM-DD).');
+                    return;
+                }
             }
+            
             clearError();
 
-            const resultsUrl =
+            let resultsUrl =
                 `results.html?name=${encodeURIComponent(studentName)}&class=${encodeURIComponent(studentClass)}&dob=${encodeURIComponent(dateOfBirth)}&term=${encodeURIComponent(termKey)}`;
+            
+            if (isAdminMode) {
+                resultsUrl += '&admin=true';
+            }
+            
             const newTab = window.open(resultsUrl, '_blank');
             if (!newTab) {
                 showError('Please allow pop-ups to view results.');
@@ -1123,25 +1404,40 @@
                 showError('Please fill in all required fields.');
                 return;
             }
+            
             const studentName = document.getElementById('studentName').value.trim();
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             const termKey = document.getElementById('termSelect').value;
 
-            if (!isValidDate(dateOfBirth)) {
-                showError('Please enter a valid date (YYYY-MM-DD).');
-                return;
+            if (!isAdminMode) {
+                if (!isValidDate(dateOfBirth)) {
+                    showError('Please enter a valid date (YYYY-MM-DD).');
+                    return;
+                }
             }
+            
             clearError();
             showInfo('Generating PDF, please wait...');
 
             try {
-                const result = await callGAS('generatePDF', {
-                    studentName: studentName,
-                    studentClass: studentClass,
-                    dateOfBirth: dateOfBirth,
-                    term: termKey
-                });
+                let result;
+                if (isAdminMode) {
+                    result = await callGAS('generatePDFAdmin', {
+                        studentName: studentName,
+                        studentClass: studentClass,
+                        term: termKey
+                    });
+                } else {
+                    result = await callGAS('generatePDF', {
+                        studentName: studentName,
+                        studentClass: studentClass,
+                        dateOfBirth: dateOfBirth,
+                        term: termKey,
+                        isAdmin: false
+                    });
+                }
+                
                 if (result && result.error) {
                     throw new Error(result.error);
                 }
@@ -1168,8 +1464,14 @@
             const studentClass = document.getElementById('studentClass').value;
             const dateOfBirth = document.getElementById('dateOfBirth').value;
             const term = document.getElementById('termSelect').value;
-            return studentName && studentClass && dateOfBirth && term &&
-                studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
+            
+            if (isAdminMode) {
+                return studentName && studentClass && term &&
+                    studentName !== "" && studentClass !== "" && term !== "";
+            } else {
+                return studentName && studentClass && dateOfBirth && term &&
+                    studentName !== "" && studentClass !== "" && dateOfBirth !== "" && term !== "";
+            }
         }
 
         function isValidDate(dateString) {
