@@ -10,16 +10,18 @@
     font-family:'Segoe UI', Roboto, Arial, sans-serif;
     background: transparent;
     color:#fff;
-    padding: 0;
+    padding: 8px;
   }
   .sub-wrap {
     background: rgba(20, 35, 55, 0.98);
     border: 1px solid rgba(255, 215, 0, 0.2);
     border-radius: 20px;
     padding: 26px 24px;
-    max-width: 520px;
+    max-width: 560px;
     width: 100%;
+    margin: 0 auto;
     box-shadow: 0 25px 50px rgba(0,0,0,0.55);
+    position: relative;
   }
   .sub-wrap h3 {
     color: #fbbf24;
@@ -34,6 +36,22 @@
     margin-bottom: 20px;
     line-height: 1.5;
   }
+  .sub-close-x {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 10px;
+    border-radius: 8px;
+    transition: 0.15s;
+  }
+  .sub-close-x:hover { color:#fff; background: rgba(255,255,255,0.08); }
+
   .sub-tabs {
     display: flex;
     gap: 8px;
@@ -75,9 +93,7 @@
   }
   .sub-field label .req { color: #fbbf24; margin-right: 3px; }
   .sub-field select,
-  .sub-field input[type="text"],
-  .sub-field input[type="email"],
-  .sub-field input[type="date"] {
+  .sub-field input {
     width: 100%;
     padding: 11px 14px;
     border: 1.5px solid rgba(255, 255, 255, 0.2);
@@ -106,8 +122,7 @@
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
   .sub-consent input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: 18px; height: 18px;
     margin-top: 1px;
     accent-color: #fbbf24;
     flex-shrink: 0;
@@ -138,22 +153,14 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    color: #fff;
   }
   .sub-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-  .sub-btn.primary {
-    background: rgba(139, 92, 246, 0.85);
-    color: #fff;
-  }
+  .sub-btn.primary { background: rgba(139, 92, 246, 0.85); }
   .sub-btn.primary:hover:not(:disabled) { background: rgba(139, 92, 246, 1); }
-  .sub-btn.secondary {
-    background: rgba(100, 116, 139, 0.5);
-    color: #fff;
-  }
+  .sub-btn.secondary { background: rgba(100, 116, 139, 0.5); }
   .sub-btn.secondary:hover:not(:disabled) { background: rgba(100, 116, 139, 0.75); }
-  .sub-btn.warn {
-    background: rgba(220, 38, 38, 0.7);
-    color: #fff;
-  }
+  .sub-btn.warn { background: rgba(220, 38, 38, 0.7); }
   .sub-btn.warn:hover:not(:disabled) { background: rgba(220, 38, 38, 0.95); }
   .sub-btn .spinner {
     width: 15px; height: 15px;
@@ -200,7 +207,7 @@
     padding: 3px 0;
   }
   .status-card .row .k { color: #94a3b8; }
-  .status-card .row .v { color: #fff; font-weight: 600; text-align: right; }
+  .status-card .row .v { color: #fff; font-weight: 600; text-align: right; word-break: break-word; }
   .badge {
     display: inline-block;
     padding: 3px 10px;
@@ -213,27 +220,11 @@
   .badge.inactive { background: rgba(148,163,184,0.2); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.35); }
 
   .hidden { display: none !important; }
-
-  .sub-close-x {
-    position: absolute;
-    top: 12px;
-    right: 14px;
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    font-size: 22px;
-    cursor: pointer;
-    line-height: 1;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: 0.15s;
-  }
-  .sub-close-x:hover { color: #fff; background: rgba(255,255,255,0.08); }
 </style>
 </head>
 <body>
 
-<div class="sub-wrap" style="position:relative;">
+<div class="sub-wrap">
   <button class="sub-close-x" onclick="closeSubscribeModal()" title="Close">×</button>
   <h3>📬 Result Alerts</h3>
   <div class="sub-sub">
@@ -344,13 +335,26 @@
 </div>
 
 <script>
-  // ---- Called from parent (index.html) via window.gasCall ----
-  // window.gasCall(action, params) -> Promise
+  // ============================================================
+  // Bridge to parent (index.html) — same origin on GitHub Pages
+  // ============================================================
+  function gasCall(action, params) {
+    if (window.parent && typeof window.parent.gasCall === 'function') {
+      return window.parent.gasCall(action, params || {});
+    }
+    return Promise.reject(new Error('gasCall bridge unavailable. Open this page inside the portal.'));
+  }
 
-  var currentSubTab = 'subscribe';
+  function closeSubscribeModal() {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'closeSubscribeModal' }, '*');
+    }
+  }
 
+  // ============================================================
+  // UI state
+  // ============================================================
   function switchSubTab(tab) {
-    currentSubTab = tab;
     document.querySelectorAll('.sub-tab').forEach(function (b) {
       b.classList.toggle('active', b.dataset.tab === tab);
     });
@@ -359,12 +363,6 @@
     hideMsg('subMessage');
     hideMsg('mgMessage');
     document.getElementById('mgStatusCard').classList.remove('show');
-  }
-
-  function closeSubscribeModal() {
-    if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'closeSubscribeModal' }, '*');
-    }
   }
 
   function hideMsg(id) {
@@ -386,7 +384,9 @@
     b.disabled = on;
   }
 
-  // ---- Populate term dropdowns from parent-provided terms ----
+  // ============================================================
+  // Term dropdowns
+  // ============================================================
   function populateTermSelects(terms) {
     ['subTerm', 'mgTerm'].forEach(function (id) {
       var sel = document.getElementById(id);
@@ -396,21 +396,41 @@
         var o = document.createElement('option');
         o.value = t.key;
         o.textContent = t.display;
-        if (t.isActive) { o.selected = true; }
+        if (t.isActive) o.selected = true;
         sel.appendChild(o);
       });
     });
   }
 
-  // ---- Subscribe ----
+  // Listen for parent pushing the terms list
+  window.addEventListener('message', function (ev) {
+    var d = ev.data || {};
+    if (d.type === 'termsPayload' && Array.isArray(d.terms)) {
+      populateTermSelects(d.terms);
+    }
+  });
+
+  // Also proactively ask the parent (in case we load after the parent)
+  function requestTerms() {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'requestTerms' }, '*');
+    }
+  }
+  window.addEventListener('load', function () {
+    setTimeout(requestTerms, 50);
+  });
+
+  // ============================================================
+  // Subscribe
+  // ============================================================
   async function submitSubscription() {
     hideMsg('subMessage');
-    var name   = document.getElementById('subName').value.trim();
-    var cls    = document.getElementById('subClass').value;
-    var dob    = document.getElementById('subDob').value;
-    var email  = document.getElementById('subEmail').value.trim();
-    var term   = document.getElementById('subTerm').value;
-    var consent= document.getElementById('subConsent').checked;
+    var name    = document.getElementById('subName').value.trim();
+    var cls     = document.getElementById('subClass').value;
+    var dob     = document.getElementById('subDob').value;
+    var email   = document.getElementById('subEmail').value.trim();
+    var term    = document.getElementById('subTerm').value;
+    var consent = document.getElementById('subConsent').checked;
 
     if (!name || !cls || !dob || !email || !term) {
       showMsg('subMessage', 'error', 'Please fill in all required fields.');
@@ -427,7 +447,7 @@
 
     setBtnLoading('subSubmitBtn', true);
     try {
-      var res = await window.gasCall('subscribeResultEmail', {
+      var res = await gasCall('subscribeResultEmail', {
         studentName: name,
         studentClass: cls,
         dateOfBirth: dob,
@@ -451,7 +471,9 @@
     }
   }
 
-  // ---- Check status ----
+  // ============================================================
+  // Check status
+  // ============================================================
   async function checkSubscriptionStatus() {
     hideMsg('mgMessage');
     var card = document.getElementById('mgStatusCard');
@@ -469,7 +491,7 @@
 
     setBtnLoading('mgCheckBtn', true);
     try {
-      var res = await window.gasCall('getResultSubscriptionStatus', {
+      var res = await gasCall('getResultSubscriptionStatus', {
         studentName: name,
         studentClass: cls,
         dateOfBirth: dob,
@@ -479,9 +501,7 @@
         showMsg('mgMessage', 'info', 'Status loaded below.');
         var status = (res.emailStatus || 'NONE').toUpperCase();
         var badgeClass = status === 'ACTIVE' ? 'active' : 'inactive';
-        var emails = (res.allEmails && res.allEmails.length)
-          ? res.allEmails.join(', ')
-          : '—';
+        var emails = (res.allEmails && res.allEmails.length) ? res.allEmails.join(', ') : '—';
         card.innerHTML = ''
           + '<div class="row"><span class="k">Student</span><span class="v">' + escapeHtml(res.studentName) + '</span></div>'
           + '<div class="row"><span class="k">Status</span><span class="v"><span class="badge ' + badgeClass + '">' + escapeHtml(status) + '</span></span></div>'
@@ -500,7 +520,9 @@
     }
   }
 
-  // ---- Unsubscribe ----
+  // ============================================================
+  // Unsubscribe
+  // ============================================================
   async function confirmUnsubscribe() {
     hideMsg('mgMessage');
     var name = document.getElementById('mgName').value.trim();
@@ -516,7 +538,7 @@
 
     setBtnLoading('mgUnsubBtn', true);
     try {
-      var res = await window.gasCall('unsubscribeResultEmail', {
+      var res = await gasCall('unsubscribeResultEmail', {
         studentName: name,
         studentClass: cls,
         dateOfBirth: dob,
@@ -535,6 +557,9 @@
     }
   }
 
+  // ============================================================
+  // Utilities
+  // ============================================================
   function escapeHtml(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
