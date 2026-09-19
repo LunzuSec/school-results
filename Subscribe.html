@@ -111,6 +111,37 @@
     border-color: #fbbf24;
     background: rgba(255, 255, 255, 0.16);
   }
+  .sub-field select:disabled,
+  .sub-field input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .sub-hint {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* Loading spinner inside a field */
+  .sub-loading-inline {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #cbd5e1;
+    margin-top: 6px;
+  }
+  .sub-loading-inline.show { display: flex; }
+  .sub-loading-inline .mini-spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #fbbf24;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   .sub-consent {
     display: flex;
     gap: 10px;
@@ -172,7 +203,6 @@
   }
   .sub-btn.loading .spinner { display: inline-block; }
   .sub-btn.loading .label { display: none; }
-  @keyframes spin { to { transform: rotate(360deg); } }
 
   .sub-msg {
     padding: 12px 14px;
@@ -239,34 +269,37 @@
   <!-- ================= SUBSCRIBE TAB ================= -->
   <div id="tab-subscribe">
     <div class="sub-field">
-      <label><span class="req">*</span> Student Full Name:</label>
-      <input type="text" id="subName" placeholder="e.g. John Banda" autocomplete="off">
+      <label><span class="req">*</span> Term:</label>
+      <select id="subTerm"><option value="" disabled selected>Loading terms...</option></select>
     </div>
+
     <div class="sub-field">
       <label><span class="req">*</span> Class:</label>
-      <select id="subClass">
-        <option value="" disabled selected>-- Select Class --</option>
-        <option value="Form 1">Form 1</option>
-        <option value="Form 2">Form 2</option>
-        <option value="Form 3">Form 3</option>
-        <option value="Form 4">Form 4</option>
-        <option value="Form 1 ODL">Form 1 ODL</option>
-        <option value="Form 2 ODL">Form 2 ODL</option>
-        <option value="Form 3 ODL">Form 3 ODL</option>
-        <option value="Form 4 ODL">Form 4 ODL</option>
+      <select id="subClass" disabled>
+        <option value="" disabled selected>-- Select Term first --</option>
       </select>
     </div>
+
+    <div class="sub-field">
+      <label><span class="req">*</span> Student Full Name:</label>
+      <select id="subName" disabled>
+        <option value="" disabled selected>-- Select Class first --</option>
+      </select>
+      <div id="subNamesLoading" class="sub-loading-inline">
+        <span class="mini-spinner"></span>
+        <span id="subNamesLoadingText">Loading student list...</span>
+      </div>
+    </div>
+
     <div class="sub-field">
       <label><span class="req">*</span> Date of Birth:</label>
       <input type="date" id="subDob">
+      <small class="sub-hint">Use the same date on the school's records (YYYY-MM-DD).</small>
     </div>
+
     <div class="sub-field">
       <label><span class="req">*</span> Parent/Guardian Email:</label>
       <input type="email" id="subEmail" placeholder="parent@example.com" autocomplete="off">
-    </div>
-    <div class="sub-field">
-      <label><span class="req">*</span> Term:</label>
-      <select id="subTerm"><option value="" disabled selected>Loading terms...</option></select>
     </div>
 
     <div class="sub-consent">
@@ -292,30 +325,31 @@
   <!-- ================= MANAGE TAB ================= -->
   <div id="tab-manage" class="hidden">
     <div class="sub-field">
-      <label><span class="req">*</span> Student Full Name:</label>
-      <input type="text" id="mgName" placeholder="e.g. John Banda" autocomplete="off">
+      <label><span class="req">*</span> Term:</label>
+      <select id="mgTerm"><option value="" disabled selected>Loading terms...</option></select>
     </div>
+
     <div class="sub-field">
       <label><span class="req">*</span> Class:</label>
-      <select id="mgClass">
-        <option value="" disabled selected>-- Select Class --</option>
-        <option value="Form 1">Form 1</option>
-        <option value="Form 2">Form 2</option>
-        <option value="Form 3">Form 3</option>
-        <option value="Form 4">Form 4</option>
-        <option value="Form 1 ODL">Form 1 ODL</option>
-        <option value="Form 2 ODL">Form 2 ODL</option>
-        <option value="Form 3 ODL">Form 3 ODL</option>
-        <option value="Form 4 ODL">Form 4 ODL</option>
+      <select id="mgClass" disabled>
+        <option value="" disabled selected>-- Select Term first --</option>
       </select>
     </div>
+
+    <div class="sub-field">
+      <label><span class="req">*</span> Student Full Name:</label>
+      <select id="mgName" disabled>
+        <option value="" disabled selected>-- Select Class first --</option>
+      </select>
+      <div id="mgNamesLoading" class="sub-loading-inline">
+        <span class="mini-spinner"></span>
+        <span id="mgNamesLoadingText">Loading student list...</span>
+      </div>
+    </div>
+
     <div class="sub-field">
       <label><span class="req">*</span> Date of Birth:</label>
       <input type="date" id="mgDob">
-    </div>
-    <div class="sub-field">
-      <label><span class="req">*</span> Term:</label>
-      <select id="mgTerm"><option value="" disabled selected>Loading terms...</option></select>
     </div>
 
     <div class="sub-actions">
@@ -352,6 +386,16 @@
   }
 
   // ============================================================
+  // Class list — must match the sheet IDs in TERM_CONFIG
+  // ============================================================
+  var ALL_CLASSES = [
+    'Form 1', 'Form 2', 'Form 3', 'Form 4',
+    'Form 1 ODL', 'Form 2 ODL', 'Form 3 ODL', 'Form 4 ODL'
+  ];
+
+  var availableTerms = [];
+
+  // ============================================================
   // UI state
   // ============================================================
   function switchSubTab(tab) {
@@ -384,15 +428,26 @@
     b.disabled = on;
   }
 
+  function toggleInlineLoading(id, on, text) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (text) {
+      var txt = el.querySelector('span:not(.mini-spinner)');
+      if (txt) txt.textContent = text;
+    }
+    el.classList.toggle('show', !!on);
+  }
+
   // ============================================================
   // Term dropdowns
   // ============================================================
   function populateTermSelects(terms) {
+    availableTerms = terms || [];
     ['subTerm', 'mgTerm'].forEach(function (id) {
       var sel = document.getElementById(id);
       if (!sel) return;
       sel.innerHTML = '<option value="" disabled selected>-- Select Term --</option>';
-      terms.forEach(function (t) {
+      availableTerms.forEach(function (t) {
         var o = document.createElement('option');
         o.value = t.key;
         o.textContent = t.display;
@@ -400,6 +455,47 @@
         sel.appendChild(o);
       });
     });
+    // Auto-init class dropdowns now that a default term may be selected
+    refreshClassDropdown('subTerm', 'subClass');
+    refreshClassDropdown('mgTerm', 'mgClass');
+  }
+
+  // Rebuild class dropdown for the selected term, restricted to classes
+  // that actually have a sheet configured for that term.
+  function refreshClassDropdown(termSelectId, classSelectId) {
+    var termSel = document.getElementById(termSelectId);
+    var classSel = document.getElementById(classSelectId);
+    if (!termSel || !classSel) return;
+
+    var termKey = termSel.value;
+    classSel.innerHTML = '';
+    if (!termKey) {
+      var o0 = document.createElement('option');
+      o0.value = ''; o0.disabled = true; o0.selected = true;
+      o0.textContent = '-- Select Term first --';
+      classSel.appendChild(o0);
+      classSel.disabled = true;
+      return;
+    }
+
+    var termMeta = availableTerms.find(function (t) { return t.key === termKey; });
+    // If server told us the classes available, use them; otherwise show all.
+    var classList = (termMeta && Array.isArray(termMeta.classes) && termMeta.classes.length)
+      ? termMeta.classes
+      : ALL_CLASSES;
+
+    var defaultOpt = document.createElement('option');
+    defaultOpt.value = ''; defaultOpt.disabled = true; defaultOpt.selected = true;
+    defaultOpt.textContent = '-- Select Class --';
+    classSel.appendChild(defaultOpt);
+
+    classList.forEach(function (c) {
+      var o = document.createElement('option');
+      o.value = c;
+      o.textContent = c;
+      classSel.appendChild(o);
+    });
+    classSel.disabled = false;
   }
 
   // Listen for parent pushing the terms list
@@ -410,7 +506,7 @@
     }
   });
 
-  // Also proactively ask the parent (in case we load after the parent)
+  // Ask parent for terms on load
   function requestTerms() {
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: 'requestTerms' }, '*');
@@ -421,11 +517,97 @@
   });
 
   // ============================================================
+  // Term/class change wiring
+  // ============================================================
+  document.getElementById('subTerm').addEventListener('change', function () {
+    refreshClassDropdown('subTerm', 'subClass');
+    resetStudentDropdown('subName');
+  });
+  document.getElementById('subClass').addEventListener('change', function () {
+    loadStudentNames('subTerm', 'subClass', 'subName', 'subNamesLoading');
+  });
+  document.getElementById('mgTerm').addEventListener('change', function () {
+    refreshClassDropdown('mgTerm', 'mgClass');
+    resetStudentDropdown('mgName');
+  });
+  document.getElementById('mgClass').addEventListener('change', function () {
+    loadStudentNames('mgTerm', 'mgClass', 'mgName', 'mgNamesLoading');
+  });
+
+  function resetStudentDropdown(studentSelectId) {
+    var sel = document.getElementById(studentSelectId);
+    if (!sel) return;
+    sel.innerHTML = '';
+    var o = document.createElement('option');
+    o.value = ''; o.disabled = true; o.selected = true;
+    o.textContent = '-- Select Class first --';
+    sel.appendChild(o);
+    sel.disabled = true;
+  }
+
+  // ============================================================
+  // Load student names for the selected class + term
+  // ============================================================
+  async function loadStudentNames(termSelId, classSelId, studentSelId, loadingId) {
+    var termKey = document.getElementById(termSelId).value;
+    var cls = document.getElementById(classSelId).value;
+    var sel = document.getElementById(studentSelId);
+
+    resetStudentDropdown(studentSelId);
+
+    if (!termKey || !cls) return;
+
+    // Show loading
+    sel.disabled = true;
+    toggleInlineLoading(loadingId, true, 'Loading ' + cls + ' students...');
+
+    try {
+      var names = await gasCall('getStudentNames', {
+        studentClass: cls,
+        term: termKey
+      });
+
+      if (Array.isArray(names) && names.length > 0) {
+        sel.innerHTML = '';
+        var def = document.createElement('option');
+        def.value = ''; def.disabled = true; def.selected = true;
+        def.textContent = '-- Select Student (' + names.length + ' available) --';
+        sel.appendChild(def);
+
+        names.forEach(function (n) {
+          var o = document.createElement('option');
+          o.value = n;
+          o.textContent = n;
+          sel.appendChild(o);
+        });
+        sel.disabled = false;
+        toggleInlineLoading(loadingId, false);
+      } else {
+        sel.innerHTML = '';
+        var o = document.createElement('option');
+        o.value = ''; o.disabled = true; o.selected = true;
+        o.textContent = '-- No students found --';
+        sel.appendChild(o);
+        sel.disabled = true;
+        toggleInlineLoading(loadingId, false);
+      }
+    } catch (e) {
+      sel.innerHTML = '';
+      var o = document.createElement('option');
+      o.value = ''; o.disabled = true; o.selected = true;
+      o.textContent = '-- Failed to load: ' + e.message + ' --';
+      sel.appendChild(o);
+      sel.disabled = true;
+      toggleInlineLoading(loadingId, false);
+    }
+  }
+
+  // ============================================================
   // Subscribe
   // ============================================================
   async function submitSubscription() {
     hideMsg('subMessage');
-    var name    = document.getElementById('subName').value.trim();
+    var name    = document.getElementById('subName').value;
     var cls     = document.getElementById('subClass').value;
     var dob     = document.getElementById('subDob').value;
     var email   = document.getElementById('subEmail').value.trim();
@@ -457,7 +639,6 @@
       });
       if (res && res.success) {
         showMsg('subMessage', 'success', res.message || 'Subscription saved.');
-        document.getElementById('subName').value = '';
         document.getElementById('subDob').value = '';
         document.getElementById('subEmail').value = '';
         document.getElementById('subConsent').checked = false;
@@ -479,7 +660,7 @@
     var card = document.getElementById('mgStatusCard');
     card.classList.remove('show');
 
-    var name = document.getElementById('mgName').value.trim();
+    var name = document.getElementById('mgName').value;
     var cls  = document.getElementById('mgClass').value;
     var dob  = document.getElementById('mgDob').value;
     var term = document.getElementById('mgTerm').value;
@@ -525,7 +706,7 @@
   // ============================================================
   async function confirmUnsubscribe() {
     hideMsg('mgMessage');
-    var name = document.getElementById('mgName').value.trim();
+    var name = document.getElementById('mgName').value;
     var cls  = document.getElementById('mgClass').value;
     var dob  = document.getElementById('mgDob').value;
     var term = document.getElementById('mgTerm').value;
@@ -534,7 +715,7 @@
       showMsg('mgMessage', 'error', 'Please fill in all required fields.');
       return;
     }
-    if (!confirm('Unsubscribe this student from all result alert emails?')) return;
+    if (!confirm('Unsubscribe "' + name + '" from all result alert emails?')) return;
 
     setBtnLoading('mgUnsubBtn', true);
     try {
