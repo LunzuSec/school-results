@@ -10,20 +10,21 @@
     font-family:'Segoe UI', Roboto, Arial, sans-serif;
     background: transparent;
     color:#fff;
+    padding: 8px;
   }
   .am-wrap {
     background: rgba(20, 35, 55, 0.98);
     border: 1px solid rgba(139, 92, 246, 0.35);
     border-radius: 20px;
     padding: 0;
-    max-width: 880px;
+    max-width: 1100px;
     width: 100%;
+    margin: 0 auto;
     box-shadow: 0 25px 50px rgba(0,0,0,0.6);
     overflow: hidden;
-    max-height: 88vh;
+    max-height: calc(100vh - 30px);
     display: flex;
     flex-direction: column;
-    position: relative;
   }
   .am-header {
     background: rgba(139, 92, 246, 0.18);
@@ -127,18 +128,12 @@
     font-weight: 700;
     margin-bottom: 6px;
   }
-  .am-card .v {
-    font-size: 22px;
-    font-weight: 700;
-    color: #fff;
-  }
+  .am-card .v { font-size: 22px; font-weight: 700; color: #fff; }
   .am-card .v.green { color:#86efac; }
   .am-card .v.red { color:#fca5a5; }
   .am-card .v.amber { color:#fcd34d; }
 
-  .am-field {
-    margin-bottom: 14px;
-  }
+  .am-field { margin-bottom: 14px; }
   .am-field label {
     display: block;
     font-size: 12.5px;
@@ -182,7 +177,7 @@
     justify-content: center;
     gap: 8px;
     flex: 1;
-    min-width: 150px;
+    min-width: 160px;
     color: #fff;
   }
   .am-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -326,7 +321,7 @@
         </div>
         <div class="am-card">
           <div class="k">Last Batch</div>
-          <div class="v" id="statLastBatch" style="font-size:13px; padding-top:6px;">—</div>
+          <div class="v" id="statLastBatch" style="font-size:13px; padding-top:6px; white-space:pre-line;">—</div>
         </div>
       </div>
 
@@ -440,16 +435,27 @@
 </div>
 
 <script>
-  // ---- Parent bridge: window.gasCall(action, params) -> Promise ----
-  // window.parentTerms   : array of { key, display, isActive }
-  var amTerms = [];
-  var amLastSubsData = []; // for CSV export
+  // ============================================================
+  // Bridge to parent (index.html)
+  // ============================================================
+  function gasCall(action, params) {
+    if (window.parent && typeof window.parent.gasCall === 'function') {
+      return window.parent.gasCall(action, params || {});
+    }
+    return Promise.reject(new Error('gasCall bridge unavailable. Open this page inside the portal.'));
+  }
 
   function closeAlertsManager() {
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: 'closeAdminAlerts' }, '*');
     }
   }
+
+  // ============================================================
+  // State
+  // ============================================================
+  var amTerms = [];
+  var amLastSubsData = [];
 
   function switchAmTab(tab) {
     document.querySelectorAll('.am-tab').forEach(function (b) {
@@ -485,7 +491,9 @@
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
-  // ---- Populate all term selects ----
+  // ============================================================
+  // Term selects + parent init handshake
+  // ============================================================
   function populateAmTerms(terms) {
     amTerms = terms || [];
     ['amTerm','amSubsTerm','amBatchesTerm'].forEach(function (id) {
@@ -507,17 +515,36 @@
     refreshStats();
   }
 
-  // ---- Stats ----
+  window.addEventListener('message', function (ev) {
+    var d = ev.data || {};
+    if (d.type === 'adminAlertsInit') {
+      if (Array.isArray(d.terms)) populateAmTerms(d.terms);
+      if (d.adminPassword) window.__adminPassword = d.adminPassword;
+    }
+  });
+
+  function requestTerms() {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'requestTerms' }, '*');
+    }
+  }
+  window.addEventListener('load', function () {
+    setTimeout(requestTerms, 50);
+  });
+
+  // ============================================================
+  // Stats
+  // ============================================================
   async function refreshStats() {
     hideAmMsg('amSendMsg');
     var term = document.getElementById('amTerm').value;
     if (!term) return;
     setAmBtnLoading('amRefreshBtn', true);
     try {
-      var res = await window.gasCall('getTermSubscriberStats', { term: term });
+      var res = await gasCall('getTermSubscriberStats', { term: term });
       if (res && res.success) {
-        document.getElementById('statStudents').textContent = res.studentCount ?? '0';
-        document.getElementById('statEmails').textContent   = res.emailCount   ?? '0';
+        document.getElementById('statStudents').textContent = res.studentCount != null ? res.studentCount : '0';
+        document.getElementById('statEmails').textContent   = res.emailCount   != null ? res.emailCount   : '0';
         var lb = res.lastBatch;
         document.getElementById('statLastBatch').textContent = lb
           ? (lb.batchId + '\n' + (lb.sent || 0) + ' sent / ' + (lb.failed || 0) + ' failed')
@@ -534,7 +561,9 @@
     }
   }
 
-  // ---- Preview ----
+  // ============================================================
+  // Preview
+  // ============================================================
   async function previewAlerts() {
     hideAmMsg('amSendMsg');
     document.getElementById('amPreviewOutput').innerHTML = '';
@@ -544,7 +573,7 @@
 
     setAmBtnLoading('amPreviewBtn', true);
     try {
-      var res = await window.gasCall('sendResultAlertsNow', {
+      var res = await gasCall('sendResultAlertsNow', {
         term: term,
         studentClass: cls || '',
         dryRun: 'true',
@@ -580,7 +609,9 @@
     }
   }
 
-  // ---- Send ----
+  // ============================================================
+  // Send
+  // ============================================================
   async function confirmSendAlerts() {
     hideAmMsg('amSendMsg');
     var term = document.getElementById('amTerm').value;
@@ -593,7 +624,7 @@
     setAmBtnLoading('amSendBtn', true);
     showAmMsg('amSendMsg', 'info', 'Sending alerts... please wait. Large batches may take a while.');
     try {
-      var res = await window.gasCall('sendResultAlertsNow', {
+      var res = await gasCall('sendResultAlertsNow', {
         term: term,
         studentClass: cls || '',
         adminPassword: window.__adminPassword || ''
@@ -619,7 +650,9 @@
     }
   }
 
-  // ---- Active subscribers ----
+  // ============================================================
+  // Active subscribers
+  // ============================================================
   async function loadSubscribers() {
     hideAmMsg('amSubsMsg');
     var term = document.getElementById('amSubsTerm').value;
@@ -632,7 +665,7 @@
     amLastSubsData = [];
 
     try {
-      var res = await window.gasCall('listTermSubscribers', {
+      var res = await gasCall('listTermSubscribers', {
         term: term,
         studentClass: cls || ''
       });
@@ -650,7 +683,6 @@
         return;
       }
 
-      // Summary
       var totalEmails = rows.reduce(function (n, r) { return n + (r.emailCount || 0); }, 0);
       showAmMsg('amSubsMsg', 'success',
         rows.length + ' student(s) with active subscription(s) · ' + totalEmails + ' email address(es) total.');
@@ -712,7 +744,9 @@
     return s;
   }
 
-  // ---- Send history ----
+  // ============================================================
+  // Send history
+  // ============================================================
   async function loadBatches() {
     hideAmMsg('amBatchesMsg');
     var term = document.getElementById('amBatchesTerm').value;
@@ -721,7 +755,7 @@
     document.getElementById('amBatchesTableWrap').innerHTML = '';
 
     try {
-      var res = await window.gasCall('getRecentResultBatches', { term: term });
+      var res = await gasCall('getRecentResultBatches', { term: term });
       if (!res || !res.success) {
         showAmMsg('amBatchesMsg', 'error', (res && res.error) || 'Failed to load history.');
         return;
