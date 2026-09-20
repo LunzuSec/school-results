@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
 <title>Manage Teachers — Lunzu Secondary School</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -64,9 +65,8 @@
   .field select option { background:#1a2a3a; color:#fff; }
 
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   @media (max-width: 700px) {
-    .row, .row-3 { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 1fr; }
   }
 
   .btn {
@@ -180,26 +180,6 @@
   .checkbox-item input {
     width: 16px; height: 16px; accent-color: #a78bfa; cursor: pointer;
   }
-
-  .stats-strip {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-  .stat-card {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 12px 14px;
-    text-align: center;
-  }
-  .stat-card .k {
-    font-size: 10.5px; color: #94a3b8;
-    text-transform: uppercase; letter-spacing: 0.6px;
-    font-weight: 700; margin-bottom: 4px;
-  }
-  .stat-card .v { font-size: 20px; font-weight: 700; color: #fbbf24; }
 
   @media (max-width: 600px) {
     body { padding: 10px; }
@@ -360,8 +340,7 @@
 
 <script>
   // ============================================================
-  // Config — plain /exec URL (matches your working fee portal)
-  // No /u/0/ prefix. JSONP only. Do NOT use fetch here.
+  // Config — plain /exec URL, JSONP only
   // ============================================================
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
 
@@ -384,46 +363,67 @@
   };
 
   // ============================================================
-  // API caller — pure JSONP (matches fee portal pattern)
+  // API caller — assignment-form JSONP
+  // Reads from window.__gasResponse_<cb> set by the server.
+  // Tolerates Google stripping the callback param during redirect.
   // ============================================================
   function callGAS(action, params, retryCount) {
     retryCount = retryCount || 0;
-    const MAX = 2;
+    const MAX = 3;
     return new Promise((resolve, reject) => {
       const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      const globalName = '__gasResponse_' + cb;
       const p = Object.assign({}, params || {});
       p.action = action;
       p.callback = cb;
+
       const url = GAS_URL + '?' + Object.keys(p)
         .filter(k => p[k] !== undefined && p[k] !== null)
         .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k]))
         .join('&');
+
       const s = document.createElement('script');
       s.src = url;
+
       const to = setTimeout(() => {
-        if (window[cb]) {
-          delete window[cb];
-          if (s.parentNode) s.parentNode.removeChild(s);
-          if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-          else reject(new Error('Request timeout'));
-        }
-      }, 30000);
-      window[cb] = function (r) {
+        cleanup();
+        if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+        else reject(new Error('Request timeout'));
+      }, 25000);
+
+      function cleanup() {
         clearTimeout(to);
-        delete window[cb];
+        try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
         if (s.parentNode) s.parentNode.removeChild(s);
-        if (r && r.error) {
-          if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-          else reject(new Error(r.error));
-        } else resolve(r);
+      }
+
+      s.onload = () => {
+        // Give it one tick for the assignment to run
+        setTimeout(() => {
+          if (window[globalName] !== undefined) {
+            const r = window[globalName];
+            cleanup();
+            if (r && r.error) {
+              // Real server error — do NOT retry
+              reject(new Error(r.error));
+            } else {
+              resolve(r);
+            }
+          } else {
+            // Callback was stripped or script failed silently — retry
+            cleanup();
+            if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+            else reject(new Error('No response from server (callback may have been stripped)'));
+          }
+        }, 20);
       };
+
       s.onerror = () => {
-        clearTimeout(to);
-        delete window[cb];
-        if (s.parentNode) s.parentNode.removeChild(s);
+        cleanup();
         if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
         else reject(new Error('Network error'));
       };
+
       document.head.appendChild(s);
     });
   }
