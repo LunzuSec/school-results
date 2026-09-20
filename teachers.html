@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
 <title>Teacher Score Entry — Lunzu Secondary School</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -16,7 +17,6 @@
   }
   .tp-shell { max-width:1200px; margin:0 auto; padding:16px; }
 
-  /* ---------- Header ---------- */
   .tp-header {
     background: rgba(10,30,50,0.85);
     backdrop-filter: blur(10px);
@@ -57,7 +57,6 @@
     color:#94a3b8; font-size:12.5px; margin-bottom:14px; line-height:1.55;
   }
 
-  /* ---------- Buttons ---------- */
   .tp-btn {
     padding:10px 15px; border:none; border-radius:10px;
     font-size:13px; font-weight:600; cursor:pointer;
@@ -78,7 +77,6 @@
   .tp-btn.amber:hover:not(:disabled) { background: rgba(245,158,11,1); }
   .tp-btn.sm { padding:7px 11px; font-size:12px; }
 
-  /* ---------- Field ---------- */
   .tp-field { margin-bottom:12px; }
   .tp-field label {
     display:block; font-size:12px; color:#e2e8f0;
@@ -99,7 +97,6 @@
   }
   .tp-field select option { background:#1a2a3a; color:#fff; }
 
-  /* ---------- Messages ---------- */
   .tp-msg {
     padding:11px 14px; border-radius:10px; font-size:12.5px;
     margin-top:12px; display:none; line-height:1.55;
@@ -111,7 +108,6 @@
   .tp-msg.info    { background: rgba(59,130,246,0.15); border-left:4px solid #3b82f6; color:#dbeafe; }
   .tp-msg.warn    { background: rgba(245,158,11,0.15); border-left:4px solid #f59e0b; color:#fef3c7; }
 
-  /* ---------- Filter bar ---------- */
   .tp-filters {
     display:grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -119,7 +115,6 @@
     align-items:end;
   }
 
-  /* ---------- Stats ---------- */
   .tp-stats {
     display:grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -143,7 +138,6 @@
   .tp-stat .v.red { color:#fca5a5; }
   .tp-stat .v.blue { color:#93c5fd; }
 
-  /* ---------- Grid ---------- */
   .tp-grid-wrap {
     overflow-x:auto;
     border-radius:12px;
@@ -213,7 +207,6 @@
   .tp-grid .preview-grade.F, .tp-grid .preview-grade.g9 { background: rgba(220,38,38,0.25); color:#fca5a5; }
   .tp-grid .preview-pos { color:#94a3b8; font-size:12px; font-variant-numeric: tabular-nums; }
 
-  /* ---------- Toolbar ---------- */
   .tp-toolbar {
     display:flex; gap:8px; flex-wrap:wrap;
     align-items:center; justify-content:space-between;
@@ -231,7 +224,6 @@
   }
   .tp-search:focus { outline:none; border-color:#fbbf24; }
 
-  /* ---------- Loading / empty ---------- */
   .tp-loading {
     display:none; align-items:center; gap:10px;
     padding:14px; font-size:12.5px; color:#cbd5e1;
@@ -250,7 +242,6 @@
     color:#94a3b8; font-size:13px; font-style:italic;
   }
 
-  /* ---------- Offline banner ---------- */
   .tp-offline {
     display:none;
     background: rgba(220,38,38,0.15);
@@ -285,7 +276,6 @@
     ⚠️ You are offline. Changes will be saved locally and synced when the connection returns.
   </div>
 
-  <!-- Header -->
   <div class="tp-header">
     <div class="tp-header-left">
       <h1>📝 Teacher Score Entry</h1>
@@ -338,7 +328,6 @@
   <!-- Portal view -->
   <div id="viewPortal" class="tp-hidden">
 
-    <!-- Filters -->
     <div class="tp-card" style="padding:14px 18px;">
       <div class="tp-filters">
         <div class="tp-field" style="margin-bottom:0;">
@@ -356,7 +345,6 @@
       </div>
     </div>
 
-    <!-- Stats -->
     <div class="tp-stats">
       <div class="tp-stat">
         <div class="k">Students</div>
@@ -380,7 +368,6 @@
       </div>
     </div>
 
-    <!-- Grid -->
     <div class="tp-card">
       <div class="tp-toolbar">
         <div class="tp-toolbar-left">
@@ -409,9 +396,17 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
   // ============================================================
+  // SAFE DOM HELPERS
+  // ============================================================
+  function el(id) { return document.getElementById(id); }
+  function getVal(id) { var e = el(id); return e ? String(e.value || '') : ''; }
+  function setText(id, text) { var e = el(id); if (e) e.textContent = text; }
+  function setHtml(id, html) { var e = el(id); if (e) e.innerHTML = html; }
+
+  // ============================================================
   // Config
   // ============================================================
-  const GAS_URL = 'https://script.google.com/macros/u/0/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
 
   const CLASS_ORDER = [
     'Form 1','Form 2','Form 3','Form 4',
@@ -419,67 +414,79 @@
   ];
 
   // ============================================================
-  // Client-side state (thick client)
+  // State
   // ============================================================
   const state = {
     token: null,
     teacher: null,
     terms: [],
     activeTerm: null,
-    byClass: {},              // { 'Form 3': ['BIOLOGY', 'AGRICULTURE'] }
-    subjectsByClass: {},      // cached; fetched once with bootstrap
+    byClass: {},
+    subjectsByClass: {},
     currentClass: null,
     currentSubject: null,
     currentTerm: null,
-    roster: [],               // [{row, student, score, original, previewGrade, previewPos}]
-    rosterCache: {},          // key = 'class|subject|term' → roster
+    roster: [],
+    rosterCache: {},
     dirty: false,
     saving: false,
-    pendingSaves: [],         // queue for offline retry
     online: navigator.onLine
   };
 
   // ============================================================
-  // JSONP caller (with retry + timeout)
+  // API caller — assignment-form JSONP
   // ============================================================
   function callGAS(action, params, retryCount) {
     retryCount = retryCount || 0;
-    const MAX = 2;
+    const MAX = 3;
     return new Promise((resolve, reject) => {
       const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      const globalName = '__gasResponse_' + cb;
       const p = Object.assign({}, params || {});
       p.action = action;
       p.callback = cb;
+
       const url = GAS_URL + '?' + Object.keys(p)
         .filter(k => p[k] !== undefined && p[k] !== null)
         .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k]))
         .join('&');
+
       const s = document.createElement('script');
       s.src = url;
+
       const to = setTimeout(() => {
-        if (window[cb]) {
-          delete window[cb];
-          if (s.parentNode) s.parentNode.removeChild(s);
-          if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-          else reject(new Error('Request timeout'));
-        }
-      }, 20000);
-      window[cb] = function (r) {
+        cleanup();
+        if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+        else reject(new Error('Request timeout'));
+      }, 25000);
+
+      function cleanup() {
         clearTimeout(to);
-        delete window[cb];
+        try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
         if (s.parentNode) s.parentNode.removeChild(s);
-        if (r && r.error) {
-          if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-          else reject(new Error(r.error));
-        } else resolve(r);
+      }
+
+      s.onload = () => {
+        setTimeout(() => {
+          if (window[globalName] !== undefined) {
+            const r = window[globalName];
+            cleanup();
+            if (r && r.error) reject(new Error(r.error));
+            else resolve(r);
+          } else {
+            cleanup();
+            if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+            else reject(new Error('No response from server (callback may have been stripped)'));
+          }
+        }, 20);
       };
+
       s.onerror = () => {
-        clearTimeout(to);
-        delete window[cb];
-        if (s.parentNode) s.parentNode.removeChild(s);
+        cleanup();
         if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
         else reject(new Error('Network error'));
       };
+
       document.head.appendChild(s);
     });
   }
@@ -488,13 +495,14 @@
   // Messages
   // ============================================================
   function showMsg(id, type, text) {
-    const el = document.getElementById(id);
-    el.className = 'tp-msg show ' + type;
-    el.textContent = text;
+    var e = el(id); if (!e) return;
+    e.className = 'tp-msg show ' + type;
+    e.textContent = text;
   }
   function hideMsg(id) {
-    document.getElementById(id).className = 'tp-msg';
-    document.getElementById(id).textContent = '';
+    var e = el(id); if (!e) return;
+    e.className = 'tp-msg';
+    e.textContent = '';
   }
 
   // ============================================================
@@ -502,7 +510,7 @@
   // ============================================================
   function handleGoogleCredential(response) {
     try {
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      var payload = JSON.parse(atob(response.credential.split('.')[1]));
       doSignIn(payload.email, payload.name || payload.email);
     } catch (e) {
       showMsg('loginMsg', 'error', 'Google Sign-In failed: ' + e.message);
@@ -511,7 +519,7 @@
   window.handleGoogleCredential = handleGoogleCredential;
 
   function manualSignIn() {
-    const email = document.getElementById('manualEmail').value.trim();
+    var email = getVal('manualEmail').trim();
     if (!email) { showMsg('loginMsg', 'error', 'Please enter your email.'); return; }
     doSignIn(email, email);
   }
@@ -519,7 +527,7 @@
   async function doSignIn(email, name) {
     showMsg('loginMsg', 'info', 'Verifying...');
     try {
-      const login = await callGAS('teacherLogin', { email: email });
+      var login = await callGAS('teacherLogin', { email: email });
       if (!login || !login.success) {
         showMsg('loginMsg', 'error', (login && login.error) || 'Login failed.');
         return;
@@ -536,19 +544,19 @@
   }
 
   // ============================================================
-  // Bootstrap — one API call brings everything down
+  // Bootstrap
   // ============================================================
   async function enterPortal() {
-    document.getElementById('viewLogin').classList.add('tp-hidden');
-    document.getElementById('viewPortal').classList.remove('tp-hidden');
-    document.getElementById('userBadge').classList.remove('tp-hidden');
-    document.getElementById('logoutBtn').classList.remove('tp-hidden');
-    document.getElementById('userName').textContent = state.teacher.name || state.teacher.email;
+    var vl = el('viewLogin'); if (vl) vl.classList.add('tp-hidden');
+    var vp = el('viewPortal'); if (vp) vp.classList.remove('tp-hidden');
+    var ub = el('userBadge'); if (ub) ub.classList.remove('tp-hidden');
+    var lb = el('logoutBtn'); if (lb) lb.classList.remove('tp-hidden');
+    setText('userName', state.teacher.name || state.teacher.email);
 
     showLoading('Loading your assignments...');
 
     try {
-      const bs = await callGAS('teacherGetBootstrap', { token: state.token });
+      var bs = await callGAS('teacherGetBootstrap', { token: state.token });
       if (!bs || !bs.success) {
         if (bs && bs.code === 'SESSION_EXPIRED') return logout(true);
         hideLoading();
@@ -562,8 +570,8 @@
 
       if (Object.keys(state.byClass).length === 0) {
         hideLoading();
-        document.getElementById('rosterWrap').innerHTML =
-          '<div class="tp-empty">No assigned classes or subjects yet.<br>Contact the admin.</div>';
+        setHtml('rosterWrap',
+          '<div class="tp-empty">You have no assigned classes or subjects yet.<br>Contact the admin.</div>');
         return;
       }
 
@@ -577,40 +585,39 @@
   }
 
   function populateClassDropdown() {
-    const sel = document.getElementById('selClass');
+    var sel = el('selClass'); if (!sel) return;
     sel.innerHTML = '';
-    const keys = Object.keys(state.byClass).sort(function (a, b) {
+    var keys = Object.keys(state.byClass).sort(function (a, b) {
       return CLASS_ORDER.indexOf(a) - CLASS_ORDER.indexOf(b);
     });
     keys.forEach(function (c) {
-      const o = document.createElement('option');
+      var o = document.createElement('option');
       o.value = c; o.textContent = c;
       sel.appendChild(o);
     });
   }
 
   function populateSubjectDropdown() {
-    const cls = document.getElementById('selClass').value;
-    const sel = document.getElementById('selSubject');
+    var cls = getVal('selClass');
+    var sel = el('selSubject'); if (!sel) return;
     sel.innerHTML = '';
-    // Prefer the cached subjects for this class (from bootstrap)
     var subjects = state.subjectsByClass[cls];
     if (!subjects || !subjects.length) {
       subjects = (state.byClass[cls] || []).slice();
     }
     subjects.sort();
     subjects.forEach(function (s) {
-      const o = document.createElement('option');
+      var o = document.createElement('option');
       o.value = s; o.textContent = s;
       sel.appendChild(o);
     });
   }
 
   function populateTermDropdown() {
-    const sel = document.getElementById('selTerm');
+    var sel = el('selTerm'); if (!sel) return;
     sel.innerHTML = '';
     state.terms.forEach(function (t) {
-      const o = document.createElement('option');
+      var o = document.createElement('option');
       o.value = t.key;
       o.textContent = t.display + (t.isLocked ? '  🔒' : '');
       if (t.key === state.activeTerm) o.selected = true;
@@ -619,7 +626,7 @@
   }
 
   // ============================================================
-  // Cascade handlers — all client-side
+  // Cascade handlers
   // ============================================================
   function onClassChange() {
     populateSubjectDropdown();
@@ -629,7 +636,7 @@
   function onTermChange() { loadRoster(); }
 
   // ============================================================
-  // Roster loading (with client-side cache)
+  // Roster loading
   // ============================================================
   function cacheKey(cls, subj, term) {
     return cls + '|' + subj + '|' + term;
@@ -637,19 +644,17 @@
 
   async function loadRoster(force) {
     hideMsg('rosterMsg');
-    const cls = document.getElementById('selClass').value;
-    const subj = document.getElementById('selSubject').value;
-    const term = document.getElementById('selTerm').value;
+    var cls = getVal('selClass');
+    var subj = getVal('selSubject');
+    var term = getVal('selTerm');
     if (!cls || !subj || !term) return;
 
-    // Confirm navigation if there are unsaved changes
     if (state.dirty && (state.currentClass !== cls || state.currentSubject !== subj || state.currentTerm !== term)) {
       if (!confirm('You have unsaved changes. Discard them?')) {
-        // Revert selects to previous values
-        document.getElementById('selClass').value = state.currentClass || cls;
+        var sc = el('selClass'); if (sc) sc.value = state.currentClass || cls;
         populateSubjectDropdown();
-        if (state.currentSubject) document.getElementById('selSubject').value = state.currentSubject;
-        document.getElementById('selTerm').value = state.currentTerm || term;
+        var ss = el('selSubject'); if (ss && state.currentSubject) ss.value = state.currentSubject;
+        var st = el('selTerm'); if (st) st.value = state.currentTerm || term;
         return;
       }
       state.dirty = false;
@@ -659,7 +664,7 @@
     state.currentSubject = subj;
     state.currentTerm = term;
 
-    const key = cacheKey(cls, subj, term);
+    var key = cacheKey(cls, subj, term);
     if (!force && state.rosterCache[key]) {
       state.roster = state.rosterCache[key].map(function (r) { return Object.assign({}, r); });
       recomputePreview();
@@ -669,7 +674,7 @@
 
     showLoading('Loading ' + cls + ' / ' + subj + '...');
     try {
-      const r = await callGAS('teacherGetRoster', {
+      var r = await callGAS('teacherGetRoster', {
         token: state.token,
         studentClass: cls,
         subject: subj,
@@ -678,7 +683,7 @@
       if (!r || !r.success) {
         if (r && r.code === 'SESSION_EXPIRED') return logout(true);
         hideLoading();
-        document.getElementById('rosterWrap').innerHTML = '';
+        setHtml('rosterWrap', '');
         showMsg('rosterMsg', 'error', (r && r.error) || 'Failed to load.');
         return;
       }
@@ -702,8 +707,7 @@
   }
 
   // ============================================================
-  // LIVE PREVIEW — client-side grade + position calc
-  // (Server recomputes on save; this is just for the teacher's eyes)
+  // Live preview
   // ============================================================
   function gradeFor(score, studentClass) {
     if (score === '' || score === null || score === undefined) return '';
@@ -731,12 +735,10 @@
   }
 
   function recomputePreview() {
-    const cls = state.currentClass;
-    // Grades
+    var cls = state.currentClass;
     state.roster.forEach(function (r) {
       r.previewGrade = gradeFor(r.score, cls);
     });
-    // Positions
     var valid = state.roster
       .filter(function (r) { return r.score !== '' && r.score !== null && !isNaN(Number(r.score)); })
       .map(function (r) { return { row: r.row, val: Number(r.score) }; })
@@ -750,17 +752,16 @@
     state.roster.forEach(function (r) {
       r.previewPos = rankMap[r.row] || '';
     });
-    // Stats
     var scores = valid.map(function (v) { return v.val; });
     var total = scores.length;
     var sum = scores.reduce(function (a, b) { return a + b; }, 0);
     var avg = total > 0 ? Math.round(sum / total) : null;
     var max = total > 0 ? Math.max.apply(null, scores) : null;
     var min = total > 0 ? Math.min.apply(null, scores) : null;
-    document.getElementById('statTotal').textContent = state.roster.length;
-    document.getElementById('statAvg').textContent = avg !== null ? avg : '—';
-    document.getElementById('statMax').textContent = max !== null ? max : '—';
-    document.getElementById('statMin').textContent = min !== null ? min : '—';
+    setText('statTotal', state.roster.length);
+    setText('statAvg', avg !== null ? avg : '—');
+    setText('statMax', max !== null ? max : '—');
+    setText('statMin', min !== null ? min : '—');
     updateChangedCount();
   }
 
@@ -768,35 +769,26 @@
     var changed = state.roster.filter(function (r) {
       return String(r.score) !== String(r.original);
     }).length;
-    document.getElementById('statChanged').textContent = changed;
+    setText('statChanged', changed);
     state.dirty = changed > 0;
-    var saveBtn = document.getElementById('saveBtn');
-    saveBtn.disabled = !state.dirty || state.saving;
+    var saveBtn = el('saveBtn');
+    if (saveBtn) saveBtn.disabled = !state.dirty || state.saving;
   }
 
   // ============================================================
-  // Render grid (with search filter)
+  // Render grid
   // ============================================================
   function renderRoster() {
-    const wrap = document.getElementById('rosterWrap');
-    const q = (document.getElementById('rosterSearch').value || '').toLowerCase().trim();
-
-    const visible = state.roster.filter(function (r) {
-      if (!q) return true;
-      return r.student.toLowerCase().indexOf(q) !== -1;
-    });
+    var wrap = el('rosterWrap'); if (!wrap) return;
+    var q = (getVal('rosterSearch') || '').toLowerCase().trim();
 
     if (!state.roster.length) {
       wrap.innerHTML = '<div class="tp-empty">No students found.</div>';
       return;
     }
-    if (!visible.length) {
-      wrap.innerHTML = '<div class="tp-empty">No matches for "' + escapeHtml(q) + '".</div>';
-      return;
-    }
 
-    const subject = state.currentSubject;
-    let html = '<div class="tp-grid-wrap"><table class="tp-grid">';
+    var subject = state.currentSubject;
+    var html = '<div class="tp-grid-wrap"><table class="tp-grid">';
     html += '<thead><tr>';
     html += '<th style="width:46px;">#</th>';
     html += '<th>Student</th>';
@@ -805,9 +797,8 @@
     html += '<th style="width:60px;" class="center">Pos</th>';
     html += '</tr></thead><tbody>';
 
-    // We iterate over the full roster to keep row order, but only render visible
     var rowCounter = 0;
-    state.roster.forEach(function (r, i) {
+    state.roster.forEach(function (r) {
       if (q && r.student.toLowerCase().indexOf(q) === -1) return;
       rowCounter++;
       var isChanged = String(r.score) !== String(r.original);
@@ -834,35 +825,32 @@
     wrap.innerHTML = html;
   }
 
-  function onScoreInput(el, ev) {
-    var row = parseInt(el.dataset.row, 10);
+  function onScoreInput(inputEl, ev) {
+    var row = parseInt(inputEl.dataset.row, 10);
     var r = state.roster.find(function (x) { return x.row === row; });
     if (!r) return;
 
-    var raw = el.value;
+    var raw = inputEl.value;
     if (raw === '') {
       r.score = '';
     } else {
       var n = Number(raw);
-      if (isNaN(n)) { el.classList.add('error'); return; }
+      if (isNaN(n)) { inputEl.classList.add('error'); return; }
       if (n < 0) n = 0;
       if (n > 100) n = 100;
       n = Math.round(n);
       r.score = n;
-      if (String(n) !== raw && ev && ev.type === 'input') el.value = n;
-      el.classList.remove('error');
+      if (String(n) !== raw && ev && ev.type === 'input') inputEl.value = n;
+      inputEl.classList.remove('error');
     }
-    el.classList.toggle('changed', String(r.score) !== String(r.original));
+    inputEl.classList.toggle('changed', String(r.score) !== String(r.original));
 
-    // Re-render just the preview cells in this row (fast, no full table rebuild)
-    var tr = el.closest('tr');
+    var tr = inputEl.closest('tr');
     if (tr) {
+      recomputePreview();
+      tr.classList.toggle('changed', String(r.score) !== String(r.original));
       var gradeCell = tr.querySelector('.preview-grade');
       var posCell = tr.querySelector('.preview-pos');
-      // Recompute grades+positions just for the visible dataset — cheap
-      recomputePreview();
-      // Update this row's visuals
-      tr.classList.toggle('changed', String(r.score) !== String(r.original));
       if (gradeCell) {
         gradeCell.textContent = r.previewGrade || '—';
         gradeCell.className = 'preview-grade ' + (r.previewGrade ? (isNaN(Number(r.previewGrade)) ? r.previewGrade : ('g' + r.previewGrade)) : '');
@@ -871,7 +859,6 @@
     }
   }
 
-  // Keyboard nav: Enter moves to the next input in the same column
   function onScoreKeyDown(ev) {
     if (ev.key === 'Enter' || ev.key === 'ArrowDown') {
       ev.preventDefault();
@@ -910,7 +897,7 @@
   }
 
   // ============================================================
-  // Save — with retry and offline queue
+  // Save
   // ============================================================
   async function saveScores() {
     hideMsg('rosterMsg');
@@ -924,72 +911,36 @@
     }
 
     state.saving = true;
-    var saveBtn = document.getElementById('saveBtn');
-    saveBtn.disabled = true;
-    saveBtn.textContent = '💾 Saving...';
-
-    var payload = {
-      token: state.token,
-      studentClass: state.currentClass,
-      subject: state.currentSubject,
-      term: state.currentTerm,
-      scores: JSON.stringify(scores)
-    };
+    var saveBtn = el('saveBtn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '💾 Saving...'; }
 
     try {
-      var res = await callGAS('teacherSaveScores', payload);
+      var res = await callGAS('teacherSaveScores', {
+        token: state.token,
+        studentClass: state.currentClass,
+        subject: state.currentSubject,
+        term: state.currentTerm,
+        scores: JSON.stringify(scores)
+      });
       if (!res || !res.success) {
         if (res && res.code === 'SESSION_EXPIRED') return logout(true);
-        // Queue for retry
-        queueOfflineSave(payload);
-        showMsg('rosterMsg', 'warn', 'Save failed. It will retry automatically. ' + ((res && res.error) || ''));
+        showMsg('rosterMsg', 'error', (res && res.error) || 'Save failed.');
         return;
       }
       showMsg('rosterMsg', 'success', res.message + ' Grades and positions have been recomputed.');
-
-      // Update originals from saved values
       state.roster.forEach(function (r) {
         if (String(r.score) !== String(r.original)) r.original = r.score;
       });
-      // Refresh cache
       var key = cacheKey(state.currentClass, state.currentSubject, state.currentTerm);
       state.rosterCache[key] = state.roster.map(function (r) { return Object.assign({}, r); });
       state.dirty = false;
       renderRoster();
     } catch (e) {
-      queueOfflineSave(payload);
-      showMsg('rosterMsg', 'warn', 'Network error. Save queued and will retry. ' + e.message);
+      showMsg('rosterMsg', 'error', 'Error: ' + e.message);
     } finally {
       state.saving = false;
-      saveBtn.textContent = '💾 Save';
+      if (saveBtn) { saveBtn.textContent = '💾 Save'; }
       updateChangedCount();
-    }
-  }
-
-  function queueOfflineSave(payload) {
-    try {
-      var q = JSON.parse(localStorage.getItem('tOfflineQueue') || '[]');
-      q.push({ at: Date.now(), payload: payload });
-      localStorage.setItem('tOfflineQueue', JSON.stringify(q));
-    } catch (e) {}
-  }
-
-  async function flushOfflineQueue() {
-    var q = [];
-    try { q = JSON.parse(localStorage.getItem('tOfflineQueue') || '[]'); } catch (e) {}
-    if (!q.length) return;
-    var remaining = [];
-    for (var i = 0; i < q.length; i++) {
-      try {
-        var res = await callGAS('teacherSaveScores', q[i].payload);
-        if (!res || !res.success) remaining.push(q[i]);
-      } catch (e) {
-        remaining.push(q[i]);
-      }
-    }
-    localStorage.setItem('tOfflineQueue', JSON.stringify(remaining));
-    if (remaining.length === 0) {
-      showMsg('rosterMsg', 'success', 'Queued saves synced.');
     }
   }
 
@@ -1006,10 +957,10 @@
     sessionStorage.clear();
     state.token = null;
     state.teacher = null;
-    document.getElementById('viewPortal').classList.add('tp-hidden');
-    document.getElementById('viewLogin').classList.remove('tp-hidden');
-    document.getElementById('userBadge').classList.add('tp-hidden');
-    document.getElementById('logoutBtn').classList.add('tp-hidden');
+    var vp = el('viewPortal'); if (vp) vp.classList.add('tp-hidden');
+    var vl = el('viewLogin'); if (vl) vl.classList.remove('tp-hidden');
+    var ub = el('userBadge'); if (ub) ub.classList.add('tp-hidden');
+    var lb = el('logoutBtn'); if (lb) lb.classList.add('tp-hidden');
     if (!silent) showMsg('loginMsg', 'info', 'Signed out.');
   }
 
@@ -1017,12 +968,12 @@
   // Loading
   // ============================================================
   function showLoading(text) {
-    document.getElementById('rosterLoadingText').textContent = text || 'Loading...';
-    document.getElementById('rosterLoading').classList.add('show');
-    document.getElementById('rosterWrap').innerHTML = '';
+    setText('rosterLoadingText', text || 'Loading...');
+    var e = el('rosterLoading'); if (e) e.classList.add('show');
+    setHtml('rosterWrap', '');
   }
   function hideLoading() {
-    document.getElementById('rosterLoading').classList.remove('show');
+    var e = el('rosterLoading'); if (e) e.classList.remove('show');
   }
 
   // ============================================================
@@ -1045,24 +996,20 @@
   // Online / offline awareness
   window.addEventListener('online', function () {
     state.online = true;
-    document.getElementById('offlineBanner').classList.remove('show');
-    flushOfflineQueue();
+    var b = el('offlineBanner'); if (b) b.classList.remove('show');
   });
   window.addEventListener('offline', function () {
     state.online = false;
-    document.getElementById('offlineBanner').classList.add('show');
+    var b = el('offlineBanner'); if (b) b.classList.add('show');
   });
 
-  // Periodic retry of queued saves
-  setInterval(function () {
-    if (state.online && state.token) flushOfflineQueue();
-  }, 45000);
-
   // ============================================================
-  // Auto-resume on page load
+  // Init
   // ============================================================
-  window.addEventListener('load', async function () {
-    if (!state.online) document.getElementById('offlineBanner').classList.add('show');
+  async function initializeTeacherPage() {
+    if (!state.online) {
+      var b = el('offlineBanner'); if (b) b.classList.add('show');
+    }
     var tok = sessionStorage.getItem('tToken');
     var name = sessionStorage.getItem('tName');
     var email = sessionStorage.getItem('tEmail');
@@ -1071,7 +1018,13 @@
       state.teacher = { name: name, email: email };
       await enterPortal();
     }
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTeacherPage);
+  } else {
+    setTimeout(initializeTeacherPage, 0);
+  }
 </script>
 </body>
 </html>
