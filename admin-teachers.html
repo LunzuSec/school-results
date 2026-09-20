@@ -377,51 +377,73 @@
     teachers: [],
     assignments: [],
     audit: [],
-    subjectsCache: {},     // { 'Form 3': ['BIOLOGY','AGRICULTURE',...] }
+    subjectsCache: {},
     terms: [],
     bulkSelected: new Set()
   };
 
   // ============================================================
-  // JSONP caller
+  // API caller — fetch with JSONP fallback
   // ============================================================
-  function callGAS(action, params, retryCount) {
-    retryCount = retryCount || 0;
-    const MAX = 2;
+  async function callGAS(action, params) {
+    // ---- Try fetch first (handles redirects cleanly) ----
+    try {
+      const p = Object.assign({}, params || {});
+      p.action = action;
+      const qs = Object.keys(p)
+        .filter(k => p[k] !== undefined && p[k] !== null)
+        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k]))
+        .join('&');
+      const res = await fetch(GAS_URL + '?' + qs, {
+        method: 'GET',
+        redirect: 'follow',
+        credentials: 'omit'
+      });
+      if (res.ok) {
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (data && data.error) throw new Error(data.error);
+          return data;
+        } catch (parseErr) {
+          // Not JSON — fall through to JSONP
+        }
+      }
+    } catch (fetchErr) {
+      // network error — try JSONP
+    }
+
+    // ---- JSONP fallback (with manual redirect follow via /u/0/ URL) ----
     return new Promise((resolve, reject) => {
       const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
       const p = Object.assign({}, params || {});
       p.action = action;
       p.callback = cb;
-      const url = GAS_URL + '?' + Object.keys(p)
+      const qs = Object.keys(p)
         .filter(k => p[k] !== undefined && p[k] !== null)
         .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k]))
         .join('&');
       const s = document.createElement('script');
-      s.src = url;
+      s.src = GAS_URL + '?' + qs;
       const to = setTimeout(() => {
         if (window[cb]) {
           delete window[cb];
           if (s.parentNode) s.parentNode.removeChild(s);
-          if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-          else reject(new Error('Request timeout'));
+          reject(new Error('Request timeout'));
         }
       }, 30000);
       window[cb] = function (r) {
         clearTimeout(to);
         delete window[cb];
         if (s.parentNode) s.parentNode.removeChild(s);
-        if (r && r.error) {
-          if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-          else reject(new Error(r.error));
-        } else resolve(r);
+        if (r && r.error) reject(new Error(r.error));
+        else resolve(r);
       };
       s.onerror = () => {
         clearTimeout(to);
         delete window[cb];
         if (s.parentNode) s.parentNode.removeChild(s);
-        if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-        else reject(new Error('Network error'));
+        reject(new Error('Network error'));
       };
       document.head.appendChild(s);
     });
@@ -490,7 +512,6 @@
         return;
       }
       state.teachers = res.teachers || [];
-      // Update datalist for autocomplete
       const dl = document.getElementById('teacherEmailList');
       dl.innerHTML = '';
       state.teachers.filter(t => t.status === 'ACTIVE').forEach(t => {
@@ -687,12 +708,10 @@
   }
 
   async function loadSubjectsForClass(cls, targetSelectId) {
-    // Use cached subjects if available
     if (state.subjectsCache[cls]) {
-      populateSelect(targetSelectId, state.subjectsCache[cls]);
+      if (targetSelectId) populateSelect(targetSelectId, state.subjectsCache[cls]);
       return state.subjectsCache[cls];
     }
-    // Otherwise fetch
     try {
       const term = document.getElementById('asgTerm').value || 'ALL';
       const realTerm = term === 'ALL'
@@ -705,7 +724,7 @@
       });
       if (!res || !res.success) return [];
       state.subjectsCache[cls] = res.subjects || [];
-      populateSelect(targetSelectId, state.subjectsCache[cls]);
+      if (targetSelectId) populateSelect(targetSelectId, state.subjectsCache[cls]);
       return state.subjectsCache[cls];
     } catch (e) {
       return [];
@@ -714,6 +733,7 @@
 
   function populateSelect(id, items) {
     const sel = document.getElementById(id);
+    if (!sel) return;
     sel.innerHTML = '';
     items.forEach(s => {
       const o = document.createElement('option');
@@ -771,7 +791,6 @@
   // BULK ASSIGN
   // ============================================================
   async function initBulkTab() {
-    // Populate class dropdown
     const sel = document.getElementById('bulkClass');
     if (sel.options.length === 0) {
       ALL_CLASSES.forEach(c => {
@@ -780,10 +799,8 @@
         sel.appendChild(o);
       });
     }
-    // Populate term dropdown
     const termSel = document.getElementById('bulkTerm');
     if (termSel.options.length <= 1) {
-      // ALL already present, add the specific terms
       state.terms.forEach(t => {
         const o = document.createElement('option');
         o.value = t.key; o.textContent = t.display;
@@ -804,7 +821,7 @@
     }
     wrap.innerHTML = '<div style="color:#94a3b8;font-size:12px;font-style:italic;padding:8px;">Loading subjects...</div>';
 
-    const subs = await loadSubjectsForClass(cls, null); // null = don't populate a select
+    const subs = await loadSubjectsForClass(cls, null);
     wrap.innerHTML = '';
     if (!subs.length) {
       wrap.innerHTML = '<div style="color:#94a3b8;font-size:12px;font-style:italic;padding:8px;">No subjects found for ' + esc(cls) + '.</div>';
@@ -950,7 +967,6 @@
   // Init
   // ============================================================
   window.addEventListener('load', async function () {
-    // Populate class dropdowns
     ['asgClass','bulkClass'].forEach(id => {
       const sel = document.getElementById(id);
       if (!sel) return;
@@ -962,7 +978,6 @@
       });
     });
 
-    // Fetch terms once
     try {
       const terms = await callGAS('getAvailableTerms', {});
       if (Array.isArray(terms)) {
@@ -970,7 +985,6 @@
         ['asgTerm','bulkTerm'].forEach(id => {
           const sel = document.getElementById(id);
           if (!sel) return;
-          // keep the ALL option
           sel.innerHTML = '<option value="ALL">ALL TERMS</option>';
           terms.forEach(t => {
             const o = document.createElement('option');
@@ -981,7 +995,6 @@
       }
     } catch (e) {}
 
-    // Load initial data
     loadTeachers();
   });
 </script>
