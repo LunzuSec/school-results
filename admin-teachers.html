@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Teachers — Lunzu Secondary School</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #0a1628;
+    color: #fff;
+    min-height: 100vh;
+    padding: 16px;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+
+  .card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 16px;
+  }
+
+  h1 { font-size: 21px; color: #fbbf24; margin-bottom: 5px; }
+  .sub { color: #94a3b8; font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+  h2 {
+    font-size: 13px; color: #a78bfa; margin-bottom: 12px;
+    text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700;
+  }
+
+  .tabs {
+    display: flex; gap: 6px; margin-bottom: 18px;
+    background: rgba(0,0,0,0.15); padding: 6px; border-radius: 12px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    flex: 1; min-width: 120px;
+    padding: 11px; text-align: center; font-size: 13px; font-weight: 600;
+    color: #cbd5e1; border-radius: 8px; cursor: pointer;
+    border: none; background: transparent; font-family: inherit;
+    transition: 0.15s;
+  }
+  .tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
+  .tab.active { background: rgba(139,92,246,0.32); color: #fff; }
+
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block; font-size: 12px; color: #e2e8f0;
+    font-weight: 600; margin-bottom: 5px;
+  }
+  .field input, .field select {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff; font-size: 13.5px; font-family: inherit;
+  }
+  .field input:focus, .field select:focus {
+    outline: none; border-color: #a78bfa;
+    background: rgba(255,255,255,0.14);
+  }
+  .field select option { background:#1a2a3a; color:#fff; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 700px) {
+    .row, .row-3 { grid-template-columns: 1fr; }
+  }
+
+  .btn {
+    padding: 10px 15px; border: none; border-radius: 10px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: 0.15s; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.purple { background: rgba(139,92,246,0.85); }
+  .btn.purple:hover:not(:disabled) { background: rgba(139,92,246,1); }
+  .btn.green { background: rgba(22,163,74,0.85); }
+  .btn.green:hover:not(:disabled) { background: rgba(22,163,74,1); }
+  .btn.gray { background: rgba(100,116,139,0.6); }
+  .btn.gray:hover:not(:disabled) { background: rgba(100,116,139,0.9); }
+  .btn.red { background: rgba(220,38,38,0.75); }
+  .btn.red:hover:not(:disabled) { background: rgba(220,38,38,1); }
+  .btn.sm { padding: 6px 11px; font-size: 12px; }
+
+  .msg {
+    padding: 11px 14px; border-radius: 10px; font-size: 12.5px;
+    margin-top: 12px; display: none; line-height: 1.55;
+    border: 1px solid rgba(255,255,255,0.06);
+    white-space: pre-wrap;
+  }
+  .msg.show { display: block; }
+  .msg.success { background: rgba(34,197,94,0.15); border-left: 4px solid #10b981; color:#dcfce7; }
+  .msg.error   { background: rgba(220,38,38,0.15); border-left: 4px solid #ef4444; color:#fecaca; }
+  .msg.info    { background: rgba(59,130,246,0.15); border-left: 4px solid #3b82f6; color:#dbeafe; }
+  .msg.warn    { background: rgba(245,158,11,0.15); border-left: 4px solid #f59e0b; color:#fef3c7; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: rgba(139,92,246,0.15); padding: 10px 12px;
+    font-size: 10.5px; color: #c4b5fd; text-transform: uppercase;
+    letter-spacing: 0.5px; font-weight: 700;
+    text-align: left; white-space: nowrap;
+  }
+  td { padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.06); color: #e2e8f0; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
+  .hidden { display: none !important; }
+  .empty { padding: 26px; text-align: center; color: #94a3b8; font-size: 13px; font-style: italic; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px; border-radius: 10px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.4px;
+  }
+  .badge.active { background: rgba(34,197,94,0.25); color: #86efac; }
+  .badge.inactive { background: rgba(148,163,184,0.25); color: #cbd5e1; }
+
+  .filter-bar {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    align-items: center; margin-bottom: 12px;
+  }
+  .filter-bar input, .filter-bar select {
+    padding: 9px 12px; border-radius: 10px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff; font-size: 13px; font-family: inherit;
+    min-width: 180px;
+  }
+  .filter-bar input:focus, .filter-bar select:focus {
+    outline: none; border-color: #a78bfa;
+  }
+  .filter-bar select option { background:#1a2a3a; color:#fff; }
+
+  .chips {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+    min-height: 30px; padding: 6px;
+    border: 1px dashed rgba(255,255,255,0.10);
+    border-radius: 10px;
+  }
+  .chip {
+    background: rgba(139,92,246,0.25);
+    border: 1px solid rgba(139,92,246,0.5);
+    padding: 4px 8px 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    display: inline-flex; align-items: center; gap: 6px;
+    color: #e9d5ff;
+  }
+  .chip button {
+    background: transparent; border: none; color: #e9d5ff;
+    cursor: pointer; font-size: 14px; line-height: 1;
+    padding: 0 2px;
+  }
+  .chip button:hover { color: #fff; }
+
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 6px;
+    margin-top: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 8px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .checkbox-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; cursor: pointer;
+    padding: 5px 8px; border-radius: 6px;
+    transition: 0.1s;
+  }
+  .checkbox-item:hover { background: rgba(255,255,255,0.05); }
+  .checkbox-item input {
+    width: 16px; height: 16px; accent-color: #a78bfa; cursor: pointer;
+  }
+
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .stat-card .k {
+    font-size: 10.5px; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    font-weight: 700; margin-bottom: 4px;
+  }
+  .stat-card .v { font-size: 20px; font-weight: 700; color: #fbbf24; }
+
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .card { padding: 16px; }
+    h1 { font-size: 17px; }
+    .filter-bar input, .filter-bar select { min-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <h1>👨‍🏫 Manage Teachers</h1>
+    <div class="sub">
+      Add teachers, assign them classes and subjects, and review the entry audit log.
+      Changes take effect immediately — no redeploy needed.
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="teachers" onclick="switchTab('teachers')">👤 Teachers</button>
+      <button class="tab" data-tab="assign" onclick="switchTab('assign')">🎯 Assignments</button>
+      <button class="tab" data-tab="bulk" onclick="switchTab('bulk')">⚡ Bulk Assign</button>
+      <button class="tab" data-tab="audit" onclick="switchTab('audit')">📋 Audit Log</button>
+    </div>
+
+    <!-- ================= TEACHERS ================= -->
+    <div id="tab-teachers">
+      <h2>Add New Teacher</h2>
+      <div class="row">
+        <div class="field">
+          <label>Teacher Email</label>
+          <input type="email" id="newTeacherEmail" placeholder="teacher@lunzu.edu">
+        </div>
+        <div class="field">
+          <label>Teacher Name</label>
+          <input type="text" id="newTeacherName" placeholder="Mr. John Banda">
+        </div>
+      </div>
+      <button class="btn green" onclick="addTeacher()">➕ Add / Update Teacher</button>
+
+      <h2 style="margin-top:24px;">Registered Teachers</h2>
+      <div class="filter-bar">
+        <input type="text" id="teacherSearch" placeholder="🔍 Search by name or email..." oninput="renderTeachers()">
+        <select id="teacherStatusFilter" onchange="renderTeachers()">
+          <option value="">All statuses</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
+        <button class="btn purple sm" onclick="loadTeachers(true)">🔄 Reload</button>
+      </div>
+      <div id="teachersMsg" class="msg"></div>
+      <div id="teachersTableWrap"></div>
+    </div>
+
+    <!-- ================= ASSIGNMENTS ================= -->
+    <div id="tab-assign" class="hidden">
+      <h2>Add Assignment</h2>
+      <div class="row">
+        <div class="field">
+          <label>Teacher Email</label>
+          <input type="email" id="asgEmail" placeholder="teacher@lunzu.edu" list="teacherEmailList">
+          <datalist id="teacherEmailList"></datalist>
+        </div>
+        <div class="field">
+          <label>Term</label>
+          <select id="asgTerm"><option value="ALL">ALL TERMS</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Class</label>
+          <select id="asgClass" onchange="onAsgClassChange()"></select>
+        </div>
+        <div class="field">
+          <label>Subject</label>
+          <select id="asgSubject"></select>
+        </div>
+      </div>
+      <button class="btn green" onclick="addAssignment()">➕ Add Assignment</button>
+
+      <h2 style="margin-top:24px;">All Assignments</h2>
+      <div class="filter-bar">
+        <input type="text" id="asgSearch" placeholder="🔍 Search by email, class, or subject..." oninput="renderAssignments()">
+        <select id="asgClassFilter" onchange="renderAssignments()">
+          <option value="">All classes</option>
+        </select>
+        <button class="btn purple sm" onclick="loadAssignments(true)">🔄 Reload</button>
+      </div>
+      <div id="assignMsg" class="msg"></div>
+      <div id="assignTableWrap"></div>
+    </div>
+
+    <!-- ================= BULK ASSIGN ================= -->
+    <div id="tab-bulk" class="hidden">
+      <h2>Bulk Assign Subjects</h2>
+      <div class="sub" style="margin-bottom:12px;">
+        Assign multiple subjects to one teacher for one class in a single operation.
+        Tick each subject you want to add.
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Teacher Email</label>
+          <input type="email" id="bulkEmail" placeholder="teacher@lunzu.edu" list="teacherEmailList">
+        </div>
+        <div class="field">
+          <label>Class</label>
+          <select id="bulkClass" onchange="onBulkClassChange()"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Term</label>
+        <select id="bulkTerm"><option value="ALL">ALL TERMS</option></select>
+      </div>
+
+      <div class="field">
+        <label>Subjects</label>
+        <div id="bulkSubjectsWrap" class="checkbox-grid">
+          <div style="color:#94a3b8;font-size:12px;font-style:italic;padding:8px;">
+            Pick a class first to load subjects.
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Selected subjects</label>
+          <div id="bulkChips" class="chips">
+            <span style="color:#94a3b8;font-size:11.5px;font-style:italic;">None selected</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn green" onclick="saveBulkAssignments()">➕ Add Selected Subjects</button>
+      <div id="bulkMsg" class="msg"></div>
+    </div>
+
+    <!-- ================= AUDIT ================= -->
+    <div id="tab-audit" class="hidden">
+      <h2>Audit Log</h2>
+      <div class="filter-bar">
+        <input type="text" id="auditSearch" placeholder="🔍 Search teacher, student, subject..." oninput="renderAudit()">
+        <select id="auditLimit" onchange="loadAudit()">
+          <option value="200">Last 200</option>
+          <option value="500">Last 500</option>
+          <option value="1000">Last 1000</option>
+        </select>
+        <button class="btn purple sm" onclick="loadAudit()">🔄 Reload</button>
+      </div>
+      <div id="auditMsg" class="msg"></div>
+      <div id="auditTableWrap"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // Config
+  // ============================================================
+  const GAS_URL = 'https://script.google.com/macros/u/0/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
+
+  const ALL_CLASSES = [
+    'Form 1','Form 2','Form 3','Form 4',
+    'Form 1 ODL','Form 2 ODL','Form 3 ODL','Form 4 ODL'
+  ];
+
+  // ============================================================
+  // State
+  // ============================================================
+  const state = {
+    adminPassword: null,
+    teachers: [],
+    assignments: [],
+    audit: [],
+    subjectsCache: {},     // { 'Form 3': ['BIOLOGY','AGRICULTURE',...] }
+    terms: [],
+    bulkSelected: new Set()
+  };
+
+  // ============================================================
+  // JSONP caller
+  // ============================================================
+  function callGAS(action, params, retryCount) {
+    retryCount = retryCount || 0;
+    const MAX = 2;
+    return new Promise((resolve, reject) => {
+      const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      const p = Object.assign({}, params || {});
+      p.action = action;
+      p.callback = cb;
+      const url = GAS_URL + '?' + Object.keys(p)
+        .filter(k => p[k] !== undefined && p[k] !== null)
+        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k]))
+        .join('&');
+      const s = document.createElement('script');
+      s.src = url;
+      const to = setTimeout(() => {
+        if (window[cb]) {
+          delete window[cb];
+          if (s.parentNode) s.parentNode.removeChild(s);
+          if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+          else reject(new Error('Request timeout'));
+        }
+      }, 30000);
+      window[cb] = function (r) {
+        clearTimeout(to);
+        delete window[cb];
+        if (s.parentNode) s.parentNode.removeChild(s);
+        if (r && r.error) {
+          if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+          else reject(new Error(r.error));
+        } else resolve(r);
+      };
+      s.onerror = () => {
+        clearTimeout(to);
+        delete window[cb];
+        if (s.parentNode) s.parentNode.removeChild(s);
+        if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+        else reject(new Error('Network error'));
+      };
+      document.head.appendChild(s);
+    });
+  }
+
+  // ============================================================
+  // Utilities
+  // ============================================================
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function showMsg(id, type, text) {
+    const el = document.getElementById(id);
+    el.className = 'msg show ' + type;
+    el.textContent = text;
+  }
+  function hideMsg(id) {
+    document.getElementById(id).className = 'msg';
+    document.getElementById(id).textContent = '';
+  }
+
+  // ============================================================
+  // Password handling
+  // ============================================================
+  function ensurePassword() {
+    if (state.adminPassword) return true;
+    const cached = sessionStorage.getItem('adminPw');
+    if (cached) {
+      state.adminPassword = cached;
+      return true;
+    }
+    const p = prompt('Enter admin password:');
+    if (!p) return false;
+    state.adminPassword = p;
+    sessionStorage.setItem('adminPw', p);
+    return true;
+  }
+
+  // ============================================================
+  // Tab switching
+  // ============================================================
+  function switchTab(t) {
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+    ['teachers','assign','bulk','audit'].forEach(x => {
+      document.getElementById('tab-' + x).classList.toggle('hidden', x !== t);
+    });
+    if (t === 'teachers' && !state.teachers.length) loadTeachers();
+    if (t === 'assign' && !state.assignments.length) loadAssignments();
+    if (t === 'bulk') initBulkTab();
+    if (t === 'audit' && !state.audit.length) loadAudit();
+  }
+
+  // ============================================================
+  // TEACHERS
+  // ============================================================
+  async function loadTeachers(force) {
+    if (!ensurePassword()) return;
+    hideMsg('teachersMsg');
+    if (!force && state.teachers.length) { renderTeachers(); return; }
+    try {
+      const res = await callGAS('adminListTeachers', { password: state.adminPassword });
+      if (!res || !res.success) {
+        showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.');
+        return;
+      }
+      state.teachers = res.teachers || [];
+      // Update datalist for autocomplete
+      const dl = document.getElementById('teacherEmailList');
+      dl.innerHTML = '';
+      state.teachers.filter(t => t.status === 'ACTIVE').forEach(t => {
+        const o = document.createElement('option');
+        o.value = t.email;
+        o.label = t.name;
+        dl.appendChild(o);
+      });
+      renderTeachers();
+    } catch (e) {
+      showMsg('teachersMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  function renderTeachers() {
+    const q = (document.getElementById('teacherSearch').value || '').toLowerCase().trim();
+    const status = document.getElementById('teacherStatusFilter').value;
+    const rows = state.teachers.filter(t => {
+      if (status && t.status !== status) return false;
+      if (!q) return true;
+      return (t.email + ' ' + t.name).toLowerCase().indexOf(q) !== -1;
+    });
+
+    if (!rows.length) {
+      document.getElementById('teachersTableWrap').innerHTML =
+        '<div class="empty">No teachers match your filter.</div>';
+      return;
+    }
+
+    let h = '<div class="table-wrap"><table><thead><tr>';
+    h += '<th>Name</th><th>Email</th><th>Status</th><th>Last Login</th><th style="width:200px;">Actions</th>';
+    h += '</tr></thead><tbody>';
+    rows.forEach(t => {
+      const active = t.status === 'ACTIVE';
+      h += '<tr>';
+      h += '<td><strong>' + esc(t.name) + '</strong></td>';
+      h += '<td style="font-size:12.5px;">' + esc(t.email) + '</td>';
+      h += '<td><span class="badge ' + (active ? 'active' : 'inactive') + '">' + esc(t.status) + '</span></td>';
+      h += '<td style="font-size:12px;color:#94a3b8;">' + (t.lastLogin ? new Date(t.lastLogin).toLocaleString() : '—') + '</td>';
+      h += '<td>';
+      if (active) {
+        h += '<button class="btn red sm" onclick="deactivateTeacher(\'' + esc(t.email) + '\')">Deactivate</button> ';
+      } else {
+        h += '<button class="btn green sm" onclick="reactivateTeacher(\'' + esc(t.email) + '\')">Reactivate</button> ';
+      }
+      h += '<button class="btn purple sm" onclick="jumpToAssignments(\'' + esc(t.email) + '\')">Assign</button>';
+      h += '</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    document.getElementById('teachersTableWrap').innerHTML = h;
+  }
+
+  async function addTeacher() {
+    if (!ensurePassword()) return;
+    hideMsg('teachersMsg');
+    const email = document.getElementById('newTeacherEmail').value.trim();
+    const name = document.getElementById('newTeacherName').value.trim();
+    if (!email || !name) {
+      showMsg('teachersMsg', 'error', 'Both email and name are required.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showMsg('teachersMsg', 'error', 'Please enter a valid email address.');
+      return;
+    }
+    try {
+      const res = await callGAS('adminAddTeacher', {
+        password: state.adminPassword, email, name
+      });
+      if (!res || !res.success) {
+        showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.');
+        return;
+      }
+      showMsg('teachersMsg', 'success', res.created ? 'Teacher added.' : 'Teacher updated.');
+      document.getElementById('newTeacherEmail').value = '';
+      document.getElementById('newTeacherName').value = '';
+      await loadTeachers(true);
+    } catch (e) {
+      showMsg('teachersMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  async function deactivateTeacher(email) {
+    if (!ensurePassword()) return;
+    if (!confirm('Deactivate ' + email + '?\n\nThey will not be able to sign in until reactivated.')) return;
+    try {
+      const res = await callGAS('adminRemoveTeacher', { password: state.adminPassword, email });
+      if (!res || !res.success) {
+        showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.');
+        return;
+      }
+      showMsg('teachersMsg', 'success', res.message || 'Deactivated.');
+      await loadTeachers(true);
+    } catch (e) {
+      showMsg('teachersMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  async function reactivateTeacher(email) {
+    if (!ensurePassword()) return;
+    try {
+      const res = await callGAS('adminReactivateTeacher', { password: state.adminPassword, email });
+      if (!res || !res.success) {
+        showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.');
+        return;
+      }
+      showMsg('teachersMsg', 'success', res.message || 'Reactivated.');
+      await loadTeachers(true);
+    } catch (e) {
+      showMsg('teachersMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  function jumpToAssignments(email) {
+    switchTab('assign');
+    document.getElementById('asgEmail').value = email;
+  }
+
+  // ============================================================
+  // ASSIGNMENTS
+  // ============================================================
+  async function loadAssignments(force) {
+    if (!ensurePassword()) return;
+    hideMsg('assignMsg');
+    if (!force && state.assignments.length) { renderAssignments(); return; }
+    try {
+      const res = await callGAS('adminListAssignments', { password: state.adminPassword });
+      if (!res || !res.success) {
+        showMsg('assignMsg', 'error', (res && res.error) || 'Failed.');
+        return;
+      }
+      state.assignments = res.assignments || [];
+      renderAssignments();
+      populateClassFilter();
+    } catch (e) {
+      showMsg('assignMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  function populateClassFilter() {
+    const sel = document.getElementById('asgClassFilter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All classes</option>';
+    ALL_CLASSES.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    });
+    sel.value = current;
+  }
+
+  function renderAssignments() {
+    const q = (document.getElementById('asgSearch').value || '').toLowerCase().trim();
+    const cls = document.getElementById('asgClassFilter').value;
+    const rows = state.assignments.filter(a => {
+      if (cls && a.studentClass !== cls) return false;
+      if (!q) return true;
+      return (a.email + ' ' + a.studentClass + ' ' + a.subject + ' ' + a.term)
+        .toLowerCase().indexOf(q) !== -1;
+    });
+
+    if (!rows.length) {
+      document.getElementById('assignTableWrap').innerHTML =
+        '<div class="empty">No assignments match your filter.</div>';
+      return;
+    }
+
+    let h = '<div class="table-wrap"><table><thead><tr>';
+    h += '<th>Teacher</th><th>Class</th><th>Subject</th><th>Term</th><th>Active</th><th style="width:100px;"></th>';
+    h += '</tr></thead><tbody>';
+    rows.forEach(a => {
+      h += '<tr>';
+      h += '<td style="font-size:12.5px;">' + esc(a.email) + '</td>';
+      h += '<td>' + esc(a.studentClass) + '</td>';
+      h += '<td><strong>' + esc(a.subject) + '</strong></td>';
+      h += '<td>' + esc(a.term) + '</td>';
+      h += '<td>' + esc(a.active) + '</td>';
+      h += '<td><button class="btn red sm" '
+         + 'onclick="removeAssignment(\'' + esc(a.email) + '\',\'' + esc(a.studentClass) + '\',\'' + esc(a.subject) + '\',\'' + esc(a.term) + '\')">'
+         + 'Remove</button></td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    document.getElementById('assignTableWrap').innerHTML = h;
+  }
+
+  async function onAsgClassChange() {
+    const cls = document.getElementById('asgClass').value;
+    const sel = document.getElementById('asgSubject');
+    sel.innerHTML = '';
+    if (!cls) return;
+    await loadSubjectsForClass(cls, 'asgSubject');
+  }
+
+  async function loadSubjectsForClass(cls, targetSelectId) {
+    // Use cached subjects if available
+    if (state.subjectsCache[cls]) {
+      populateSelect(targetSelectId, state.subjectsCache[cls]);
+      return state.subjectsCache[cls];
+    }
+    // Otherwise fetch
+    try {
+      const term = document.getElementById('asgTerm').value || 'ALL';
+      const realTerm = term === 'ALL'
+        ? (state.terms.find(t => t.isActive) || state.terms[0] || {}).key
+        : term;
+      const res = await callGAS('adminGetSubjectsForClass', {
+        password: state.adminPassword,
+        studentClass: cls,
+        term: realTerm
+      });
+      if (!res || !res.success) return [];
+      state.subjectsCache[cls] = res.subjects || [];
+      populateSelect(targetSelectId, state.subjectsCache[cls]);
+      return state.subjectsCache[cls];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function populateSelect(id, items) {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '';
+    items.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    });
+  }
+
+  async function addAssignment() {
+    if (!ensurePassword()) return;
+    hideMsg('assignMsg');
+    const email = document.getElementById('asgEmail').value.trim();
+    const cls = document.getElementById('asgClass').value;
+    const subject = document.getElementById('asgSubject').value;
+    const term = document.getElementById('asgTerm').value || 'ALL';
+
+    if (!email || !cls || !subject) {
+      showMsg('assignMsg', 'error', 'All fields required.');
+      return;
+    }
+    try {
+      const res = await callGAS('adminAddAssignment', {
+        password: state.adminPassword, email, studentClass: cls, subject, term
+      });
+      if (!res || !res.success) {
+        showMsg('assignMsg', 'error', (res && res.error) || 'Failed.');
+        return;
+      }
+      showMsg('assignMsg', 'success', 'Assignment added.');
+      await loadAssignments(true);
+    } catch (e) {
+      showMsg('assignMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  async function removeAssignment(email, cls, subject, term) {
+    if (!ensurePassword()) return;
+    if (!confirm('Remove ' + subject + ' for ' + email + ' in ' + cls + '?')) return;
+    try {
+      const res = await callGAS('adminRemoveAssignment', {
+        password: state.adminPassword, email, studentClass: cls, subject, term
+      });
+      if (!res || !res.success) {
+        showMsg('assignMsg', 'error', (res && res.error) || 'Failed.');
+        return;
+      }
+      showMsg('assignMsg', 'success', 'Removed ' + (res.removed || 0) + ' assignment(s).');
+      await loadAssignments(true);
+    } catch (e) {
+      showMsg('assignMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  // ============================================================
+  // BULK ASSIGN
+  // ============================================================
+  async function initBulkTab() {
+    // Populate class dropdown
+    const sel = document.getElementById('bulkClass');
+    if (sel.options.length === 0) {
+      ALL_CLASSES.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c; o.textContent = c;
+        sel.appendChild(o);
+      });
+    }
+    // Populate term dropdown
+    const termSel = document.getElementById('bulkTerm');
+    if (termSel.options.length <= 1) {
+      // ALL already present, add the specific terms
+      state.terms.forEach(t => {
+        const o = document.createElement('option');
+        o.value = t.key; o.textContent = t.display;
+        termSel.appendChild(o);
+      });
+    }
+  }
+
+  async function onBulkClassChange() {
+    const cls = document.getElementById('bulkClass').value;
+    const wrap = document.getElementById('bulkSubjectsWrap');
+    state.bulkSelected.clear();
+    updateBulkChips();
+
+    if (!cls) {
+      wrap.innerHTML = '<div style="color:#94a3b8;font-size:12px;font-style:italic;padding:8px;">Pick a class first.</div>';
+      return;
+    }
+    wrap.innerHTML = '<div style="color:#94a3b8;font-size:12px;font-style:italic;padding:8px;">Loading subjects...</div>';
+
+    const subs = await loadSubjectsForClass(cls, null); // null = don't populate a select
+    wrap.innerHTML = '';
+    if (!subs.length) {
+      wrap.innerHTML = '<div style="color:#94a3b8;font-size:12px;font-style:italic;padding:8px;">No subjects found for ' + esc(cls) + '.</div>';
+      return;
+    }
+    subs.forEach(s => {
+      const label = document.createElement('label');
+      label.className = 'checkbox-item';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = s;
+      cb.onchange = function () {
+        if (this.checked) state.bulkSelected.add(s);
+        else state.bulkSelected.delete(s);
+        updateBulkChips();
+      };
+      const span = document.createElement('span');
+      span.textContent = s;
+      label.appendChild(cb);
+      label.appendChild(span);
+      wrap.appendChild(label);
+    });
+  }
+
+  function updateBulkChips() {
+    const wrap = document.getElementById('bulkChips');
+    wrap.innerHTML = '';
+    if (state.bulkSelected.size === 0) {
+      wrap.innerHTML = '<span style="color:#94a3b8;font-size:11.5px;font-style:italic;">None selected</span>';
+      return;
+    }
+    Array.from(state.bulkSelected).sort().forEach(s => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = esc(s) + ' <button type="button" title="Remove">×</button>';
+      chip.querySelector('button').onclick = function () {
+        state.bulkSelected.delete(s);
+        const cb = document.querySelector('#bulkSubjectsWrap input[value="' + CSS.escape(s) + '"]');
+        if (cb) cb.checked = false;
+        updateBulkChips();
+      };
+      wrap.appendChild(chip);
+    });
+  }
+
+  async function saveBulkAssignments() {
+    if (!ensurePassword()) return;
+    hideMsg('bulkMsg');
+    const email = document.getElementById('bulkEmail').value.trim();
+    const cls = document.getElementById('bulkClass').value;
+    const term = document.getElementById('bulkTerm').value || 'ALL';
+
+    if (!email) { showMsg('bulkMsg', 'error', 'Teacher email is required.'); return; }
+    if (!cls)   { showMsg('bulkMsg', 'error', 'Class is required.'); return; }
+    if (state.bulkSelected.size === 0) { showMsg('bulkMsg', 'error', 'Select at least one subject.'); return; }
+
+    const subjects = Array.from(state.bulkSelected);
+    try {
+      const res = await callGAS('adminAddAssignmentsBulk', {
+        password: state.adminPassword,
+        email: email,
+        studentClass: cls,
+        subjects: JSON.stringify(subjects),
+        term: term
+      });
+      if (!res || !res.success) {
+        showMsg('bulkMsg', 'error', (res && res.error) || 'Failed.');
+        return;
+      }
+      showMsg('bulkMsg', 'success', 'Added ' + res.added + ' assignment(s) for ' + email + ' in ' + cls + '.');
+      state.bulkSelected.clear();
+      updateBulkChips();
+      document.querySelectorAll('#bulkSubjectsWrap input[type=checkbox]').forEach(cb => cb.checked = false);
+      await loadAssignments(true);
+    } catch (e) {
+      showMsg('bulkMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  // ============================================================
+  // AUDIT LOG
+  // ============================================================
+  async function loadAudit() {
+    if (!ensurePassword()) return;
+    hideMsg('auditMsg');
+    const limit = parseInt(document.getElementById('auditLimit').value, 10) || 200;
+    try {
+      const res = await callGAS('adminGetAuditLog', {
+        password: state.adminPassword,
+        limit: limit
+      });
+      if (!res || !res.success) {
+        showMsg('auditMsg', 'error', (res && res.error) || 'Failed.');
+        return;
+      }
+      state.audit = res.log || [];
+      renderAudit();
+    } catch (e) {
+      showMsg('auditMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  function renderAudit() {
+    const q = (document.getElementById('auditSearch').value || '').toLowerCase().trim();
+    const rows = state.audit.filter(r => {
+      if (!q) return true;
+      return (
+        (r.teacherName || '') + ' ' +
+        (r.teacherEmail || '') + ' ' +
+        (r.student || '') + ' ' +
+        (r.subject || '') + ' ' +
+        (r.studentClass || '')
+      ).toLowerCase().indexOf(q) !== -1;
+    });
+
+    if (!rows.length) {
+      document.getElementById('auditTableWrap').innerHTML =
+        '<div class="empty">No entries match your filter.</div>';
+      return;
+    }
+
+    let h = '<div class="table-wrap"><table><thead><tr>';
+    h += '<th>When</th><th>Teacher</th><th>Class</th><th>Subject</th><th>Student</th><th>Old</th><th>New</th>';
+    h += '</tr></thead><tbody>';
+    rows.forEach(r => {
+      const changed = String(r.oldScore) !== String(r.newScore);
+      h += '<tr' + (changed ? '' : ' style="opacity:0.6;"') + '>';
+      h += '<td style="font-size:12px;color:#94a3b8;white-space:nowrap;">'
+        + (r.timestamp ? new Date(r.timestamp).toLocaleString() : '') + '</td>';
+      h += '<td>' + esc(r.teacherName || r.teacherEmail) + '</td>';
+      h += '<td>' + esc(r.studentClass) + '</td>';
+      h += '<td>' + esc(r.subject) + '</td>';
+      h += '<td>' + esc(r.student) + '</td>';
+      h += '<td style="color:#94a3b8;">' + esc(r.oldScore) + '</td>';
+      h += '<td style="color:#fbbf24;font-weight:700;">' + esc(r.newScore) + '</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    document.getElementById('auditTableWrap').innerHTML = h;
+  }
+
+  // ============================================================
+  // Init
+  // ============================================================
+  window.addEventListener('load', async function () {
+    // Populate class dropdowns
+    ['asgClass','bulkClass'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '';
+      ALL_CLASSES.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c; o.textContent = c;
+        sel.appendChild(o);
+      });
+    });
+
+    // Fetch terms once
+    try {
+      const terms = await callGAS('getAvailableTerms', {});
+      if (Array.isArray(terms)) {
+        state.terms = terms;
+        ['asgTerm','bulkTerm'].forEach(id => {
+          const sel = document.getElementById(id);
+          if (!sel) return;
+          // keep the ALL option
+          sel.innerHTML = '<option value="ALL">ALL TERMS</option>';
+          terms.forEach(t => {
+            const o = document.createElement('option');
+            o.value = t.key; o.textContent = t.display;
+            sel.appendChild(o);
+          });
+        });
+      }
+    } catch (e) {}
+
+    // Load initial data
+    loadTeachers();
+  });
+</script>
+</body>
+</html>
