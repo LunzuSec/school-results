@@ -426,6 +426,7 @@
     currentClass: null,
     currentSubject: null,
     currentTerm: null,
+    currentPapers: [],
     roster: [],
     rosterCache: {},
     dirty: false,
@@ -666,7 +667,12 @@
 
     var key = cacheKey(cls, subj, term);
     if (!force && state.rosterCache[key]) {
-      state.roster = state.rosterCache[key].map(function (r) { return Object.assign({}, r); });
+      var cached = state.rosterCache[key];
+      state.currentPapers = cached.papers || [];
+      state.roster = cached.roster.map(function (r) { return Object.assign({}, r, {
+        paperScores: r.paperScores.slice(),
+        paperScoresOriginal: r.paperScoresOriginal.slice()
+      }); });
       recomputePreview();
       renderRoster();
       return;
@@ -687,15 +693,29 @@
         showMsg('rosterMsg', 'error', (r && r.error) || 'Failed to load.');
         return;
       }
+
+      state.currentPapers = r.papers || [];
+      var paperScoresByRow = r.paperScoresByRow || {};
+
       state.roster = (r.roster || []).map(function (row) {
+        var ps = paperScoresByRow[row.row] || state.currentPapers.map(function () { return ''; });
         return {
           row: row.row,
           student: row.student,
           score: row.score === '' ? '' : Number(row.score),
-          original: row.score === '' ? '' : Number(row.score)
+          original: row.score === '' ? '' : Number(row.score),
+          paperScores: ps.slice(),
+          paperScoresOriginal: ps.slice()
         };
       });
-      state.rosterCache[key] = state.roster.map(function (r) { return Object.assign({}, r); });
+
+      state.rosterCache[key] = {
+        papers: state.currentPapers,
+        roster: state.roster.map(function (r2) { return Object.assign({}, r2, {
+          paperScores: r2.paperScores.slice(),
+          paperScoresOriginal: r2.paperScoresOriginal.slice()
+        }); })
+      };
       state.dirty = false;
       recomputePreview();
       renderRoster();
@@ -707,8 +727,22 @@
   }
 
   // ============================================================
-  // Live preview
+  // Live preview (Reading B client-side)
   // ============================================================
+  function computeFinal(scores, maxMarks) {
+    var sumScore = 0, sumMax = 0;
+    for (var i = 0; i < scores.length; i++) {
+      var s = scores[i];
+      if (s === '' || s === null || s === undefined) return '';
+      var n = Number(s);
+      if (isNaN(n)) return '';
+      sumScore += n;
+      sumMax += Number(maxMarks[i]);
+    }
+    if (sumMax <= 0) return '';
+    return Math.round((sumScore / sumMax) * 100);
+  }
+
   function gradeFor(score, studentClass) {
     if (score === '' || score === null || score === undefined) return '';
     var n = Number(score);
@@ -736,9 +770,16 @@
 
   function recomputePreview() {
     var cls = state.currentClass;
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+
     state.roster.forEach(function (r) {
+      if (isMulti) {
+        var maxMarks = state.currentPapers.map(function (p) { return p.maxMark; });
+        r.score = computeFinal(r.paperScores, maxMarks);
+      }
       r.previewGrade = gradeFor(r.score, cls);
     });
+
     var valid = state.roster
       .filter(function (r) { return r.score !== '' && r.score !== null && !isNaN(Number(r.score)); })
       .map(function (r) { return { row: r.row, val: Number(r.score) }; })
@@ -752,6 +793,7 @@
     state.roster.forEach(function (r) {
       r.previewPos = rankMap[r.row] || '';
     });
+
     var scores = valid.map(function (v) { return v.val; });
     var total = scores.length;
     var sum = scores.reduce(function (a, b) { return a + b; }, 0);
@@ -766,7 +808,14 @@
   }
 
   function updateChangedCount() {
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
     var changed = state.roster.filter(function (r) {
+      if (isMulti) {
+        for (var i = 0; i < r.paperScores.length; i++) {
+          if (String(r.paperScores[i]) !== String(r.paperScoresOriginal[i])) return true;
+        }
+        return false;
+      }
       return String(r.score) !== String(r.original);
     }).length;
     setText('statChanged', changed);
@@ -781,6 +830,7 @@
   function renderRoster() {
     var wrap = el('rosterWrap'); if (!wrap) return;
     var q = (getVal('rosterSearch') || '').toLowerCase().trim();
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
 
     if (!state.roster.length) {
       wrap.innerHTML = '<div class="tp-empty">No students found.</div>';
@@ -792,7 +842,15 @@
     html += '<thead><tr>';
     html += '<th style="width:46px;">#</th>';
     html += '<th>Student</th>';
-    html += '<th style="width:110px;" class="center">' + escapeHtml(subject) + '</th>';
+    if (isMulti) {
+      for (var pi = 0; pi < state.currentPapers.length; pi++) {
+        var p = state.currentPapers[pi];
+        html += '<th style="width:90px;" class="center">' + escapeHtml(p.paperName) + '<br><small style="color:#94a3b8;font-weight:400;font-size:10px;">max ' + p.maxMark + '</small></th>';
+      }
+      html += '<th style="width:90px;" class="center">' + escapeHtml(subject) + '<br><small style="color:#94a3b8;font-weight:400;font-size:10px;">final</small></th>';
+    } else {
+      html += '<th style="width:110px;" class="center">' + escapeHtml(subject) + '</th>';
+    }
     html += '<th style="width:70px;" class="center">Grade</th>';
     html += '<th style="width:60px;" class="center">Pos</th>';
     html += '</tr></thead><tbody>';
@@ -801,22 +859,52 @@
     state.roster.forEach(function (r) {
       if (q && r.student.toLowerCase().indexOf(q) === -1) return;
       rowCounter++;
-      var isChanged = String(r.score) !== String(r.original);
+
+      var isChanged;
+      if (isMulti) {
+        isChanged = false;
+        for (var k = 0; k < r.paperScores.length; k++) {
+          if (String(r.paperScores[k]) !== String(r.paperScoresOriginal[k])) { isChanged = true; break; }
+        }
+      } else {
+        isChanged = String(r.score) !== String(r.original);
+      }
+
       var gradeClass = 'preview-grade';
       if (r.previewGrade) {
         gradeClass += ' ' + (isNaN(Number(r.previewGrade)) ? r.previewGrade : ('g' + r.previewGrade));
       }
+
       html += '<tr class="' + (isChanged ? 'changed' : '') + '">';
       html += '<td class="num">' + rowCounter + '</td>';
       html += '<td class="name">' + escapeHtml(r.student) + '</td>';
-      html += '<td class="center">';
-      html += '<input class="score-input ' + (isChanged ? 'changed' : '') + '" '
-            + 'type="number" min="0" max="100" step="1" inputmode="numeric" '
-            + 'value="' + (r.score === '' ? '' : escapeHtml(String(r.score))) + '" '
-            + 'data-row="' + r.row + '" '
-            + 'oninput="onScoreInput(this, event)" '
-            + 'onkeydown="onScoreKeyDown(event)">';
-      html += '</td>';
+
+      if (isMulti) {
+        for (var pj = 0; pj < state.currentPapers.length; pj++) {
+          var pp = state.currentPapers[pj];
+          var pv = r.paperScores[pj];
+          var pChanged = String(pv) !== String(r.paperScoresOriginal[pj]);
+          html += '<td class="center">';
+          html += '<input class="score-input ' + (pChanged ? 'changed' : '') + '" '
+                + 'type="number" min="0" max="' + pp.maxMark + '" step="1" inputmode="numeric" '
+                + 'value="' + (pv === '' || pv === null || pv === undefined ? '' : escapeHtml(String(pv))) + '" '
+                + 'data-row="' + r.row + '" data-paper="' + pj + '" '
+                + 'oninput="onPaperScoreInput(this, event)" '
+                + 'onkeydown="onScoreKeyDown(event)">';
+          html += '</td>';
+        }
+        html += '<td class="center" data-final="1"><strong>' + (r.score === '' ? '—' : r.score) + '</strong></td>';
+      } else {
+        html += '<td class="center">';
+        html += '<input class="score-input ' + (isChanged ? 'changed' : '') + '" '
+              + 'type="number" min="0" max="100" step="1" inputmode="numeric" '
+              + 'value="' + (r.score === '' ? '' : escapeHtml(String(r.score))) + '" '
+              + 'data-row="' + r.row + '" '
+              + 'oninput="onScoreInput(this, event)" '
+              + 'onkeydown="onScoreKeyDown(event)">';
+        html += '</td>';
+      }
+
       html += '<td class="center"><span class="' + gradeClass + '">' + (r.previewGrade || '—') + '</span></td>';
       html += '<td class="center preview-pos">' + (r.previewPos || '—') + '</td>';
       html += '</tr>';
@@ -859,6 +947,56 @@
     }
   }
 
+  function onPaperScoreInput(inputEl, ev) {
+    var row = parseInt(inputEl.dataset.row, 10);
+    var pi = parseInt(inputEl.dataset.paper, 10);
+    var r = state.roster.find(function (x) { return x.row === row; });
+    if (!r || !state.currentPapers[pi]) return;
+
+    var raw = inputEl.value;
+    if (raw === '') {
+      r.paperScores[pi] = '';
+    } else {
+      var n = Number(raw);
+      if (isNaN(n)) { inputEl.classList.add('error'); return; }
+      if (n < 0) n = 0;
+      var maxMark = state.currentPapers[pi].maxMark;
+      if (n > maxMark) n = maxMark;
+      n = Math.round(n);
+      r.paperScores[pi] = n;
+      if (String(n) !== raw && ev && ev.type === 'input') inputEl.value = n;
+      inputEl.classList.remove('error');
+    }
+
+    var maxMarks = state.currentPapers.map(function (p) { return p.maxMark; });
+    r.score = computeFinal(r.paperScores, maxMarks);
+
+    inputEl.classList.toggle('changed',
+      String(r.paperScores[pi]) !== String(r.paperScoresOriginal[pi]));
+
+    recomputePreview();
+
+    var tr = inputEl.closest('tr');
+    if (tr) {
+      var anyChanged = false;
+      for (var k = 0; k < r.paperScores.length; k++) {
+        if (String(r.paperScores[k]) !== String(r.paperScoresOriginal[k])) { anyChanged = true; break; }
+      }
+      tr.classList.toggle('changed', anyChanged);
+
+      var finalTd = tr.querySelector('td[data-final="1"]');
+      if (finalTd) finalTd.innerHTML = '<strong>' + (r.score === '' ? '—' : r.score) + '</strong>';
+
+      var gradeCell = tr.querySelector('.preview-grade');
+      var posCell = tr.querySelector('.preview-pos');
+      if (gradeCell) {
+        gradeCell.textContent = r.previewGrade || '—';
+        gradeCell.className = 'preview-grade ' + (r.previewGrade ? (isNaN(Number(r.previewGrade)) ? r.previewGrade : ('g' + r.previewGrade)) : '');
+      }
+      if (posCell) posCell.textContent = r.previewPos || '—';
+    }
+  }
+
   function onScoreKeyDown(ev) {
     if (ev.key === 'Enter' || ev.key === 'ArrowDown') {
       ev.preventDefault();
@@ -884,13 +1022,30 @@
   // ============================================================
   function clearAll() {
     if (!confirm('Clear all inputs? You must click Save to apply.')) return;
-    state.roster.forEach(function (r) { r.score = ''; });
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+    state.roster.forEach(function (r) {
+      if (isMulti) {
+        r.paperScores = r.paperScores.map(function () { return ''; });
+        r.score = '';
+      } else {
+        r.score = '';
+      }
+    });
     recomputePreview();
     renderRoster();
   }
   function resetChanges() {
     if (!confirm('Discard unsaved changes?')) return;
-    state.roster.forEach(function (r) { r.score = r.original; });
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+    var maxMarks = isMulti ? state.currentPapers.map(function (p) { return p.maxMark; }) : [];
+    state.roster.forEach(function (r) {
+      if (isMulti) {
+        r.paperScores = r.paperScoresOriginal.slice();
+        r.score = computeFinal(r.paperScores, maxMarks);
+      } else {
+        r.score = r.original;
+      }
+    });
     recomputePreview();
     renderRoster();
     hideMsg('rosterMsg');
@@ -901,9 +1056,25 @@
   // ============================================================
   async function saveScores() {
     hideMsg('rosterMsg');
-    var scores = state.roster
-      .filter(function (r) { return String(r.score) !== String(r.original); })
-      .map(function (r) { return { row: r.row, value: r.score }; });
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+
+    var scores;
+    if (isMulti) {
+      scores = state.roster
+        .filter(function (r) {
+          for (var i = 0; i < r.paperScores.length; i++) {
+            if (String(r.paperScores[i]) !== String(r.paperScoresOriginal[i])) return true;
+          }
+          return false;
+        })
+        .map(function (r) {
+          return { row: r.row, value: r.score, paperScores: r.paperScores };
+        });
+    } else {
+      scores = state.roster
+        .filter(function (r) { return String(r.score) !== String(r.original); })
+        .map(function (r) { return { row: r.row, value: r.score }; });
+    }
 
     if (!scores.length) {
       showMsg('rosterMsg', 'info', 'Nothing to save.');
@@ -928,11 +1099,24 @@
         return;
       }
       showMsg('rosterMsg', 'success', res.message + ' Grades and positions have been recomputed.');
+
       state.roster.forEach(function (r) {
-        if (String(r.score) !== String(r.original)) r.original = r.score;
+        if (isMulti) {
+          r.paperScoresOriginal = r.paperScores.slice();
+          r.original = r.score;
+        } else if (String(r.score) !== String(r.original)) {
+          r.original = r.score;
+        }
       });
+
       var key = cacheKey(state.currentClass, state.currentSubject, state.currentTerm);
-      state.rosterCache[key] = state.roster.map(function (r) { return Object.assign({}, r); });
+      state.rosterCache[key] = {
+        papers: state.currentPapers,
+        roster: state.roster.map(function (r) { return Object.assign({}, r, {
+          paperScores: r.paperScores.slice(),
+          paperScoresOriginal: r.paperScoresOriginal.slice()
+        }); })
+      };
       state.dirty = false;
       renderRoster();
     } catch (e) {
@@ -985,7 +1169,6 @@
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
-  // Warn on browser close with unsaved changes
   window.addEventListener('beforeunload', function (ev) {
     if (state.dirty) {
       ev.preventDefault();
@@ -993,7 +1176,1217 @@
     }
   });
 
-  // Online / offline awareness
+  window.addEventListener('online', function () {
+    state.online = true;
+    var b = el('offlineBanner'); if (b) b.classList.remove('show');
+  });
+  window.addEventListener('offline', function () {
+    state.online = false;
+    var b = el('offlineBanner'); if (b) b.classList.add('show');
+  });
+
+  // ============================================================
+  // Init
+  // ============================================================
+  async function initializeTeacherPage() {
+    if (!state.online) {
+      var b = el('offlineBanner'); if (b) b.classList.add('show');
+    }
+    var tok = sessionStorage.getItem('tToken');
+    var name = sessionStorage.getItem('tName');
+    var email = sessionStorage.getItem('tEmail');
+    if (tok && name) {
+      state.token = tok;
+      state.teacher = { name: name, email: email };
+      await enterPortal();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTeacherPage);
+  } else {
+    setTimeout(initializeTeacherPage, 0);
+  }
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>Teacher Score Entry — Lunzu Secondary School</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body {
+    font-family:'Segoe UI', Roboto, Arial, sans-serif;
+    background:#0a1628;
+    color:#fff;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .tp-shell { max-width:1200px; margin:0 auto; padding:16px; }
+
+  .tp-header {
+    background: rgba(10,30,50,0.85);
+    backdrop-filter: blur(10px);
+    border:1px solid rgba(255,215,0,0.2);
+    border-radius:16px;
+    padding:16px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .tp-header-left h1 { font-size:19px; letter-spacing:0.5px; }
+  .tp-header-left .sub { font-size:12px; color:#94a3b8; margin-top:3px; }
+  .tp-header-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .tp-user-badge {
+    background: rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:10px;
+    padding:6px 12px;
+    font-size:12.5px;
+  }
+  .tp-user-badge strong { color:#fbbf24; }
+
+  .tp-card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:14px;
+  }
+  .tp-card h2 {
+    color:#fbbf24; font-size:16px; margin-bottom:5px;
+  }
+  .tp-card .hint {
+    color:#94a3b8; font-size:12.5px; margin-bottom:14px; line-height:1.55;
+  }
+
+  .tp-btn {
+    padding:10px 15px; border:none; border-radius:10px;
+    font-size:13px; font-weight:600; cursor:pointer;
+    font-family:inherit; transition:0.15s;
+    display:inline-flex; align-items:center; justify-content:center;
+    gap:6px; color:#fff; white-space:nowrap;
+  }
+  .tp-btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .tp-btn.primary { background: rgba(37,99,235,0.85); }
+  .tp-btn.primary:hover:not(:disabled) { background: rgba(37,99,235,1); }
+  .tp-btn.green { background: rgba(22,163,74,0.85); }
+  .tp-btn.green:hover:not(:disabled) { background: rgba(22,163,74,1); }
+  .tp-btn.gray { background: rgba(100,116,139,0.6); }
+  .tp-btn.gray:hover:not(:disabled) { background: rgba(100,116,139,0.9); }
+  .tp-btn.warn { background: rgba(220,38,38,0.75); }
+  .tp-btn.warn:hover:not(:disabled) { background: rgba(220,38,38,1); }
+  .tp-btn.amber { background: rgba(245,158,11,0.85); color:#1e293b; }
+  .tp-btn.amber:hover:not(:disabled) { background: rgba(245,158,11,1); }
+  .tp-btn.sm { padding:7px 11px; font-size:12px; }
+
+  .tp-field { margin-bottom:12px; }
+  .tp-field label {
+    display:block; font-size:12px; color:#e2e8f0;
+    font-weight:600; margin-bottom:4px;
+  }
+  .tp-field input,
+  .tp-field select {
+    width:100%; padding:10px 12px;
+    border-radius:10px;
+    border:1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color:#fff; font-size:13px; font-family:inherit;
+  }
+  .tp-field input:focus,
+  .tp-field select:focus {
+    outline:none; border-color:#fbbf24;
+    background: rgba(255,255,255,0.14);
+  }
+  .tp-field select option { background:#1a2a3a; color:#fff; }
+
+  .tp-msg {
+    padding:11px 14px; border-radius:10px; font-size:12.5px;
+    margin-top:12px; display:none; line-height:1.55;
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .tp-msg.show { display:block; }
+  .tp-msg.success { background: rgba(34,197,94,0.15); border-left:4px solid #10b981; color:#dcfce7; }
+  .tp-msg.error   { background: rgba(220,38,38,0.15); border-left:4px solid #ef4444; color:#fecaca; }
+  .tp-msg.info    { background: rgba(59,130,246,0.15); border-left:4px solid #3b82f6; color:#dbeafe; }
+  .tp-msg.warn    { background: rgba(245,158,11,0.15); border-left:4px solid #f59e0b; color:#fef3c7; }
+
+  .tp-filters {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap:12px;
+    align-items:end;
+  }
+
+  .tp-stats {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .tp-stat {
+    background: rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:12px 14px;
+  }
+  .tp-stat .k {
+    font-size:10.5px; color:#94a3b8;
+    text-transform:uppercase; letter-spacing:0.6px; font-weight:700;
+    margin-bottom:5px;
+  }
+  .tp-stat .v { font-size:20px; font-weight:700; }
+  .tp-stat .v.green { color:#86efac; }
+  .tp-stat .v.amber { color:#fcd34d; }
+  .tp-stat .v.red { color:#fca5a5; }
+  .tp-stat .v.blue { color:#93c5fd; }
+
+  .tp-grid-wrap {
+    overflow-x:auto;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.08);
+    margin-top:12px;
+  }
+  .tp-grid {
+    width:100%; border-collapse:collapse;
+    font-size:13px; min-width:640px;
+  }
+  .tp-grid th {
+    background: rgba(59,130,246,0.15);
+    padding:10px 12px;
+    font-size:10.5px; color:#93c5fd;
+    text-transform:uppercase; letter-spacing:0.5px;
+    font-weight:700; text-align:left;
+    white-space:nowrap; position:sticky; top:0; z-index:5;
+  }
+  .tp-grid th.center { text-align:center; }
+  .tp-grid td {
+    padding:6px 12px;
+    border-top:1px solid rgba(255,255,255,0.06);
+    color:#e2e8f0;
+  }
+  .tp-grid tr:hover td { background: rgba(255,255,255,0.03); }
+  .tp-grid tr.changed td { background: rgba(251,191,36,0.06); }
+  .tp-grid tr.changed:hover td { background: rgba(251,191,36,0.10); }
+  .tp-grid .num { text-align:right; width:50px; color:#94a3b8; font-variant-numeric: tabular-nums; }
+  .tp-grid .name { font-weight:600; color:#fff; }
+  .tp-grid .center { text-align:center; }
+
+  .tp-grid input.score-input {
+    width:80px; padding:7px 9px;
+    border-radius:8px;
+    border:1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color:#fff; font-size:13.5px;
+    text-align:center; font-weight:600;
+    font-family:inherit; font-variant-numeric: tabular-nums;
+  }
+  .tp-grid input.score-input:focus {
+    outline:none; border-color:#fbbf24;
+    background: rgba(255,255,255,0.14);
+  }
+  .tp-grid input.score-input.changed {
+    border-color:#fbbf24;
+    background: rgba(251,191,36,0.14);
+    color:#fcd34d;
+  }
+  .tp-grid input.score-input.error {
+    border-color:#ef4444;
+    background: rgba(239,68,68,0.10);
+  }
+  .tp-grid .preview-grade {
+    display:inline-block; min-width:24px;
+    padding:3px 8px; border-radius:6px;
+    font-size:11px; font-weight:700;
+    background: rgba(255,255,255,0.06);
+    color:#cbd5e1;
+  }
+  .tp-grid .preview-grade.A, .tp-grid .preview-grade.g1 { background: rgba(34,197,94,0.25); color:#86efac; }
+  .tp-grid .preview-grade.B, .tp-grid .preview-grade.g2 { background: rgba(14,165,233,0.25); color:#7dd3fc; }
+  .tp-grid .preview-grade.C, .tp-grid .preview-grade.g3,
+  .tp-grid .preview-grade.g4, .tp-grid .preview-grade.g5 { background: rgba(245,158,11,0.25); color:#fcd34d; }
+  .tp-grid .preview-grade.D, .tp-grid .preview-grade.g6,
+  .tp-grid .preview-grade.g7, .tp-grid .preview-grade.g8 { background: rgba(234,88,12,0.25); color:#fdba74; }
+  .tp-grid .preview-grade.F, .tp-grid .preview-grade.g9 { background: rgba(220,38,38,0.25); color:#fca5a5; }
+  .tp-grid .preview-pos { color:#94a3b8; font-size:12px; font-variant-numeric: tabular-nums; }
+
+  .tp-toolbar {
+    display:flex; gap:8px; flex-wrap:wrap;
+    align-items:center; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .tp-toolbar-left, .tp-toolbar-right {
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  }
+  .tp-search {
+    padding:8px 12px; border-radius:10px;
+    border:1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color:#fff; font-size:12.5px; font-family:inherit;
+    min-width:220px;
+  }
+  .tp-search:focus { outline:none; border-color:#fbbf24; }
+
+  .tp-loading {
+    display:none; align-items:center; gap:10px;
+    padding:14px; font-size:12.5px; color:#cbd5e1;
+  }
+  .tp-loading.show { display:flex; }
+  .tp-loading .spin {
+    width:16px; height:16px;
+    border:2.5px solid rgba(255,255,255,0.15);
+    border-top-color:#fbbf24;
+    border-radius:50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .tp-empty {
+    padding:26px; text-align:center;
+    color:#94a3b8; font-size:13px; font-style:italic;
+  }
+
+  .tp-offline {
+    display:none;
+    background: rgba(220,38,38,0.15);
+    border:1px solid rgba(220,38,38,0.35);
+    border-left:4px solid #ef4444;
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:12.5px;
+    color:#fecaca;
+    margin-bottom:12px;
+  }
+  .tp-offline.show { display:block; }
+
+  .tp-hidden { display:none !important; }
+
+  @media (max-width:700px) {
+    .tp-shell { padding:10px; }
+    .tp-card { padding:14px; }
+    .tp-header { padding:12px 14px; }
+    .tp-header-left h1 { font-size:16px; }
+    .tp-btn { padding:9px 12px; font-size:12px; }
+    .tp-search { min-width:140px; width:100%; }
+    .tp-grid { min-width:520px; }
+    .tp-grid input.score-input { width:70px; }
+  }
+</style>
+</head>
+<body>
+<div class="tp-shell">
+
+  <div class="tp-offline" id="offlineBanner">
+    ⚠️ You are offline. Changes will be saved locally and synced when the connection returns.
+  </div>
+
+  <div class="tp-header">
+    <div class="tp-header-left">
+      <h1>📝 Teacher Score Entry</h1>
+      <div class="sub">Lunzu Secondary School — Academic Office</div>
+    </div>
+    <div class="tp-header-right">
+      <div id="userBadge" class="tp-user-badge tp-hidden">
+        <strong id="userName">—</strong>
+      </div>
+      <button id="logoutBtn" class="tp-btn gray sm tp-hidden" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Login view -->
+  <div id="viewLogin" class="tp-card">
+    <h2>Sign in</h2>
+    <div class="hint">
+      Sign in with your school Google account. If you're not registered,
+      ask the admin to add your email.
+    </div>
+
+    <div id="googleBtnWrap" style="margin-top:8px;">
+      <div id="g_id_onload"
+           data-client_id="PASTE_YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com"
+           data-callback="handleGoogleCredential"
+           data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin"
+           data-type="standard"
+           data-size="large"
+           data-theme="outline"
+           data-text="signin_with"
+           data-shape="rectangular">
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">
+        No Google account? Enter your school email:
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="email" id="manualEmail" class="tp-search" placeholder="teacher@lunzu.edu" style="flex:1;">
+        <button class="tp-btn primary" onclick="manualSignIn()">Continue</button>
+      </div>
+    </div>
+
+    <div id="loginMsg" class="tp-msg"></div>
+  </div>
+
+  <!-- Portal view -->
+  <div id="viewPortal" class="tp-hidden">
+
+    <div class="tp-card" style="padding:14px 18px;">
+      <div class="tp-filters">
+        <div class="tp-field" style="margin-bottom:0;">
+          <label for="selClass">Class</label>
+          <select id="selClass" onchange="onClassChange()"></select>
+        </div>
+        <div class="tp-field" style="margin-bottom:0;">
+          <label for="selSubject">Subject</label>
+          <select id="selSubject" onchange="onSubjectChange()"></select>
+        </div>
+        <div class="tp-field" style="margin-bottom:0;">
+          <label for="selTerm">Term</label>
+          <select id="selTerm" onchange="onTermChange()"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="tp-stats">
+      <div class="tp-stat">
+        <div class="k">Students</div>
+        <div class="v" id="statTotal">0</div>
+      </div>
+      <div class="tp-stat">
+        <div class="k">Unsaved changes</div>
+        <div class="v amber" id="statChanged">0</div>
+      </div>
+      <div class="tp-stat">
+        <div class="k">Class average</div>
+        <div class="v blue" id="statAvg">—</div>
+      </div>
+      <div class="tp-stat">
+        <div class="k">Top score</div>
+        <div class="v green" id="statMax">—</div>
+      </div>
+      <div class="tp-stat">
+        <div class="k">Lowest score</div>
+        <div class="v red" id="statMin">—</div>
+      </div>
+    </div>
+
+    <div class="tp-card">
+      <div class="tp-toolbar">
+        <div class="tp-toolbar-left">
+          <input type="text" class="tp-search" id="rosterSearch" placeholder="🔍 Search student..." oninput="renderRoster()">
+          <button class="tp-btn gray sm" onclick="loadRoster(true)">🔄 Reload</button>
+        </div>
+        <div class="tp-toolbar-right">
+          <button class="tp-btn gray sm" onclick="clearAll()" title="Clear all inputs">🧹 Clear all</button>
+          <button class="tp-btn gray sm" onclick="resetChanges()">↺ Reset</button>
+          <button class="tp-btn green" id="saveBtn" onclick="saveScores()">💾 Save</button>
+        </div>
+      </div>
+
+      <div id="rosterLoading" class="tp-loading">
+        <span class="spin"></span>
+        <span id="rosterLoadingText">Loading...</span>
+      </div>
+      <div id="rosterMsg" class="tp-msg"></div>
+      <div id="rosterWrap"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+  // ============================================================
+  // SAFE DOM HELPERS
+  // ============================================================
+  function el(id) { return document.getElementById(id); }
+  function getVal(id) { var e = el(id); return e ? String(e.value || '') : ''; }
+  function setText(id, text) { var e = el(id); if (e) e.textContent = text; }
+  function setHtml(id, html) { var e = el(id); if (e) e.innerHTML = html; }
+
+  // ============================================================
+  // Config
+  // ============================================================
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
+
+  const CLASS_ORDER = [
+    'Form 1','Form 2','Form 3','Form 4',
+    'Form 1 ODL','Form 2 ODL','Form 3 ODL','Form 4 ODL'
+  ];
+
+  // ============================================================
+  // State
+  // ============================================================
+  const state = {
+    token: null,
+    teacher: null,
+    terms: [],
+    activeTerm: null,
+    byClass: {},
+    subjectsByClass: {},
+    currentClass: null,
+    currentSubject: null,
+    currentTerm: null,
+    currentPapers: [],
+    roster: [],
+    rosterCache: {},
+    dirty: false,
+    saving: false,
+    online: navigator.onLine
+  };
+
+  // ============================================================
+  // API caller — assignment-form JSONP
+  // ============================================================
+  function callGAS(action, params, retryCount) {
+    retryCount = retryCount || 0;
+    const MAX = 3;
+    return new Promise((resolve, reject) => {
+      const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      const globalName = '__gasResponse_' + cb;
+      const p = Object.assign({}, params || {});
+      p.action = action;
+      p.callback = cb;
+
+      const url = GAS_URL + '?' + Object.keys(p)
+        .filter(k => p[k] !== undefined && p[k] !== null)
+        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k]))
+        .join('&');
+
+      const s = document.createElement('script');
+      s.src = url;
+
+      const to = setTimeout(() => {
+        cleanup();
+        if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+        else reject(new Error('Request timeout'));
+      }, 25000);
+
+      function cleanup() {
+        clearTimeout(to);
+        try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
+        if (s.parentNode) s.parentNode.removeChild(s);
+      }
+
+      s.onload = () => {
+        setTimeout(() => {
+          if (window[globalName] !== undefined) {
+            const r = window[globalName];
+            cleanup();
+            if (r && r.error) reject(new Error(r.error));
+            else resolve(r);
+          } else {
+            cleanup();
+            if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+            else reject(new Error('No response from server (callback may have been stripped)'));
+          }
+        }, 20);
+      };
+
+      s.onerror = () => {
+        cleanup();
+        if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
+        else reject(new Error('Network error'));
+      };
+
+      document.head.appendChild(s);
+    });
+  }
+
+  // ============================================================
+  // Messages
+  // ============================================================
+  function showMsg(id, type, text) {
+    var e = el(id); if (!e) return;
+    e.className = 'tp-msg show ' + type;
+    e.textContent = text;
+  }
+  function hideMsg(id) {
+    var e = el(id); if (!e) return;
+    e.className = 'tp-msg';
+    e.textContent = '';
+  }
+
+  // ============================================================
+  // Auth
+  // ============================================================
+  function handleGoogleCredential(response) {
+    try {
+      var payload = JSON.parse(atob(response.credential.split('.')[1]));
+      doSignIn(payload.email, payload.name || payload.email);
+    } catch (e) {
+      showMsg('loginMsg', 'error', 'Google Sign-In failed: ' + e.message);
+    }
+  }
+  window.handleGoogleCredential = handleGoogleCredential;
+
+  function manualSignIn() {
+    var email = getVal('manualEmail').trim();
+    if (!email) { showMsg('loginMsg', 'error', 'Please enter your email.'); return; }
+    doSignIn(email, email);
+  }
+
+  async function doSignIn(email, name) {
+    showMsg('loginMsg', 'info', 'Verifying...');
+    try {
+      var login = await callGAS('teacherLogin', { email: email });
+      if (!login || !login.success) {
+        showMsg('loginMsg', 'error', (login && login.error) || 'Login failed.');
+        return;
+      }
+      state.token = login.token;
+      state.teacher = login.teacher;
+      sessionStorage.setItem('tToken', login.token);
+      sessionStorage.setItem('tName', login.teacher.name);
+      sessionStorage.setItem('tEmail', login.teacher.email);
+      await enterPortal();
+    } catch (e) {
+      showMsg('loginMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  // ============================================================
+  // Bootstrap
+  // ============================================================
+  async function enterPortal() {
+    var vl = el('viewLogin'); if (vl) vl.classList.add('tp-hidden');
+    var vp = el('viewPortal'); if (vp) vp.classList.remove('tp-hidden');
+    var ub = el('userBadge'); if (ub) ub.classList.remove('tp-hidden');
+    var lb = el('logoutBtn'); if (lb) lb.classList.remove('tp-hidden');
+    setText('userName', state.teacher.name || state.teacher.email);
+
+    showLoading('Loading your assignments...');
+
+    try {
+      var bs = await callGAS('teacherGetBootstrap', { token: state.token });
+      if (!bs || !bs.success) {
+        if (bs && bs.code === 'SESSION_EXPIRED') return logout(true);
+        hideLoading();
+        showMsg('rosterMsg', 'error', (bs && bs.error) || 'Bootstrap failed.');
+        return;
+      }
+      state.byClass = bs.byClass || {};
+      state.subjectsByClass = bs.subjectsByClass || {};
+      state.terms = bs.terms || [];
+      state.activeTerm = bs.activeTerm || (state.terms[0] && state.terms[0].key);
+
+      if (Object.keys(state.byClass).length === 0) {
+        hideLoading();
+        setHtml('rosterWrap',
+          '<div class="tp-empty">You have no assigned classes or subjects yet.<br>Contact the admin.</div>');
+        return;
+      }
+
+      populateClassDropdown();
+      populateTermDropdown();
+      onClassChange();
+    } catch (e) {
+      hideLoading();
+      showMsg('rosterMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  function populateClassDropdown() {
+    var sel = el('selClass'); if (!sel) return;
+    sel.innerHTML = '';
+    var keys = Object.keys(state.byClass).sort(function (a, b) {
+      return CLASS_ORDER.indexOf(a) - CLASS_ORDER.indexOf(b);
+    });
+    keys.forEach(function (c) {
+      var o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    });
+  }
+
+  function populateSubjectDropdown() {
+    var cls = getVal('selClass');
+    var sel = el('selSubject'); if (!sel) return;
+    sel.innerHTML = '';
+    var subjects = state.subjectsByClass[cls];
+    if (!subjects || !subjects.length) {
+      subjects = (state.byClass[cls] || []).slice();
+    }
+    subjects.sort();
+    subjects.forEach(function (s) {
+      var o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    });
+  }
+
+  function populateTermDropdown() {
+    var sel = el('selTerm'); if (!sel) return;
+    sel.innerHTML = '';
+    state.terms.forEach(function (t) {
+      var o = document.createElement('option');
+      o.value = t.key;
+      o.textContent = t.display + (t.isLocked ? '  🔒' : '');
+      if (t.key === state.activeTerm) o.selected = true;
+      sel.appendChild(o);
+    });
+  }
+
+  // ============================================================
+  // Cascade handlers
+  // ============================================================
+  function onClassChange() {
+    populateSubjectDropdown();
+    onSubjectChange();
+  }
+  function onSubjectChange() { loadRoster(); }
+  function onTermChange() { loadRoster(); }
+
+  // ============================================================
+  // Roster loading
+  // ============================================================
+  function cacheKey(cls, subj, term) {
+    return cls + '|' + subj + '|' + term;
+  }
+
+  async function loadRoster(force) {
+    hideMsg('rosterMsg');
+    var cls = getVal('selClass');
+    var subj = getVal('selSubject');
+    var term = getVal('selTerm');
+    if (!cls || !subj || !term) return;
+
+    if (state.dirty && (state.currentClass !== cls || state.currentSubject !== subj || state.currentTerm !== term)) {
+      if (!confirm('You have unsaved changes. Discard them?')) {
+        var sc = el('selClass'); if (sc) sc.value = state.currentClass || cls;
+        populateSubjectDropdown();
+        var ss = el('selSubject'); if (ss && state.currentSubject) ss.value = state.currentSubject;
+        var st = el('selTerm'); if (st) st.value = state.currentTerm || term;
+        return;
+      }
+      state.dirty = false;
+    }
+
+    state.currentClass = cls;
+    state.currentSubject = subj;
+    state.currentTerm = term;
+
+    var key = cacheKey(cls, subj, term);
+    if (!force && state.rosterCache[key]) {
+      var cached = state.rosterCache[key];
+      state.currentPapers = cached.papers || [];
+      state.roster = cached.roster.map(function (r) { return Object.assign({}, r, {
+        paperScores: r.paperScores.slice(),
+        paperScoresOriginal: r.paperScoresOriginal.slice()
+      }); });
+      recomputePreview();
+      renderRoster();
+      return;
+    }
+
+    showLoading('Loading ' + cls + ' / ' + subj + '...');
+    try {
+      var r = await callGAS('teacherGetRoster', {
+        token: state.token,
+        studentClass: cls,
+        subject: subj,
+        term: term
+      });
+      if (!r || !r.success) {
+        if (r && r.code === 'SESSION_EXPIRED') return logout(true);
+        hideLoading();
+        setHtml('rosterWrap', '');
+        showMsg('rosterMsg', 'error', (r && r.error) || 'Failed to load.');
+        return;
+      }
+
+      state.currentPapers = r.papers || [];
+      var paperScoresByRow = r.paperScoresByRow || {};
+
+      state.roster = (r.roster || []).map(function (row) {
+        var ps = paperScoresByRow[row.row] || state.currentPapers.map(function () { return ''; });
+        return {
+          row: row.row,
+          student: row.student,
+          score: row.score === '' ? '' : Number(row.score),
+          original: row.score === '' ? '' : Number(row.score),
+          paperScores: ps.slice(),
+          paperScoresOriginal: ps.slice()
+        };
+      });
+
+      state.rosterCache[key] = {
+        papers: state.currentPapers,
+        roster: state.roster.map(function (r2) { return Object.assign({}, r2, {
+          paperScores: r2.paperScores.slice(),
+          paperScoresOriginal: r2.paperScoresOriginal.slice()
+        }); })
+      };
+      state.dirty = false;
+      recomputePreview();
+      renderRoster();
+      hideLoading();
+    } catch (e) {
+      hideLoading();
+      showMsg('rosterMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  // ============================================================
+  // Live preview (Reading B client-side)
+  // ============================================================
+  function computeFinal(scores, maxMarks) {
+    var sumScore = 0, sumMax = 0;
+    for (var i = 0; i < scores.length; i++) {
+      var s = scores[i];
+      if (s === '' || s === null || s === undefined) return '';
+      var n = Number(s);
+      if (isNaN(n)) return '';
+      sumScore += n;
+      sumMax += Number(maxMarks[i]);
+    }
+    if (sumMax <= 0) return '';
+    return Math.round((sumScore / sumMax) * 100);
+  }
+
+  function gradeFor(score, studentClass) {
+    if (score === '' || score === null || score === undefined) return '';
+    var n = Number(score);
+    if (isNaN(n)) return '';
+    n = Math.round(n);
+    var isLower = ['Form 1','Form 2','Form 1 ODL','Form 2 ODL'].indexOf(studentClass) !== -1;
+    if (isLower) {
+      if (n >= 85) return 'A';
+      if (n >= 70) return 'B';
+      if (n >= 60) return 'C';
+      if (n >= 50) return 'D';
+      return 'F';
+    } else {
+      if (n >= 90) return '1';
+      if (n >= 80) return '2';
+      if (n >= 75) return '3';
+      if (n >= 70) return '4';
+      if (n >= 65) return '5';
+      if (n >= 60) return '6';
+      if (n >= 55) return '7';
+      if (n >= 50) return '8';
+      return '9';
+    }
+  }
+
+  function recomputePreview() {
+    var cls = state.currentClass;
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+
+    state.roster.forEach(function (r) {
+      if (isMulti) {
+        var maxMarks = state.currentPapers.map(function (p) { return p.maxMark; });
+        r.score = computeFinal(r.paperScores, maxMarks);
+      }
+      r.previewGrade = gradeFor(r.score, cls);
+    });
+
+    var valid = state.roster
+      .filter(function (r) { return r.score !== '' && r.score !== null && !isNaN(Number(r.score)); })
+      .map(function (r) { return { row: r.row, val: Number(r.score) }; })
+      .sort(function (a, b) { return b.val - a.val; });
+    var rankMap = {};
+    var lastVal = null, lastRank = 0;
+    valid.forEach(function (v, i) {
+      if (v.val !== lastVal) { lastRank = i + 1; lastVal = v.val; }
+      rankMap[v.row] = lastRank;
+    });
+    state.roster.forEach(function (r) {
+      r.previewPos = rankMap[r.row] || '';
+    });
+
+    var scores = valid.map(function (v) { return v.val; });
+    var total = scores.length;
+    var sum = scores.reduce(function (a, b) { return a + b; }, 0);
+    var avg = total > 0 ? Math.round(sum / total) : null;
+    var max = total > 0 ? Math.max.apply(null, scores) : null;
+    var min = total > 0 ? Math.min.apply(null, scores) : null;
+    setText('statTotal', state.roster.length);
+    setText('statAvg', avg !== null ? avg : '—');
+    setText('statMax', max !== null ? max : '—');
+    setText('statMin', min !== null ? min : '—');
+    updateChangedCount();
+  }
+
+  function updateChangedCount() {
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+    var changed = state.roster.filter(function (r) {
+      if (isMulti) {
+        for (var i = 0; i < r.paperScores.length; i++) {
+          if (String(r.paperScores[i]) !== String(r.paperScoresOriginal[i])) return true;
+        }
+        return false;
+      }
+      return String(r.score) !== String(r.original);
+    }).length;
+    setText('statChanged', changed);
+    state.dirty = changed > 0;
+    var saveBtn = el('saveBtn');
+    if (saveBtn) saveBtn.disabled = !state.dirty || state.saving;
+  }
+
+  // ============================================================
+  // Render grid
+  // ============================================================
+  function renderRoster() {
+    var wrap = el('rosterWrap'); if (!wrap) return;
+    var q = (getVal('rosterSearch') || '').toLowerCase().trim();
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+
+    if (!state.roster.length) {
+      wrap.innerHTML = '<div class="tp-empty">No students found.</div>';
+      return;
+    }
+
+    var subject = state.currentSubject;
+    var html = '<div class="tp-grid-wrap"><table class="tp-grid">';
+    html += '<thead><tr>';
+    html += '<th style="width:46px;">#</th>';
+    html += '<th>Student</th>';
+    if (isMulti) {
+      for (var pi = 0; pi < state.currentPapers.length; pi++) {
+        var p = state.currentPapers[pi];
+        html += '<th style="width:90px;" class="center">' + escapeHtml(p.paperName) + '<br><small style="color:#94a3b8;font-weight:400;font-size:10px;">max ' + p.maxMark + '</small></th>';
+      }
+      html += '<th style="width:90px;" class="center">' + escapeHtml(subject) + '<br><small style="color:#94a3b8;font-weight:400;font-size:10px;">final</small></th>';
+    } else {
+      html += '<th style="width:110px;" class="center">' + escapeHtml(subject) + '</th>';
+    }
+    html += '<th style="width:70px;" class="center">Grade</th>';
+    html += '<th style="width:60px;" class="center">Pos</th>';
+    html += '</tr></thead><tbody>';
+
+    var rowCounter = 0;
+    state.roster.forEach(function (r) {
+      if (q && r.student.toLowerCase().indexOf(q) === -1) return;
+      rowCounter++;
+
+      var isChanged;
+      if (isMulti) {
+        isChanged = false;
+        for (var k = 0; k < r.paperScores.length; k++) {
+          if (String(r.paperScores[k]) !== String(r.paperScoresOriginal[k])) { isChanged = true; break; }
+        }
+      } else {
+        isChanged = String(r.score) !== String(r.original);
+      }
+
+      var gradeClass = 'preview-grade';
+      if (r.previewGrade) {
+        gradeClass += ' ' + (isNaN(Number(r.previewGrade)) ? r.previewGrade : ('g' + r.previewGrade));
+      }
+
+      html += '<tr class="' + (isChanged ? 'changed' : '') + '">';
+      html += '<td class="num">' + rowCounter + '</td>';
+      html += '<td class="name">' + escapeHtml(r.student) + '</td>';
+
+      if (isMulti) {
+        for (var pj = 0; pj < state.currentPapers.length; pj++) {
+          var pp = state.currentPapers[pj];
+          var pv = r.paperScores[pj];
+          var pChanged = String(pv) !== String(r.paperScoresOriginal[pj]);
+          html += '<td class="center">';
+          html += '<input class="score-input ' + (pChanged ? 'changed' : '') + '" '
+                + 'type="number" min="0" max="' + pp.maxMark + '" step="1" inputmode="numeric" '
+                + 'value="' + (pv === '' || pv === null || pv === undefined ? '' : escapeHtml(String(pv))) + '" '
+                + 'data-row="' + r.row + '" data-paper="' + pj + '" '
+                + 'oninput="onPaperScoreInput(this, event)" '
+                + 'onkeydown="onScoreKeyDown(event)">';
+          html += '</td>';
+        }
+        html += '<td class="center" data-final="1"><strong>' + (r.score === '' ? '—' : r.score) + '</strong></td>';
+      } else {
+        html += '<td class="center">';
+        html += '<input class="score-input ' + (isChanged ? 'changed' : '') + '" '
+              + 'type="number" min="0" max="100" step="1" inputmode="numeric" '
+              + 'value="' + (r.score === '' ? '' : escapeHtml(String(r.score))) + '" '
+              + 'data-row="' + r.row + '" '
+              + 'oninput="onScoreInput(this, event)" '
+              + 'onkeydown="onScoreKeyDown(event)">';
+        html += '</td>';
+      }
+
+      html += '<td class="center"><span class="' + gradeClass + '">' + (r.previewGrade || '—') + '</span></td>';
+      html += '<td class="center preview-pos">' + (r.previewPos || '—') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    wrap.innerHTML = html;
+  }
+
+  function onScoreInput(inputEl, ev) {
+    var row = parseInt(inputEl.dataset.row, 10);
+    var r = state.roster.find(function (x) { return x.row === row; });
+    if (!r) return;
+
+    var raw = inputEl.value;
+    if (raw === '') {
+      r.score = '';
+    } else {
+      var n = Number(raw);
+      if (isNaN(n)) { inputEl.classList.add('error'); return; }
+      if (n < 0) n = 0;
+      if (n > 100) n = 100;
+      n = Math.round(n);
+      r.score = n;
+      if (String(n) !== raw && ev && ev.type === 'input') inputEl.value = n;
+      inputEl.classList.remove('error');
+    }
+    inputEl.classList.toggle('changed', String(r.score) !== String(r.original));
+
+    var tr = inputEl.closest('tr');
+    if (tr) {
+      recomputePreview();
+      tr.classList.toggle('changed', String(r.score) !== String(r.original));
+      var gradeCell = tr.querySelector('.preview-grade');
+      var posCell = tr.querySelector('.preview-pos');
+      if (gradeCell) {
+        gradeCell.textContent = r.previewGrade || '—';
+        gradeCell.className = 'preview-grade ' + (r.previewGrade ? (isNaN(Number(r.previewGrade)) ? r.previewGrade : ('g' + r.previewGrade)) : '');
+      }
+      if (posCell) posCell.textContent = r.previewPos || '—';
+    }
+  }
+
+  function onPaperScoreInput(inputEl, ev) {
+    var row = parseInt(inputEl.dataset.row, 10);
+    var pi = parseInt(inputEl.dataset.paper, 10);
+    var r = state.roster.find(function (x) { return x.row === row; });
+    if (!r || !state.currentPapers[pi]) return;
+
+    var raw = inputEl.value;
+    if (raw === '') {
+      r.paperScores[pi] = '';
+    } else {
+      var n = Number(raw);
+      if (isNaN(n)) { inputEl.classList.add('error'); return; }
+      if (n < 0) n = 0;
+      var maxMark = state.currentPapers[pi].maxMark;
+      if (n > maxMark) n = maxMark;
+      n = Math.round(n);
+      r.paperScores[pi] = n;
+      if (String(n) !== raw && ev && ev.type === 'input') inputEl.value = n;
+      inputEl.classList.remove('error');
+    }
+
+    var maxMarks = state.currentPapers.map(function (p) { return p.maxMark; });
+    r.score = computeFinal(r.paperScores, maxMarks);
+
+    inputEl.classList.toggle('changed',
+      String(r.paperScores[pi]) !== String(r.paperScoresOriginal[pi]));
+
+    recomputePreview();
+
+    var tr = inputEl.closest('tr');
+    if (tr) {
+      var anyChanged = false;
+      for (var k = 0; k < r.paperScores.length; k++) {
+        if (String(r.paperScores[k]) !== String(r.paperScoresOriginal[k])) { anyChanged = true; break; }
+      }
+      tr.classList.toggle('changed', anyChanged);
+
+      var finalTd = tr.querySelector('td[data-final="1"]');
+      if (finalTd) finalTd.innerHTML = '<strong>' + (r.score === '' ? '—' : r.score) + '</strong>';
+
+      var gradeCell = tr.querySelector('.preview-grade');
+      var posCell = tr.querySelector('.preview-pos');
+      if (gradeCell) {
+        gradeCell.textContent = r.previewGrade || '—';
+        gradeCell.className = 'preview-grade ' + (r.previewGrade ? (isNaN(Number(r.previewGrade)) ? r.previewGrade : ('g' + r.previewGrade)) : '');
+      }
+      if (posCell) posCell.textContent = r.previewPos || '—';
+    }
+  }
+
+  function onScoreKeyDown(ev) {
+    if (ev.key === 'Enter' || ev.key === 'ArrowDown') {
+      ev.preventDefault();
+      var inputs = Array.prototype.slice.call(document.querySelectorAll('#rosterWrap input.score-input'));
+      var idx = inputs.indexOf(ev.target);
+      if (idx !== -1 && idx + 1 < inputs.length) {
+        inputs[idx + 1].focus();
+        inputs[idx + 1].select();
+      }
+    } else if (ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      var inputs2 = Array.prototype.slice.call(document.querySelectorAll('#rosterWrap input.score-input'));
+      var idx2 = inputs2.indexOf(ev.target);
+      if (idx2 > 0) {
+        inputs2[idx2 - 1].focus();
+        inputs2[idx2 - 1].select();
+      }
+    }
+  }
+
+  // ============================================================
+  // Bulk actions
+  // ============================================================
+  function clearAll() {
+    if (!confirm('Clear all inputs? You must click Save to apply.')) return;
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+    state.roster.forEach(function (r) {
+      if (isMulti) {
+        r.paperScores = r.paperScores.map(function () { return ''; });
+        r.score = '';
+      } else {
+        r.score = '';
+      }
+    });
+    recomputePreview();
+    renderRoster();
+  }
+  function resetChanges() {
+    if (!confirm('Discard unsaved changes?')) return;
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+    var maxMarks = isMulti ? state.currentPapers.map(function (p) { return p.maxMark; }) : [];
+    state.roster.forEach(function (r) {
+      if (isMulti) {
+        r.paperScores = r.paperScoresOriginal.slice();
+        r.score = computeFinal(r.paperScores, maxMarks);
+      } else {
+        r.score = r.original;
+      }
+    });
+    recomputePreview();
+    renderRoster();
+    hideMsg('rosterMsg');
+  }
+
+  // ============================================================
+  // Save
+  // ============================================================
+  async function saveScores() {
+    hideMsg('rosterMsg');
+    var isMulti = state.currentPapers && state.currentPapers.length > 0;
+
+    var scores;
+    if (isMulti) {
+      scores = state.roster
+        .filter(function (r) {
+          for (var i = 0; i < r.paperScores.length; i++) {
+            if (String(r.paperScores[i]) !== String(r.paperScoresOriginal[i])) return true;
+          }
+          return false;
+        })
+        .map(function (r) {
+          return { row: r.row, value: r.score, paperScores: r.paperScores };
+        });
+    } else {
+      scores = state.roster
+        .filter(function (r) { return String(r.score) !== String(r.original); })
+        .map(function (r) { return { row: r.row, value: r.score }; });
+    }
+
+    if (!scores.length) {
+      showMsg('rosterMsg', 'info', 'Nothing to save.');
+      return;
+    }
+
+    state.saving = true;
+    var saveBtn = el('saveBtn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '💾 Saving...'; }
+
+    try {
+      var res = await callGAS('teacherSaveScores', {
+        token: state.token,
+        studentClass: state.currentClass,
+        subject: state.currentSubject,
+        term: state.currentTerm,
+        scores: JSON.stringify(scores)
+      });
+      if (!res || !res.success) {
+        if (res && res.code === 'SESSION_EXPIRED') return logout(true);
+        showMsg('rosterMsg', 'error', (res && res.error) || 'Save failed.');
+        return;
+      }
+      showMsg('rosterMsg', 'success', res.message + ' Grades and positions have been recomputed.');
+
+      state.roster.forEach(function (r) {
+        if (isMulti) {
+          r.paperScoresOriginal = r.paperScores.slice();
+          r.original = r.score;
+        } else if (String(r.score) !== String(r.original)) {
+          r.original = r.score;
+        }
+      });
+
+      var key = cacheKey(state.currentClass, state.currentSubject, state.currentTerm);
+      state.rosterCache[key] = {
+        papers: state.currentPapers,
+        roster: state.roster.map(function (r) { return Object.assign({}, r, {
+          paperScores: r.paperScores.slice(),
+          paperScoresOriginal: r.paperScoresOriginal.slice()
+        }); })
+      };
+      state.dirty = false;
+      renderRoster();
+    } catch (e) {
+      showMsg('rosterMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      state.saving = false;
+      if (saveBtn) { saveBtn.textContent = '💾 Save'; }
+      updateChangedCount();
+    }
+  }
+
+  // ============================================================
+  // Logout
+  // ============================================================
+  async function logout(silent) {
+    if (state.dirty && !silent) {
+      if (!confirm('You have unsaved changes. Log out anyway?')) return;
+    }
+    if (state.token) {
+      try { await callGAS('teacherLogout', { token: state.token }); } catch (e) {}
+    }
+    sessionStorage.clear();
+    state.token = null;
+    state.teacher = null;
+    var vp = el('viewPortal'); if (vp) vp.classList.add('tp-hidden');
+    var vl = el('viewLogin'); if (vl) vl.classList.remove('tp-hidden');
+    var ub = el('userBadge'); if (ub) ub.classList.add('tp-hidden');
+    var lb = el('logoutBtn'); if (lb) lb.classList.add('tp-hidden');
+    if (!silent) showMsg('loginMsg', 'info', 'Signed out.');
+  }
+
+  // ============================================================
+  // Loading
+  // ============================================================
+  function showLoading(text) {
+    setText('rosterLoadingText', text || 'Loading...');
+    var e = el('rosterLoading'); if (e) e.classList.add('show');
+    setHtml('rosterWrap', '');
+  }
+  function hideLoading() {
+    var e = el('rosterLoading'); if (e) e.classList.remove('show');
+  }
+
+  // ============================================================
+  // Utilities
+  // ============================================================
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  window.addEventListener('beforeunload', function (ev) {
+    if (state.dirty) {
+      ev.preventDefault();
+      ev.returnValue = '';
+    }
+  });
+
   window.addEventListener('online', function () {
     state.online = true;
     var b = el('offlineBanner'); if (b) b.classList.remove('show');
