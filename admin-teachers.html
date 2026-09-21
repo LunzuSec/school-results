@@ -188,6 +188,20 @@
   }
   .pc-input:focus { outline:none; border-color:#a78bfa; }
 
+  .sandbox-badge {
+    display:none;
+    background: rgba(220,38,38,0.25);
+    border:1px solid rgba(220,38,38,0.5);
+    color:#fecaca;
+    padding:4px 10px;
+    border-radius:8px;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    margin-left:10px;
+  }
+  .sandbox-badge.show { display:inline-block; }
+
   @media (max-width: 600px) {
     body { padding: 10px; }
     .card { padding: 16px; }
@@ -200,7 +214,7 @@
 <div class="wrap">
 
   <div class="card">
-    <h1>👨‍🏫 Manage Teachers</h1>
+    <h1>👨‍🏫 Manage Teachers <span id="sandboxBadge" class="sandbox-badge">SANDBOX MODE</span></h1>
     <div class="sub">
       Add teachers, assign them classes and subjects, review the audit log, and configure paper structures.
     </div>
@@ -392,6 +406,8 @@
     'Form 1 ODL','Form 2 ODL','Form 3 ODL','Form 4 ODL'
   ];
 
+  const SANDBOX_MODE = (new URLSearchParams(window.location.search).get('sandbox') === 'true');
+
   // ============================================================
   // State
   // ============================================================
@@ -403,7 +419,8 @@
     subjectsCache: {},
     terms: [],
     bulkSelected: new Set(),
-    paperConfigRows: []
+    paperConfigRows: [],
+    sandbox: SANDBOX_MODE
   };
 
   // ============================================================
@@ -1095,6 +1112,12 @@
   // Init
   // ============================================================
   async function initializeAdminPage() {
+    // Show sandbox badge if in sandbox mode
+    if (state.sandbox) {
+      var badge = el('sandboxBadge');
+      if (badge) badge.classList.add('show');
+    }
+
     ['asgClass','bulkClass','pcClass'].forEach(function (id) {
       var sel = el(id);
       if (!sel) return;
@@ -1107,7 +1130,9 @@
     });
 
     try {
-      const terms = await callGAS('getAvailableTerms', {});
+      const terms = await callGAS('getAvailableTerms', {
+        sandbox: state.sandbox ? 'true' : 'false'
+      });
       if (Array.isArray(terms)) {
         state.terms = terms;
         ['asgTerm','bulkTerm','pcTerm'].forEach(function (id) {
@@ -1116,7 +1141,8 @@
           sel.innerHTML = '<option value="ALL">ALL TERMS</option>';
           terms.forEach(function (t) {
             var o = document.createElement('option');
-            o.value = t.key; o.textContent = t.display;
+            o.value = t.key;
+            o.textContent = t.display + (t.isSandbox ? '  🧪' : '');
             sel.appendChild(o);
           });
         });
