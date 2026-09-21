@@ -38,8 +38,8 @@
     flex-wrap: wrap;
   }
   .tab {
-    flex: 1; min-width: 120px;
-    padding: 11px; text-align: center; font-size: 13px; font-weight: 600;
+    flex: 1; min-width: 110px;
+    padding: 11px; text-align: center; font-size: 12.5px; font-weight: 600;
     color: #cbd5e1; border-radius: 8px; cursor: pointer;
     border: none; background: transparent; font-family: inherit;
     transition: 0.15s;
@@ -65,7 +65,9 @@
   .field select option { background:#1a2a3a; color:#fff; }
 
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 700px) { .row { grid-template-columns: 1fr; } }
+  @media (max-width: 700px) {
+    .row { grid-template-columns: 1fr; }
+  }
 
   .btn {
     padding: 10px 15px; border: none; border-radius: 10px;
@@ -179,6 +181,13 @@
     width: 16px; height: 16px; accent-color: #a78bfa; cursor: pointer;
   }
 
+  .pc-input {
+    padding:6px 8px; background: rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15); border-radius:6px;
+    color:#fff; font-family:inherit; font-size:12.5px;
+  }
+  .pc-input:focus { outline:none; border-color:#a78bfa; }
+
   @media (max-width: 600px) {
     body { padding: 10px; }
     .card { padding: 16px; }
@@ -193,17 +202,18 @@
   <div class="card">
     <h1>👨‍🏫 Manage Teachers</h1>
     <div class="sub">
-      Add teachers, assign them classes and subjects, and review the entry audit log.
+      Add teachers, assign them classes and subjects, review the audit log, and configure paper structures.
     </div>
 
     <div class="tabs">
       <button class="tab active" data-tab="teachers" onclick="switchTab('teachers')">👤 Teachers</button>
       <button class="tab" data-tab="assign" onclick="switchTab('assign')">🎯 Assignments</button>
       <button class="tab" data-tab="bulk" onclick="switchTab('bulk')">⚡ Bulk Assign</button>
+      <button class="tab" data-tab="papers" onclick="switchTab('papers')">📄 Paper Config</button>
       <button class="tab" data-tab="audit" onclick="switchTab('audit')">📋 Audit Log</button>
     </div>
 
-    <!-- TEACHERS -->
+    <!-- ================= TEACHERS ================= -->
     <div id="tab-teachers">
       <h2>Add New Teacher</h2>
       <div class="row">
@@ -232,7 +242,7 @@
       <div id="teachersTableWrap"></div>
     </div>
 
-    <!-- ASSIGNMENTS -->
+    <!-- ================= ASSIGNMENTS ================= -->
     <div id="tab-assign" class="hidden">
       <h2>Add Assignment</h2>
       <div class="row">
@@ -270,7 +280,7 @@
       <div id="assignTableWrap"></div>
     </div>
 
-    <!-- BULK -->
+    <!-- ================= BULK ================= -->
     <div id="tab-bulk" class="hidden">
       <h2>Bulk Assign Subjects</h2>
       <div class="sub" style="margin-bottom:12px;">
@@ -315,7 +325,36 @@
       <div id="bulkMsg" class="msg"></div>
     </div>
 
-    <!-- AUDIT -->
+    <!-- ================= PAPER CONFIG ================= -->
+    <div id="tab-papers" class="hidden">
+      <h2>Paper Configuration</h2>
+      <div class="sub" style="margin-bottom:12px;">
+        Configure how many papers each subject has, their names, and their max marks.
+        The teacher portal uses this to build multi-paper input grids automatically.
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Class</label>
+          <select id="pcClass" onchange="onPcClassChange()"></select>
+        </div>
+        <div class="field">
+          <label>Term</label>
+          <select id="pcTerm"><option value="ALL">ALL TERMS</option></select>
+        </div>
+      </div>
+
+      <div class="filter-bar" style="margin-top:8px;">
+        <button class="btn purple sm" onclick="loadPaperConfig()">🔄 Load Paper Config</button>
+        <button class="btn green sm" onclick="savePaperConfig()">💾 Save Changes</button>
+        <button class="btn red sm" onclick="resetPaperConfig()">↺ Reset to Defaults</button>
+      </div>
+
+      <div id="pcMsg" class="msg"></div>
+      <div id="pcTableWrap"></div>
+    </div>
+
+    <!-- ================= AUDIT ================= -->
     <div id="tab-audit" class="hidden">
       <h2>Audit Log</h2>
       <div class="filter-bar">
@@ -336,25 +375,12 @@
 
 <script>
   // ============================================================
-  // SAFE DOM HELPERS — guard against null elements
+  // SAFE DOM HELPERS
   // ============================================================
   function el(id) { return document.getElementById(id); }
-  function getVal(id) {
-    var e = el(id);
-    return e ? String(e.value || '') : '';
-  }
-  function getChecked(id) {
-    var e = el(id);
-    return e ? !!e.checked : false;
-  }
-  function setText(id, text) {
-    var e = el(id);
-    if (e) e.textContent = text;
-  }
-  function setHtml(id, html) {
-    var e = el(id);
-    if (e) e.innerHTML = html;
-  }
+  function getVal(id) { var e = el(id); return e ? String(e.value || '') : ''; }
+  function setText(id, text) { var e = el(id); if (e) e.textContent = text; }
+  function setHtml(id, html) { var e = el(id); if (e) e.innerHTML = html; }
 
   // ============================================================
   // Config
@@ -377,7 +403,7 @@
     subjectsCache: {},
     terms: [],
     bulkSelected: new Set(),
-    initialized: false
+    paperConfigRows: []
   };
 
   // ============================================================
@@ -447,16 +473,24 @@
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
   function showMsg(id, type, text) {
-    var e = el(id);
-    if (!e) return;
+    var e = el(id); if (!e) return;
     e.className = 'msg show ' + type;
     e.textContent = text;
   }
   function hideMsg(id) {
-    var e = el(id);
-    if (!e) return;
+    var e = el(id); if (!e) return;
     e.className = 'msg';
     e.textContent = '';
+  }
+  function colLetter(n) {
+    var s = '';
+    n = n + 1;
+    while (n > 0) {
+      var r = (n - 1) % 26;
+      s = String.fromCharCode(65 + r) + s;
+      n = Math.floor((n - 1) / 26);
+    }
+    return s;
   }
 
   // ============================================================
@@ -478,13 +512,14 @@
   // ============================================================
   function switchTab(t) {
     document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
-    ['teachers','assign','bulk','audit'].forEach(x => {
+    ['teachers','assign','bulk','papers','audit'].forEach(function (x) {
       var e = el('tab-' + x);
       if (e) e.classList.toggle('hidden', x !== t);
     });
     if (t === 'teachers' && !state.teachers.length) loadTeachers();
     if (t === 'assign' && !state.assignments.length) loadAssignments();
     if (t === 'bulk') initBulkTab();
+    if (t === 'papers') initPaperTab();
     if (t === 'audit' && !state.audit.length) loadAudit();
   }
 
@@ -497,17 +532,15 @@
     if (!force && state.teachers.length) { renderTeachers(); return; }
     try {
       const res = await callGAS('adminListTeachers', { password: state.adminPassword });
-      if (!res || !res.success) {
-        showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.');
-        return;
-      }
+      if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
       state.teachers = res.teachers || [];
       var dl = el('teacherEmailList');
       if (dl) {
         dl.innerHTML = '';
-        state.teachers.filter(t => t.status === 'ACTIVE').forEach(t => {
+        state.teachers.filter(function (t) { return t.status === 'ACTIVE'; }).forEach(function (t) {
           var o = document.createElement('option');
-          o.value = t.email; o.label = t.name;
+          o.value = t.email;
+          o.label = t.name;
           dl.appendChild(o);
         });
       }
@@ -520,7 +553,7 @@
   function renderTeachers() {
     var q = (getVal('teacherSearch') || '').toLowerCase().trim();
     var status = getVal('teacherStatusFilter');
-    var rows = state.teachers.filter(t => {
+    var rows = state.teachers.filter(function (t) {
       if (status && t.status !== status) return false;
       if (!q) return true;
       return (t.email + ' ' + t.name).toLowerCase().indexOf(q) !== -1;
@@ -534,7 +567,7 @@
     var h = '<div class="table-wrap"><table><thead><tr>';
     h += '<th>Name</th><th>Email</th><th>Status</th><th>Last Login</th><th style="width:200px;">Actions</th>';
     h += '</tr></thead><tbody>';
-    rows.forEach(t => {
+    rows.forEach(function (t) {
       var active = t.status === 'ACTIVE';
       h += '<tr>';
       h += '<td><strong>' + esc(t.name) + '</strong></td>';
@@ -564,7 +597,7 @@
       showMsg('teachersMsg', 'error', 'Please enter a valid email address.'); return;
     }
     try {
-      const res = await callGAS('adminAddTeacher', { password: state.adminPassword, email, name });
+      const res = await callGAS('adminAddTeacher', { password: state.adminPassword, email: email, name: name });
       if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
       showMsg('teachersMsg', 'success', res.created ? 'Teacher added.' : 'Teacher updated.');
       var e1 = el('newTeacherEmail'); if (e1) e1.value = '';
@@ -579,7 +612,7 @@
     if (!ensurePassword()) return;
     if (!confirm('Deactivate ' + email + '?')) return;
     try {
-      const res = await callGAS('adminRemoveTeacher', { password: state.adminPassword, email });
+      const res = await callGAS('adminRemoveTeacher', { password: state.adminPassword, email: email });
       if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
       showMsg('teachersMsg', 'success', res.message || 'Deactivated.');
       await loadTeachers(true);
@@ -591,7 +624,7 @@
   async function reactivateTeacher(email) {
     if (!ensurePassword()) return;
     try {
-      const res = await callGAS('adminReactivateTeacher', { password: state.adminPassword, email });
+      const res = await callGAS('adminReactivateTeacher', { password: state.adminPassword, email: email });
       if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
       showMsg('teachersMsg', 'success', res.message || 'Reactivated.');
       await loadTeachers(true);
@@ -624,11 +657,10 @@
   }
 
   function populateClassFilter() {
-    var sel = el('asgClassFilter');
-    if (!sel) return;
+    var sel = el('asgClassFilter'); if (!sel) return;
     var current = sel.value;
     sel.innerHTML = '<option value="">All classes</option>';
-    ALL_CLASSES.forEach(c => {
+    ALL_CLASSES.forEach(function (c) {
       var o = document.createElement('option');
       o.value = c; o.textContent = c;
       sel.appendChild(o);
@@ -639,7 +671,7 @@
   function renderAssignments() {
     var q = (getVal('asgSearch') || '').toLowerCase().trim();
     var cls = getVal('asgClassFilter');
-    var rows = state.assignments.filter(a => {
+    var rows = state.assignments.filter(function (a) {
       if (cls && a.studentClass !== cls) return false;
       if (!q) return true;
       return (a.email + ' ' + a.studentClass + ' ' + a.subject + ' ' + a.term)
@@ -654,7 +686,7 @@
     var h = '<div class="table-wrap"><table><thead><tr>';
     h += '<th>Teacher</th><th>Class</th><th>Subject</th><th>Term</th><th>Active</th><th style="width:100px;"></th>';
     h += '</tr></thead><tbody>';
-    rows.forEach(a => {
+    rows.forEach(function (a) {
       h += '<tr>';
       h += '<td style="font-size:12.5px;">' + esc(a.email) + '</td>';
       h += '<td>' + esc(a.studentClass) + '</td>';
@@ -691,7 +723,7 @@
     try {
       var term = getVal('asgTerm') || 'ALL';
       var realTerm = term === 'ALL'
-        ? ((state.terms.find(t => t.isActive) || state.terms[0] || {}).key || '')
+        ? ((state.terms.find(function (t) { return t.isActive; }) || state.terms[0] || {}).key || '')
         : term;
       const res = await callGAS('adminGetSubjectsForClass', {
         password: state.adminPassword,
@@ -712,8 +744,7 @@
   }
 
   function populateSelect(id, items) {
-    var sel = el(id);
-    if (!sel) return;
+    var sel = el(id); if (!sel) return;
     sel.innerHTML = '';
     if (!items || !items.length) {
       var o = document.createElement('option');
@@ -722,7 +753,7 @@
       sel.appendChild(o);
       return;
     }
-    items.forEach(s => {
+    items.forEach(function (s) {
       var op = document.createElement('option');
       op.value = s; op.textContent = s;
       sel.appendChild(op);
@@ -743,7 +774,7 @@
     }
     try {
       const res = await callGAS('adminAddAssignment', {
-        password: state.adminPassword, email, studentClass: cls, subject, term
+        password: state.adminPassword, email: email, studentClass: cls, subject: subject, term: term
       });
       if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
       showMsg('assignMsg', 'success', 'Assignment added.');
@@ -758,7 +789,7 @@
     if (!confirm('Remove ' + subject + ' for ' + email + ' in ' + cls + '?')) return;
     try {
       const res = await callGAS('adminRemoveAssignment', {
-        password: state.adminPassword, email, studentClass: cls, subject, term
+        password: state.adminPassword, email: email, studentClass: cls, subject: subject, term: term
       });
       if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
       showMsg('assignMsg', 'success', 'Removed ' + (res.removed || 0) + ' assignment(s).');
@@ -774,7 +805,7 @@
   async function initBulkTab() {
     var sel = el('bulkClass');
     if (sel && sel.options.length === 0) {
-      ALL_CLASSES.forEach(c => {
+      ALL_CLASSES.forEach(function (c) {
         var o = document.createElement('option');
         o.value = c; o.textContent = c;
         sel.appendChild(o);
@@ -782,7 +813,7 @@
     }
     var termSel = el('bulkTerm');
     if (termSel && termSel.options.length <= 1) {
-      state.terms.forEach(t => {
+      state.terms.forEach(function (t) {
         var o = document.createElement('option');
         o.value = t.key; o.textContent = t.display;
         termSel.appendChild(o);
@@ -814,7 +845,7 @@
       wrap.innerHTML = '<div style="color:#94a3b8;font-size:12px;font-style:italic;padding:8px;">No subjects found for ' + esc(cls) + '.</div>';
       return;
     }
-    subs.forEach(s => {
+    subs.forEach(function (s) {
       var label = document.createElement('label');
       label.className = 'checkbox-item';
       var cb = document.createElement('input');
@@ -834,14 +865,13 @@
   }
 
   function updateBulkChips() {
-    var wrap = el('bulkChips');
-    if (!wrap) return;
+    var wrap = el('bulkChips'); if (!wrap) return;
     wrap.innerHTML = '';
     if (state.bulkSelected.size === 0) {
       wrap.innerHTML = '<span style="color:#94a3b8;font-size:11.5px;font-style:italic;">None selected</span>';
       return;
     }
-    Array.from(state.bulkSelected).sort().forEach(s => {
+    Array.from(state.bulkSelected).sort().forEach(function (s) {
       var chip = document.createElement('span');
       chip.className = 'chip';
       chip.innerHTML = esc(s) + ' <button type="button" title="Remove">×</button>';
@@ -869,17 +899,144 @@
     var subjects = Array.from(state.bulkSelected);
     try {
       const res = await callGAS('adminAddAssignmentsBulk', {
-        password: state.adminPassword, email, studentClass: cls,
+        password: state.adminPassword, email: email, studentClass: cls,
         subjects: JSON.stringify(subjects), term: term
       });
       if (!res || !res.success) { showMsg('bulkMsg', 'error', (res && res.error) || 'Failed.'); return; }
       showMsg('bulkMsg', 'success', 'Added ' + res.added + ' assignment(s) for ' + email + ' in ' + cls + '.');
       state.bulkSelected.clear();
       updateBulkChips();
-      document.querySelectorAll('#bulkSubjectsWrap input[type=checkbox]').forEach(cb => cb.checked = false);
+      document.querySelectorAll('#bulkSubjectsWrap input[type=checkbox]').forEach(function (cb) { cb.checked = false; });
       await loadAssignments(true);
     } catch (e) {
       showMsg('bulkMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  // ============================================================
+  // PAPER CONFIG
+  // ============================================================
+  function initPaperTab() {
+    var cls = el('pcClass');
+    if (cls && cls.options.length === 0) {
+      ALL_CLASSES.forEach(function (c) {
+        var o = document.createElement('option');
+        o.value = c; o.textContent = c;
+        cls.appendChild(o);
+      });
+    }
+    var term = el('pcTerm');
+    if (term && term.options.length <= 1) {
+      state.terms.forEach(function (t) {
+        var o = document.createElement('option');
+        o.value = t.key; o.textContent = t.display;
+        term.appendChild(o);
+      });
+    }
+  }
+
+  function onPcClassChange() {
+    if (state.adminPassword) loadPaperConfig();
+  }
+
+  function resolveRealTerm() {
+    var term = getVal('pcTerm') || 'ALL';
+    if (term !== 'ALL') return term;
+    var active = state.terms.find(function (t) { return t.isActive; });
+    return (active || state.terms[0] || {}).key || TERM_DEFAULT;
+  }
+
+  var TERM_DEFAULT = '2025-2026_TERM_3';
+
+  async function loadPaperConfig() {
+    if (!ensurePassword()) return;
+    hideMsg('pcMsg');
+    var cls = getVal('pcClass');
+    var realTerm = resolveRealTerm();
+    if (!cls || !realTerm) return;
+
+    try {
+      const res = await callGAS('adminGetPaperConfig', {
+        password: state.adminPassword,
+        studentClass: cls,
+        term: realTerm
+      });
+      if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
+      state.paperConfigRows = res.papers || [];
+      renderPaperConfig();
+    } catch (e) {
+      showMsg('pcMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  function renderPaperConfig() {
+    var rows = state.paperConfigRows;
+    if (!rows.length) {
+      setHtml('pcTableWrap', '<div class="empty">No papers configured for this class.</div>');
+      return;
+    }
+    var h = '<div class="table-wrap"><table><thead><tr>';
+    h += '<th>Subject</th><th>Paper Name</th><th>Max Mark</th><th>Order</th><th>Column</th>';
+    h += '</tr></thead><tbody>';
+    rows.forEach(function (p, i) {
+      h += '<tr>';
+      h += '<td>' + esc(p.subject) + '</td>';
+      h += '<td><input class="pc-input" type="text" value="' + esc(p.paperName) + '" onchange="pcEdit(' + i + ',\'paperName\',this.value)" style="width:120px;"></td>';
+      h += '<td><input class="pc-input" type="number" value="' + p.maxMark + '" onchange="pcEdit(' + i + ',\'maxMark\',this.value)" style="width:80px;"></td>';
+      h += '<td>' + p.order + '</td>';
+      h += '<td style="font-family:monospace;font-size:11px;">' + colLetter(p.colIndex) + '</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    setHtml('pcTableWrap', h);
+  }
+
+  function pcEdit(i, key, value) {
+    if (!state.paperConfigRows[i]) return;
+    if (key === 'maxMark') value = Number(value) || 100;
+    state.paperConfigRows[i][key] = value;
+  }
+
+  async function savePaperConfig() {
+    if (!ensurePassword()) return;
+    hideMsg('pcMsg');
+    var cls = getVal('pcClass');
+    var realTerm = resolveRealTerm();
+    if (!cls || !realTerm) { showMsg('pcMsg', 'error', 'Class and term required.'); return; }
+
+    try {
+      const res = await callGAS('adminSavePaperConfig', {
+        password: state.adminPassword,
+        studentClass: cls,
+        term: realTerm,
+        papers: JSON.stringify(state.paperConfigRows)
+      });
+      if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
+      showMsg('pcMsg', 'success', 'Saved ' + res.count + ' paper config rows.');
+      await loadPaperConfig();
+    } catch (e) {
+      showMsg('pcMsg', 'error', 'Error: ' + e.message);
+    }
+  }
+
+  async function resetPaperConfig() {
+    if (!ensurePassword()) return;
+    if (!confirm('Reset paper configuration for this class to defaults?')) return;
+    hideMsg('pcMsg');
+    var cls = getVal('pcClass');
+    var realTerm = resolveRealTerm();
+
+    try {
+      const res = await callGAS('adminResetPaperConfig', {
+        password: state.adminPassword,
+        studentClass: cls,
+        term: realTerm
+      });
+      if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
+      showMsg('pcMsg', 'success', 'Reset to defaults.');
+      await loadPaperConfig();
+    } catch (e) {
+      showMsg('pcMsg', 'error', 'Error: ' + e.message);
     }
   }
 
@@ -902,7 +1059,7 @@
 
   function renderAudit() {
     var q = (getVal('auditSearch') || '').toLowerCase().trim();
-    var rows = state.audit.filter(r => {
+    var rows = state.audit.filter(function (r) {
       if (!q) return true;
       return ((r.teacherName || '') + ' ' + (r.teacherEmail || '') + ' ' +
               (r.student || '') + ' ' + (r.subject || '') + ' ' + (r.studentClass || ''))
@@ -917,7 +1074,7 @@
     var h = '<div class="table-wrap"><table><thead><tr>';
     h += '<th>When</th><th>Teacher</th><th>Class</th><th>Subject</th><th>Student</th><th>Old</th><th>New</th>';
     h += '</tr></thead><tbody>';
-    rows.forEach(r => {
+    rows.forEach(function (r) {
       var changed = String(r.oldScore) !== String(r.newScore);
       h += '<tr' + (changed ? '' : ' style="opacity:0.6;"') + '>';
       h += '<td style="font-size:12px;color:#94a3b8;white-space:nowrap;">'
@@ -935,58 +1092,44 @@
   }
 
   // ============================================================
-  // INIT
+  // Init
   // ============================================================
-  async function initializePage() {
-    // 1. Populate class dropdowns
-    ['asgClass','bulkClass'].forEach(id => {
+  async function initializeAdminPage() {
+    ['asgClass','bulkClass','pcClass'].forEach(function (id) {
       var sel = el(id);
       if (!sel) return;
       sel.innerHTML = '';
-      ALL_CLASSES.forEach(c => {
+      ALL_CLASSES.forEach(function (c) {
         var o = document.createElement('option');
         o.value = c; o.textContent = c;
         sel.appendChild(o);
       });
     });
 
-    // 2. Fetch terms
     try {
       const terms = await callGAS('getAvailableTerms', {});
       if (Array.isArray(terms)) {
         state.terms = terms;
-        ['asgTerm','bulkTerm'].forEach(id => {
+        ['asgTerm','bulkTerm','pcTerm'].forEach(function (id) {
           var sel = el(id);
           if (!sel) return;
           sel.innerHTML = '<option value="ALL">ALL TERMS</option>';
-          terms.forEach(t => {
+          terms.forEach(function (t) {
             var o = document.createElement('option');
             o.value = t.key; o.textContent = t.display;
             sel.appendChild(o);
           });
         });
       }
-    } catch (e) {
-      console.error('Term fetch failed:', e);
-    }
+    } catch (e) {}
 
-    // 3. Load teachers (triggers password prompt on first load)
-    await loadTeachers();
-
-    // 4. Now that password is cached, load subjects for the default class
-    await onAsgClassChange();
-    await onBulkClassChange();
-
-    state.initialized = true;
-    console.log('Admin page initialized');
+    loadTeachers();
   }
 
-  // Wait for DOM then run
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializePage);
+    document.addEventListener('DOMContentLoaded', initializeAdminPage);
   } else {
-    // Already loaded — run on next tick
-    setTimeout(initializePage, 0);
+    setTimeout(initializeAdminPage, 0);
   }
 </script>
 </body>
