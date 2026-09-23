@@ -69,7 +69,7 @@
     font-size: 13px; font-weight: 600; cursor: pointer;
     font-family: inherit; transition: 0.15s; color: #fff;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    white-space: nowrap; position: relative;
+    white-space: nowrap;
   }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn.purple { background: rgba(139,92,246,0.85); }
@@ -239,7 +239,6 @@
 </head>
 <body>
 
-<!-- Universal wait overlay -->
 <div id="waitOverlay" class="wait-overlay">
   <div class="wait-box">
     <div class="wait-spinner"></div>
@@ -487,7 +486,7 @@
   }
 
   // ============================================================
-  // JSONP caller
+  // JSONP caller with retry + cache fallback
   // ============================================================
   function hashParams(action, params) {
     try {
@@ -594,7 +593,7 @@
               if (isRead) {
                 var cached = cacheGet(action, params);
                 if (cached) {
-                  console.warn('callGAS: server error for ' + action + ', using cache. Error: ' + response.error);
+                  console.warn('callGAS: server error for ' + action + ', using cache.');
                   resolve(cached);
                   return;
                 }
@@ -618,8 +617,6 @@
     });
   }
 
-  // Fire-and-forget warm-up. Called on page load AND on hover/focus
-  // of action buttons so the server is hot when the user clicks.
   function warmServer() {
     try { callGAS('test', {}).catch(function () {}); } catch (e) {}
   }
@@ -657,9 +654,6 @@
     return s;
   }
 
-  // ============================================================
-  // Password
-  // ============================================================
   function ensurePassword() {
     if (state.adminPassword) return true;
     const cached = sessionStorage.getItem('adminPw');
@@ -771,7 +765,6 @@
         var e1 = el('newTeacherEmail'); if (e1) e1.value = '';
         var e2 = el('newTeacherName'); if (e2) e2.value = '';
 
-        // Server returns the refreshed list
         if (res.teachers) {
           state.teachers = res.teachers;
           var dl = el('teacherEmailList');
@@ -980,9 +973,13 @@
             password: state.adminPassword, email: email, studentClass: cls, subject: subject, term: term
           });
           if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
-          showMsg('assignMsg', 'success', 'Assignment added.');
 
-          // Server returns the fresh list — no second call
+          if (res.duplicate) {
+            showMsg('assignMsg', 'warn', 'This assignment already exists — nothing was added.');
+          } else {
+            showMsg('assignMsg', 'success', 'Assignment added.');
+          }
+
           if (res.assignments) {
             state.assignments = res.assignments;
             renderAssignments();
@@ -1126,7 +1123,13 @@
             subjects: JSON.stringify(subjects), term: term
           });
           if (!res || !res.success) { showMsg('bulkMsg', 'error', (res && res.error) || 'Failed.'); return; }
-          showMsg('bulkMsg', 'success', 'Added ' + res.added + ' assignment(s) for ' + email + ' in ' + cls + '.');
+
+          var msg = 'Added ' + res.added + ' assignment(s) for ' + email + ' in ' + cls + '.';
+          if (res.skipped && res.skipped > 0) {
+            msg += ' ' + res.skipped + ' already existed.';
+          }
+          showMsg('bulkMsg', 'success', msg);
+
           state.bulkSelected.clear();
           updateBulkChips();
           document.querySelectorAll('#bulkSubjectsWrap input[type=checkbox]').forEach(function (cb) { cb.checked = false; });
@@ -1347,7 +1350,6 @@
 
     setTimeout(warmServer, 100);
 
-    // Warm the server on hover/focus of key action buttons
     setTimeout(function () {
       ['addTeacherBtn','addAssignmentBtn','saveBulkBtn'].forEach(function (id) {
         var b = el(id);
