@@ -74,7 +74,7 @@
     font-size: 13px; font-weight: 600; cursor: pointer;
     font-family: inherit; transition: 0.15s; color: #fff;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    white-space: nowrap;
+    white-space: nowrap; position: relative;
   }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn.purple { background: rgba(139,92,246,0.85); }
@@ -87,15 +87,15 @@
   .btn.red:hover:not(:disabled) { background: rgba(220,38,38,1); }
   .btn.sm { padding: 6px 11px; font-size: 12px; }
   .btn .spinner {
-    width: 12px; height: 12px;
+    width: 14px; height: 14px;
     border: 2px solid rgba(255,255,255,0.3);
     border-top-color: #fff;
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    animation: spin 0.7s linear infinite;
     display: none;
   }
   .btn.loading .spinner { display: inline-block; }
-  .btn.loading .label { opacity: 0.5; }
+  .btn.loading .label { display: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .msg {
@@ -213,21 +213,63 @@
   }
   .sandbox-badge.show { display:inline-block; }
 
-  /* Connection banner */
-  .conn-banner {
-    display: none;
+  /* ============================================================
+     UNIVERSAL "PLEASE WAIT" OVERLAY
+     Appears on every action. Blocks the UI to prevent double
+     submits (which caused the duplicated assignments).
+     ============================================================ */
+  .wait-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0;
-    background: rgba(245,158,11,0.95);
-    color: #1e293b;
-    padding: 8px 16px;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 600;
-    z-index: 9999;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    inset: 0;
+    background: rgba(10, 22, 40, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
   }
-  .conn-banner.show { display: block; }
+  .wait-overlay.show { display: flex; }
+  .wait-box {
+    background: rgba(20, 35, 55, 0.98);
+    border: 1px solid rgba(167, 139, 250, 0.4);
+    border-radius: 18px;
+    padding: 28px 34px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    min-width: 260px;
+    max-width: 90vw;
+    text-align: center;
+  }
+  .wait-spinner {
+    width: 46px;
+    height: 46px;
+    border: 4px solid rgba(255,255,255,0.10);
+    border-top-color: #a78bfa;
+    border-radius: 50%;
+    animation: waitSpin 0.9s linear infinite;
+  }
+  @keyframes waitSpin { to { transform: rotate(360deg); } }
+  .wait-text {
+    color: #e9d5ff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .wait-sub {
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .wait-elapsed {
+    color: #fbbf24;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
 
   @media (max-width: 600px) {
     body { padding: 10px; }
@@ -239,8 +281,14 @@
 </head>
 <body>
 
-<div id="connBanner" class="conn-banner">
-  🔄 Connecting to server… if this takes more than 10 seconds, please wait — retrying automatically.
+<!-- Universal wait overlay -->
+<div id="waitOverlay" class="wait-overlay">
+  <div class="wait-box">
+    <div class="wait-spinner"></div>
+    <div class="wait-text" id="waitText">Please wait…</div>
+    <div class="wait-sub" id="waitSub">Sending your request to the server.</div>
+    <div class="wait-elapsed" id="waitElapsed">0s</div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -466,8 +514,7 @@
   ];
 
   const SANDBOX_MODE = (new URLSearchParams(window.location.search).get('sandbox') === 'true');
-
-  const CACHE_TTL_MS = 60 * 1000;  // client-side cache: 60 seconds
+  const CACHE_TTL_MS = 60 * 1000;
 
   // ============================================================
   // State
@@ -482,25 +529,65 @@
     bulkSelected: new Set(),
     paperConfigRows: [],
     sandbox: SANDBOX_MODE,
-    inflight: 0
+    busy: false    // global lock: true while any action is running
   };
 
   // ============================================================
-  // Connection banner — shows while any API call is in-flight
+  // UNIVERSAL "PLEASE WAIT" OVERLAY
+  // Every action wraps itself in withBusy() which:
+  //   1. Blocks the UI (no double-clicks possible)
+  //   2. Shows the overlay with a live elapsed timer
+  //   3. Restores the UI when the action finishes
   // ============================================================
-  function updateConnBanner() {
-    var b = el('connBanner');
-    if (!b) return;
-    if (state.inflight > 0) b.classList.add('show');
-    else b.classList.remove('show');
+  var __waitTimer = null;
+  var __waitStart = 0;
+
+  function showWait(text, sub) {
+    var overlay = el('waitOverlay');
+    if (!overlay) return;
+    setText('waitText', text || 'Please wait…');
+    setText('waitSub', sub || 'Sending your request to the server.');
+    setText('waitElapsed', '0s');
+    overlay.classList.add('show');
+
+    __waitStart = Date.now();
+    if (__waitTimer) clearInterval(__waitTimer);
+    __waitTimer = setInterval(function () {
+      var secs = Math.floor((Date.now() - __waitStart) / 1000);
+      var label = secs + 's';
+      if (secs >= 10) label += '  (still working…)';
+      setText('waitElapsed', label);
+    }, 500);
+  }
+
+  function hideWait() {
+    var overlay = el('waitOverlay');
+    if (overlay) overlay.classList.remove('show');
+    if (__waitTimer) { clearInterval(__waitTimer); __waitTimer = null; }
+  }
+
+  /**
+   * Run an async action while blocking the UI.
+   * If another action is already running, this returns immediately
+   * with { skipped: true } — preventing double-submits.
+   */
+  async function withBusy(text, sub, fn) {
+    if (state.busy) {
+      return { skipped: true };
+    }
+    state.busy = true;
+    showWait(text, sub);
+    try {
+      var result = await fn();
+      return result;
+    } finally {
+      state.busy = false;
+      hideWait();
+    }
   }
 
   // ============================================================
   // NETWORK-RESILIENT JSONP CALLER
-  // - Exponential backoff: 500ms, 1.5s, 4s, 8s
-  // - localStorage cache fallback
-  // - Per-attempt 15s timeout; 5 attempts max
-  // - Shows connection banner while in-flight
   // ============================================================
   function hashParams(action, params) {
     try {
@@ -542,9 +629,6 @@
     const PER_ATTEMPT_MS = 15000;
     const BACKOFF = [0, 500, 1500, 4000, 8000];
 
-    state.inflight++;
-    updateConnBanner();
-
     return new Promise(function (resolve, reject) {
       const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
       const globalName = '__gasResponse_' + cb;
@@ -566,12 +650,6 @@
         if (script.parentNode) script.parentNode.removeChild(script);
       }
 
-      function finalize(fn, arg) {
-        state.inflight = Math.max(0, state.inflight - 1);
-        updateConnBanner();
-        fn(arg);
-      }
-
       function attemptFailed(reason) {
         if (settled) return;
         settled = true;
@@ -579,18 +657,15 @@
 
         if (attempt < MAX_ATTEMPTS) {
           setTimeout(function () {
-            callGAS(action, params, attempt + 1).then(
-              function (r) { finalize(resolve, r); },
-              function (e) { finalize(reject, e); }
-            );
+            callGAS(action, params, attempt + 1).then(resolve, reject);
           }, BACKOFF[attempt]);
         } else {
           var cached = cacheGet(action, params);
           if (cached) {
             console.warn('callGAS: using cached response for ' + action + ' after ' + attempt + ' attempts. Reason: ' + reason);
-            finalize(resolve, cached);
+            resolve(cached);
           } else {
-            finalize(reject, new Error(reason + ' (after ' + attempt + ' attempts)'));
+            reject(new Error(reason + ' (after ' + attempt + ' attempts)'));
           }
         }
       }
@@ -610,7 +685,7 @@
 
             if (response && !response.error) {
               cacheSet(action, params, response);
-              finalize(resolve, response);
+              resolve(response);
             } else if (response && response.error) {
               var isRead = action.indexOf('adminGet') === 0 ||
                            action.indexOf('adminList') === 0 ||
@@ -620,13 +695,13 @@
                 var cached = cacheGet(action, params);
                 if (cached) {
                   console.warn('callGAS: server returned error for ' + action + ', using cache. Error: ' + response.error);
-                  finalize(resolve, cached);
+                  resolve(cached);
                   return;
                 }
               }
-              finalize(reject, new Error(response.error));
+              reject(new Error(response.error));
             } else {
-              finalize(resolve, response);
+              resolve(response);
             }
           } else {
             attemptFailed('No response (callback stripped or script empty)');
@@ -645,16 +720,6 @@
 
   function warmServer() {
     try { callGAS('test', {}).catch(function () {}); } catch (e) {}
-  }
-
-  // ============================================================
-  // Button spinner helper
-  // ============================================================
-  function setBtnLoading(id, on) {
-    var b = el(id);
-    if (!b) return;
-    b.classList.toggle('loading', on);
-    b.disabled = on;
   }
 
   // ============================================================
@@ -729,27 +794,26 @@
     hideMsg('teachersMsg');
     if (!force && state.teachers.length) { renderTeachers(); return; }
 
-    setBtnLoading('loadTeachersBtn', true);
-    try {
-      const res = await callGAS('adminListTeachers', { password: state.adminPassword });
-      if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      state.teachers = res.teachers || [];
-      var dl = el('teacherEmailList');
-      if (dl) {
-        dl.innerHTML = '';
-        state.teachers.filter(function (t) { return t.status === 'ACTIVE'; }).forEach(function (t) {
-          var o = document.createElement('option');
-          o.value = t.email;
-          o.label = t.name;
-          dl.appendChild(o);
-        });
+    await withBusy('Loading teachers…', 'Fetching the teacher list from the server.', async function () {
+      try {
+        const res = await callGAS('adminListTeachers', { password: state.adminPassword });
+        if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        state.teachers = res.teachers || [];
+        var dl = el('teacherEmailList');
+        if (dl) {
+          dl.innerHTML = '';
+          state.teachers.filter(function (t) { return t.status === 'ACTIVE'; }).forEach(function (t) {
+            var o = document.createElement('option');
+            o.value = t.email;
+            o.label = t.name;
+            dl.appendChild(o);
+          });
+        }
+        renderTeachers();
+      } catch (e) {
+        showMsg('teachersMsg', 'error', 'Error: ' + e.message);
       }
-      renderTeachers();
-    } catch (e) {
-      showMsg('teachersMsg', 'error', 'Error: ' + e.message);
-    } finally {
-      setBtnLoading('loadTeachersBtn', false);
-    }
+    });
   }
 
   function renderTeachers() {
@@ -799,44 +863,74 @@
       showMsg('teachersMsg', 'error', 'Please enter a valid email address.'); return;
     }
 
-    setBtnLoading('addTeacherBtn', true);
-    try {
-      const res = await callGAS('adminAddTeacher', { password: state.adminPassword, email: email, name: name });
-      if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      showMsg('teachersMsg', 'success', res.created ? 'Teacher added.' : 'Teacher updated.');
-      var e1 = el('newTeacherEmail'); if (e1) e1.value = '';
-      var e2 = el('newTeacherName'); if (e2) e2.value = '';
-      await loadTeachers(true);
-    } catch (e) {
-      showMsg('teachersMsg', 'error', 'Error: ' + e.message);
-    } finally {
-      setBtnLoading('addTeacherBtn', false);
-    }
+    await withBusy('Adding teacher…', 'Registering ' + email + ' on the server.', async function () {
+      try {
+        const res = await callGAS('adminAddTeacher', { password: state.adminPassword, email: email, name: name });
+        if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        showMsg('teachersMsg', 'success', res.created ? 'Teacher added.' : 'Teacher updated.');
+        var e1 = el('newTeacherEmail'); if (e1) e1.value = '';
+        var e2 = el('newTeacherName'); if (e2) e2.value = '';
+        // Reload silently so we don't re-show the overlay
+        try {
+          const list = await callGAS('adminListTeachers', { password: state.adminPassword });
+          if (list && list.success) {
+            state.teachers = list.teachers || [];
+            var dl = el('teacherEmailList');
+            if (dl) {
+              dl.innerHTML = '';
+              state.teachers.filter(function (t) { return t.status === 'ACTIVE'; }).forEach(function (t) {
+                var o = document.createElement('option');
+                o.value = t.email;
+                o.label = t.name;
+                dl.appendChild(o);
+              });
+            }
+            renderTeachers();
+          }
+        } catch (e) {}
+      } catch (e) {
+        showMsg('teachersMsg', 'error', 'Error: ' + e.message);
+      }
+    });
   }
 
   async function deactivateTeacher(email) {
     if (!ensurePassword()) return;
     if (!confirm('Deactivate ' + email + '?')) return;
-    try {
-      const res = await callGAS('adminRemoveTeacher', { password: state.adminPassword, email: email });
-      if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      showMsg('teachersMsg', 'success', res.message || 'Deactivated.');
-      await loadTeachers(true);
-    } catch (e) {
-      showMsg('teachersMsg', 'error', 'Error: ' + e.message);
-    }
+
+    await withBusy('Deactivating…', 'Updating the teacher status.', async function () {
+      try {
+        const res = await callGAS('adminRemoveTeacher', { password: state.adminPassword, email: email });
+        if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        showMsg('teachersMsg', 'success', res.message || 'Deactivated.');
+        const list = await callGAS('adminListTeachers', { password: state.adminPassword });
+        if (list && list.success) {
+          state.teachers = list.teachers || [];
+          renderTeachers();
+        }
+      } catch (e) {
+        showMsg('teachersMsg', 'error', 'Error: ' + e.message);
+      }
+    });
   }
 
   async function reactivateTeacher(email) {
     if (!ensurePassword()) return;
-    try {
-      const res = await callGAS('adminReactivateTeacher', { password: state.adminPassword, email: email });
-      if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      showMsg('teachersMsg', 'success', res.message || 'Reactivated.');
-      await loadTeachers(true);
-    } catch (e) {
-      showMsg('teachersMsg', 'error', 'Error: ' + e.message);
-    }
+
+    await withBusy('Reactivating…', 'Updating the teacher status.', async function () {
+      try {
+        const res = await callGAS('adminReactivateTeacher', { password: state.adminPassword, email: email });
+        if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        showMsg('teachersMsg', 'success', res.message || 'Reactivated.');
+        const list = await callGAS('adminListTeachers', { password: state.adminPassword });
+        if (list && list.success) {
+          state.teachers = list.teachers || [];
+          renderTeachers();
+        }
+      } catch (e) {
+        showMsg('teachersMsg', 'error', 'Error: ' + e.message);
+      }
+    });
   }
 
   function jumpToAssignments(email) {
@@ -852,18 +946,17 @@
     hideMsg('assignMsg');
     if (!force && state.assignments.length) { renderAssignments(); return; }
 
-    setBtnLoading('loadAssignmentsBtn', true);
-    try {
-      const res = await callGAS('adminListAssignments', { password: state.adminPassword });
-      if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      state.assignments = res.assignments || [];
-      renderAssignments();
-      populateClassFilter();
-    } catch (e) {
-      showMsg('assignMsg', 'error', 'Error: ' + e.message);
-    } finally {
-      setBtnLoading('loadAssignmentsBtn', false);
-    }
+    await withBusy('Loading assignments…', 'Fetching the assignments list.', async function () {
+      try {
+        const res = await callGAS('adminListAssignments', { password: state.adminPassword });
+        if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        state.assignments = res.assignments || [];
+        renderAssignments();
+        populateClassFilter();
+      } catch (e) {
+        showMsg('assignMsg', 'error', 'Error: ' + e.message);
+      }
+    });
   }
 
   function populateClassFilter() {
@@ -983,34 +1076,57 @@
       return;
     }
 
-    setBtnLoading('addAssignmentBtn', true);
-    try {
-      const res = await callGAS('adminAddAssignment', {
-        password: state.adminPassword, email: email, studentClass: cls, subject: subject, term: term
-      });
-      if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      showMsg('assignMsg', 'success', 'Assignment added.');
-      await loadAssignments(true);
-    } catch (e) {
-      showMsg('assignMsg', 'error', 'Error: ' + e.message);
-    } finally {
-      setBtnLoading('addAssignmentBtn', false);
-    }
+    await withBusy(
+      'Adding assignment…',
+      email + ' → ' + cls + ' / ' + subject + ' (' + term + ')',
+      async function () {
+        try {
+          const res = await callGAS('adminAddAssignment', {
+            password: state.adminPassword, email: email, studentClass: cls, subject: subject, term: term
+          });
+          if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
+          showMsg('assignMsg', 'success', 'Assignment added.');
+
+          // Refresh in background — no overlay needed
+          try {
+            const list = await callGAS('adminListAssignments', { password: state.adminPassword });
+            if (list && list.success) {
+              state.assignments = list.assignments || [];
+              renderAssignments();
+              populateClassFilter();
+            }
+          } catch (e) {}
+        } catch (e) {
+          showMsg('assignMsg', 'error', 'Error: ' + e.message);
+        }
+      }
+    );
   }
 
   async function removeAssignment(email, cls, subject, term) {
     if (!ensurePassword()) return;
     if (!confirm('Remove ' + subject + ' for ' + email + ' in ' + cls + '?')) return;
-    try {
-      const res = await callGAS('adminRemoveAssignment', {
-        password: state.adminPassword, email: email, studentClass: cls, subject: subject, term: term
-      });
-      if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      showMsg('assignMsg', 'success', 'Removed ' + (res.removed || 0) + ' assignment(s).');
-      await loadAssignments(true);
-    } catch (e) {
-      showMsg('assignMsg', 'error', 'Error: ' + e.message);
-    }
+
+    await withBusy('Removing assignment…', subject + ' (' + cls + ')', async function () {
+      try {
+        const res = await callGAS('adminRemoveAssignment', {
+          password: state.adminPassword, email: email, studentClass: cls, subject: subject, term: term
+        });
+        if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        showMsg('assignMsg', 'success', 'Removed ' + (res.removed || 0) + ' assignment(s).');
+
+        try {
+          const list = await callGAS('adminListAssignments', { password: state.adminPassword });
+          if (list && list.success) {
+            state.assignments = list.assignments || [];
+            renderAssignments();
+            populateClassFilter();
+          }
+        } catch (e) {}
+      } catch (e) {
+        showMsg('assignMsg', 'error', 'Error: ' + e.message);
+      }
+    });
   }
 
   // ============================================================
@@ -1112,23 +1228,34 @@
 
     var subjects = Array.from(state.bulkSelected);
 
-    setBtnLoading('saveBulkBtn', true);
-    try {
-      const res = await callGAS('adminAddAssignmentsBulk', {
-        password: state.adminPassword, email: email, studentClass: cls,
-        subjects: JSON.stringify(subjects), term: term
-      });
-      if (!res || !res.success) { showMsg('bulkMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      showMsg('bulkMsg', 'success', 'Added ' + res.added + ' assignment(s) for ' + email + ' in ' + cls + '.');
-      state.bulkSelected.clear();
-      updateBulkChips();
-      document.querySelectorAll('#bulkSubjectsWrap input[type=checkbox]').forEach(function (cb) { cb.checked = false; });
-      await loadAssignments(true);
-    } catch (e) {
-      showMsg('bulkMsg', 'error', 'Error: ' + e.message);
-    } finally {
-      setBtnLoading('saveBulkBtn', false);
-    }
+    await withBusy(
+      'Adding ' + subjects.length + ' assignment' + (subjects.length > 1 ? 's' : '') + '…',
+      email + ' → ' + cls,
+      async function () {
+        try {
+          const res = await callGAS('adminAddAssignmentsBulk', {
+            password: state.adminPassword, email: email, studentClass: cls,
+            subjects: JSON.stringify(subjects), term: term
+          });
+          if (!res || !res.success) { showMsg('bulkMsg', 'error', (res && res.error) || 'Failed.'); return; }
+          showMsg('bulkMsg', 'success', 'Added ' + res.added + ' assignment(s) for ' + email + ' in ' + cls + '.');
+          state.bulkSelected.clear();
+          updateBulkChips();
+          document.querySelectorAll('#bulkSubjectsWrap input[type=checkbox]').forEach(function (cb) { cb.checked = false; });
+
+          try {
+            const list = await callGAS('adminListAssignments', { password: state.adminPassword });
+            if (list && list.success) {
+              state.assignments = list.assignments || [];
+              renderAssignments();
+              populateClassFilter();
+            }
+          } catch (e) {}
+        } catch (e) {
+          showMsg('bulkMsg', 'error', 'Error: ' + e.message);
+        }
+      }
+    );
   }
 
   // ============================================================
@@ -1173,21 +1300,20 @@
     var realTerm = resolveRealTerm();
     if (!cls || !realTerm) return;
 
-    setBtnLoading('loadPcBtn', true);
-    try {
-      const res = await callGAS('adminGetPaperConfig', {
-        password: state.adminPassword,
-        studentClass: cls,
-        term: realTerm
-      });
-      if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      state.paperConfigRows = res.papers || [];
-      renderPaperConfig();
-    } catch (e) {
-      showMsg('pcMsg', 'error', 'Error: ' + e.message);
-    } finally {
-      setBtnLoading('loadPcBtn', false);
-    }
+    await withBusy('Loading paper config…', cls, async function () {
+      try {
+        const res = await callGAS('adminGetPaperConfig', {
+          password: state.adminPassword,
+          studentClass: cls,
+          term: realTerm
+        });
+        if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        state.paperConfigRows = res.papers || [];
+        renderPaperConfig();
+      } catch (e) {
+        showMsg('pcMsg', 'error', 'Error: ' + e.message);
+      }
+    });
   }
 
   function renderPaperConfig() {
@@ -1225,22 +1351,20 @@
     var realTerm = resolveRealTerm();
     if (!cls || !realTerm) { showMsg('pcMsg', 'error', 'Class and term required.'); return; }
 
-    setBtnLoading('savePcBtn', true);
-    try {
-      const res = await callGAS('adminSavePaperConfig', {
-        password: state.adminPassword,
-        studentClass: cls,
-        term: realTerm,
-        papers: JSON.stringify(state.paperConfigRows)
-      });
-      if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      showMsg('pcMsg', 'success', 'Saved ' + res.count + ' paper config rows.');
-      await loadPaperConfig();
-    } catch (e) {
-      showMsg('pcMsg', 'error', 'Error: ' + e.message);
-    } finally {
-      setBtnLoading('savePcBtn', false);
-    }
+    await withBusy('Saving paper config…', cls + ' (' + state.paperConfigRows.length + ' rows)', async function () {
+      try {
+        const res = await callGAS('adminSavePaperConfig', {
+          password: state.adminPassword,
+          studentClass: cls,
+          term: realTerm,
+          papers: JSON.stringify(state.paperConfigRows)
+        });
+        if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        showMsg('pcMsg', 'success', 'Saved ' + res.count + ' paper config rows.');
+      } catch (e) {
+        showMsg('pcMsg', 'error', 'Error: ' + e.message);
+      }
+    });
   }
 
   async function resetPaperConfig() {
@@ -1250,21 +1374,29 @@
     var cls = getVal('pcClass');
     var realTerm = resolveRealTerm();
 
-    setBtnLoading('resetPcBtn', true);
-    try {
-      const res = await callGAS('adminResetPaperConfig', {
-        password: state.adminPassword,
-        studentClass: cls,
-        term: realTerm
-      });
-      if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      showMsg('pcMsg', 'success', 'Reset to defaults.');
-      await loadPaperConfig();
-    } catch (e) {
-      showMsg('pcMsg', 'error', 'Error: ' + e.message);
-    } finally {
-      setBtnLoading('resetPcBtn', false);
-    }
+    await withBusy('Resetting paper config…', cls, async function () {
+      try {
+        const res = await callGAS('adminResetPaperConfig', {
+          password: state.adminPassword,
+          studentClass: cls,
+          term: realTerm
+        });
+        if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        showMsg('pcMsg', 'success', 'Reset to defaults.');
+
+        const fresh = await callGAS('adminGetPaperConfig', {
+          password: state.adminPassword,
+          studentClass: cls,
+          term: realTerm
+        });
+        if (fresh && fresh.success) {
+          state.paperConfigRows = fresh.papers || [];
+          renderPaperConfig();
+        }
+      } catch (e) {
+        showMsg('pcMsg', 'error', 'Error: ' + e.message);
+      }
+    });
   }
 
   // ============================================================
@@ -1275,17 +1407,16 @@
     hideMsg('auditMsg');
     var limit = parseInt(getVal('auditLimit'), 10) || 200;
 
-    setBtnLoading('loadAuditBtn', true);
-    try {
-      const res = await callGAS('adminGetAuditLog', { password: state.adminPassword, limit: limit });
-      if (!res || !res.success) { showMsg('auditMsg', 'error', (res && res.error) || 'Failed.'); return; }
-      state.audit = res.log || [];
-      renderAudit();
-    } catch (e) {
-      showMsg('auditMsg', 'error', 'Error: ' + e.message);
-    } finally {
-      setBtnLoading('loadAuditBtn', false);
-    }
+    await withBusy('Loading audit log…', 'Fetching the last ' + limit + ' entries.', async function () {
+      try {
+        const res = await callGAS('adminGetAuditLog', { password: state.adminPassword, limit: limit });
+        if (!res || !res.success) { showMsg('auditMsg', 'error', (res && res.error) || 'Failed.'); return; }
+        state.audit = res.log || [];
+        renderAudit();
+      } catch (e) {
+        showMsg('auditMsg', 'error', 'Error: ' + e.message);
+      }
+    });
   }
 
   function renderAudit() {
@@ -1326,16 +1457,13 @@
   // Init
   // ============================================================
   async function initializeAdminPage() {
-    // Show sandbox badge if in sandbox mode
     if (state.sandbox) {
       var badge = el('sandboxBadge');
       if (badge) badge.classList.add('show');
     }
 
-    // Warm the server
     setTimeout(warmServer, 100);
 
-    // Populate class dropdowns
     ['asgClass','bulkClass','pcClass'].forEach(function (id) {
       var sel = el(id);
       if (!sel) return;
@@ -1347,7 +1475,6 @@
       });
     });
 
-    // Fetch terms
     try {
       const terms = await callGAS('getAvailableTerms', {
         sandbox: state.sandbox ? 'true' : 'false'
@@ -1368,7 +1495,6 @@
       }
     } catch (e) {}
 
-    // Load teachers (also prompts for admin password on first visit)
     loadTeachers();
   }
 
