@@ -15,7 +15,6 @@
     padding: 16px;
   }
   .wrap { max-width: 1200px; margin: 0 auto; }
-
   .card {
     background: rgba(255,255,255,0.05);
     backdrop-filter: blur(10px);
@@ -24,14 +23,12 @@
     padding: 22px;
     margin-bottom: 16px;
   }
-
   h1 { font-size: 21px; color: #fbbf24; margin-bottom: 5px; }
   .sub { color: #94a3b8; font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
   h2 {
     font-size: 13px; color: #a78bfa; margin-bottom: 12px;
     text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700;
   }
-
   .tabs {
     display: flex; gap: 6px; margin-bottom: 18px;
     background: rgba(0,0,0,0.15); padding: 6px; border-radius: 12px;
@@ -65,9 +62,7 @@
   .field select option { background:#1a2a3a; color:#fff; }
 
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 700px) {
-    .row { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 700px) { .row { grid-template-columns: 1fr; } }
 
   .btn {
     padding: 10px 15px; border: none; border-radius: 10px;
@@ -86,17 +81,6 @@
   .btn.red { background: rgba(220,38,38,0.75); }
   .btn.red:hover:not(:disabled) { background: rgba(220,38,38,1); }
   .btn.sm { padding: 6px 11px; font-size: 12px; }
-  .btn .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: none;
-  }
-  .btn.loading .spinner { display: inline-block; }
-  .btn.loading .label { display: none; }
-  @keyframes spin { to { transform: rotate(360deg); } }
 
   .msg {
     padding: 11px 14px; border-radius: 10px; font-size: 12.5px;
@@ -122,7 +106,6 @@
   .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); }
   .hidden { display: none !important; }
   .empty { padding: 26px; text-align: center; color: #94a3b8; font-size: 13px; font-style: italic; }
-
   .badge {
     display: inline-block;
     padding: 3px 9px; border-radius: 10px;
@@ -130,7 +113,6 @@
   }
   .badge.active { background: rgba(34,197,94,0.25); color: #86efac; }
   .badge.inactive { background: rgba(148,163,184,0.25); color: #cbd5e1; }
-
   .filter-bar {
     display: flex; gap: 10px; flex-wrap: wrap;
     align-items: center; margin-bottom: 12px;
@@ -172,12 +154,9 @@
   .checkbox-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 6px;
-    margin-top: 6px;
-    max-height: 260px;
-    overflow-y: auto;
-    padding: 8px;
-    background: rgba(0,0,0,0.15);
+    gap: 6px; margin-top: 6px;
+    max-height: 260px; overflow-y: auto;
+    padding: 8px; background: rgba(0,0,0,0.15);
     border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.06);
   }
@@ -191,14 +170,12 @@
   .checkbox-item input {
     width: 16px; height: 16px; accent-color: #a78bfa; cursor: pointer;
   }
-
   .pc-input {
     padding:6px 8px; background: rgba(255,255,255,0.08);
     border:1px solid rgba(255,255,255,0.15); border-radius:6px;
     color:#fff; font-family:inherit; font-size:12.5px;
   }
   .pc-input:focus { outline:none; border-color:#a78bfa; }
-
   .sandbox-badge {
     display:none;
     background: rgba(220,38,38,0.25);
@@ -213,20 +190,12 @@
   }
   .sandbox-badge.show { display:inline-block; }
 
-  /* ============================================================
-     UNIVERSAL "PLEASE WAIT" OVERLAY
-     Appears on every action. Blocks the UI to prevent double
-     submits (which caused the duplicated assignments).
-     ============================================================ */
   .wait-overlay {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background: rgba(10, 22, 40, 0.75);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    display: none;
-    align-items: center;
-    justify-content: center;
+    display: none; align-items: center; justify-content: center;
     z-index: 99999;
   }
   .wait-overlay.show { display: flex; }
@@ -236,17 +205,13 @@
     border-radius: 18px;
     padding: 28px 34px;
     box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    min-width: 260px;
-    max-width: 90vw;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 16px;
+    min-width: 260px; max-width: 90vw;
     text-align: center;
   }
   .wait-spinner {
-    width: 46px;
-    height: 46px;
+    width: 46px; height: 46px;
     border: 4px solid rgba(255,255,255,0.10);
     border-top-color: #a78bfa;
     border-radius: 50%;
@@ -254,21 +219,14 @@
   }
   @keyframes waitSpin { to { transform: rotate(360deg); } }
   .wait-text {
-    color: #e9d5ff;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
+    color: #e9d5ff; font-size: 14px; font-weight: 600; letter-spacing: 0.3px;
   }
   .wait-sub {
-    color: #94a3b8;
-    font-size: 12px;
-    line-height: 1.5;
+    color: #94a3b8; font-size: 12px; line-height: 1.5;
   }
   .wait-elapsed {
-    color: #fbbf24;
-    font-size: 12px;
-    font-variant-numeric: tabular-nums;
-    font-weight: 700;
+    color: #fbbf24; font-size: 12px;
+    font-variant-numeric: tabular-nums; font-weight: 700;
   }
 
   @media (max-width: 600px) {
@@ -320,10 +278,7 @@
           <input type="text" id="newTeacherName" placeholder="Mr. John Banda">
         </div>
       </div>
-      <button class="btn green" id="addTeacherBtn" onclick="addTeacher()">
-        <span class="spinner"></span>
-        <span class="label">➕ Add / Update Teacher</span>
-      </button>
+      <button class="btn green" id="addTeacherBtn" onclick="addTeacher()">➕ Add / Update Teacher</button>
 
       <h2 style="margin-top:24px;">Registered Teachers</h2>
       <div class="filter-bar">
@@ -333,10 +288,7 @@
           <option value="ACTIVE">Active</option>
           <option value="INACTIVE">Inactive</option>
         </select>
-        <button class="btn purple sm" id="loadTeachersBtn" onclick="loadTeachers(true)">
-          <span class="spinner"></span>
-          <span class="label">🔄 Reload</span>
-        </button>
+        <button class="btn purple sm" onclick="loadTeachers(true)">🔄 Reload</button>
       </div>
       <div id="teachersMsg" class="msg"></div>
       <div id="teachersTableWrap"></div>
@@ -366,10 +318,7 @@
           <select id="asgSubject"></select>
         </div>
       </div>
-      <button class="btn green" id="addAssignmentBtn" onclick="addAssignment()">
-        <span class="spinner"></span>
-        <span class="label">➕ Add Assignment</span>
-      </button>
+      <button class="btn green" id="addAssignmentBtn" onclick="addAssignment()">➕ Add Assignment</button>
 
       <h2 style="margin-top:24px;">All Assignments</h2>
       <div class="filter-bar">
@@ -377,10 +326,7 @@
         <select id="asgClassFilter" onchange="renderAssignments()">
           <option value="">All classes</option>
         </select>
-        <button class="btn purple sm" id="loadAssignmentsBtn" onclick="loadAssignments(true)">
-          <span class="spinner"></span>
-          <span class="label">🔄 Reload</span>
-        </button>
+        <button class="btn purple sm" onclick="loadAssignments(true)">🔄 Reload</button>
       </div>
       <div id="assignMsg" class="msg"></div>
       <div id="assignTableWrap"></div>
@@ -427,10 +373,7 @@
         </div>
       </div>
 
-      <button class="btn green" id="saveBulkBtn" onclick="saveBulkAssignments()">
-        <span class="spinner"></span>
-        <span class="label">➕ Add Selected Subjects</span>
-      </button>
+      <button class="btn green" id="saveBulkBtn" onclick="saveBulkAssignments()">➕ Add Selected Subjects</button>
       <div id="bulkMsg" class="msg"></div>
     </div>
 
@@ -454,18 +397,9 @@
       </div>
 
       <div class="filter-bar" style="margin-top:8px;">
-        <button class="btn purple sm" id="loadPcBtn" onclick="loadPaperConfig()">
-          <span class="spinner"></span>
-          <span class="label">🔄 Load Paper Config</span>
-        </button>
-        <button class="btn green sm" id="savePcBtn" onclick="savePaperConfig()">
-          <span class="spinner"></span>
-          <span class="label">💾 Save Changes</span>
-        </button>
-        <button class="btn red sm" id="resetPcBtn" onclick="resetPaperConfig()">
-          <span class="spinner"></span>
-          <span class="label">↺ Reset to Defaults</span>
-        </button>
+        <button class="btn purple sm" onclick="loadPaperConfig()">🔄 Load Paper Config</button>
+        <button class="btn green sm" onclick="savePaperConfig()">💾 Save Changes</button>
+        <button class="btn red sm" onclick="resetPaperConfig()">↺ Reset to Defaults</button>
       </div>
 
       <div id="pcMsg" class="msg"></div>
@@ -482,10 +416,7 @@
           <option value="500">Last 500</option>
           <option value="1000">Last 1000</option>
         </select>
-        <button class="btn purple sm" id="loadAuditBtn" onclick="loadAudit()">
-          <span class="spinner"></span>
-          <span class="label">🔄 Reload</span>
-        </button>
+        <button class="btn purple sm" onclick="loadAudit()">🔄 Reload</button>
       </div>
       <div id="auditMsg" class="msg"></div>
       <div id="auditTableWrap"></div>
@@ -495,30 +426,16 @@
 </div>
 
 <script>
-  // ============================================================
-  // SAFE DOM HELPERS
-  // ============================================================
   function el(id) { return document.getElementById(id); }
   function getVal(id) { var e = el(id); return e ? String(e.value || '') : ''; }
   function setText(id, text) { var e = el(id); if (e) e.textContent = text; }
   function setHtml(id, html) { var e = el(id); if (e) e.innerHTML = html; }
 
-  // ============================================================
-  // Config
-  // ============================================================
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
-
-  const ALL_CLASSES = [
-    'Form 1','Form 2','Form 3','Form 4',
-    'Form 1 ODL','Form 2 ODL','Form 3 ODL','Form 4 ODL'
-  ];
-
+  const ALL_CLASSES = ['Form 1','Form 2','Form 3','Form 4','Form 1 ODL','Form 2 ODL','Form 3 ODL','Form 4 ODL'];
   const SANDBOX_MODE = (new URLSearchParams(window.location.search).get('sandbox') === 'true');
   const CACHE_TTL_MS = 60 * 1000;
 
-  // ============================================================
-  // State
-  // ============================================================
   const state = {
     adminPassword: null,
     teachers: [],
@@ -529,15 +446,11 @@
     bulkSelected: new Set(),
     paperConfigRows: [],
     sandbox: SANDBOX_MODE,
-    busy: false    // global lock: true while any action is running
+    busy: false
   };
 
   // ============================================================
-  // UNIVERSAL "PLEASE WAIT" OVERLAY
-  // Every action wraps itself in withBusy() which:
-  //   1. Blocks the UI (no double-clicks possible)
-  //   2. Shows the overlay with a live elapsed timer
-  //   3. Restores the UI when the action finishes
+  // Universal busy overlay
   // ============================================================
   var __waitTimer = null;
   var __waitStart = 0;
@@ -549,7 +462,6 @@
     setText('waitSub', sub || 'Sending your request to the server.');
     setText('waitElapsed', '0s');
     overlay.classList.add('show');
-
     __waitStart = Date.now();
     if (__waitTimer) clearInterval(__waitTimer);
     __waitTimer = setInterval(function () {
@@ -566,28 +478,16 @@
     if (__waitTimer) { clearInterval(__waitTimer); __waitTimer = null; }
   }
 
-  /**
-   * Run an async action while blocking the UI.
-   * If another action is already running, this returns immediately
-   * with { skipped: true } — preventing double-submits.
-   */
   async function withBusy(text, sub, fn) {
-    if (state.busy) {
-      return { skipped: true };
-    }
+    if (state.busy) return { skipped: true };
     state.busy = true;
     showWait(text, sub);
-    try {
-      var result = await fn();
-      return result;
-    } finally {
-      state.busy = false;
-      hideWait();
-    }
+    try { return await fn(); }
+    finally { state.busy = false; hideWait(); }
   }
 
   // ============================================================
-  // NETWORK-RESILIENT JSONP CALLER
+  // JSONP caller
   // ============================================================
   function hashParams(action, params) {
     try {
@@ -662,7 +562,7 @@
         } else {
           var cached = cacheGet(action, params);
           if (cached) {
-            console.warn('callGAS: using cached response for ' + action + ' after ' + attempt + ' attempts. Reason: ' + reason);
+            console.warn('callGAS: using cache for ' + action + ' after ' + attempt + ' attempts. Reason: ' + reason);
             resolve(cached);
           } else {
             reject(new Error(reason + ' (after ' + attempt + ' attempts)'));
@@ -694,7 +594,7 @@
               if (isRead) {
                 var cached = cacheGet(action, params);
                 if (cached) {
-                  console.warn('callGAS: server returned error for ' + action + ', using cache. Error: ' + response.error);
+                  console.warn('callGAS: server error for ' + action + ', using cache. Error: ' + response.error);
                   resolve(cached);
                   return;
                 }
@@ -718,6 +618,8 @@
     });
   }
 
+  // Fire-and-forget warm-up. Called on page load AND on hover/focus
+  // of action buttons so the server is hot when the user clicks.
   function warmServer() {
     try { callGAS('test', {}).catch(function () {}); } catch (e) {}
   }
@@ -746,8 +648,7 @@
     e.textContent = '';
   }
   function colLetter(n) {
-    var s = '';
-    n = n + 1;
+    var s = ''; n = n + 1;
     while (n > 0) {
       var r = (n - 1) % 26;
       s = String.fromCharCode(65 + r) + s;
@@ -804,8 +705,7 @@
           dl.innerHTML = '';
           state.teachers.filter(function (t) { return t.status === 'ACTIVE'; }).forEach(function (t) {
             var o = document.createElement('option');
-            o.value = t.email;
-            o.label = t.name;
+            o.value = t.email; o.label = t.name;
             dl.appendChild(o);
           });
         }
@@ -870,24 +770,21 @@
         showMsg('teachersMsg', 'success', res.created ? 'Teacher added.' : 'Teacher updated.');
         var e1 = el('newTeacherEmail'); if (e1) e1.value = '';
         var e2 = el('newTeacherName'); if (e2) e2.value = '';
-        // Reload silently so we don't re-show the overlay
-        try {
-          const list = await callGAS('adminListTeachers', { password: state.adminPassword });
-          if (list && list.success) {
-            state.teachers = list.teachers || [];
-            var dl = el('teacherEmailList');
-            if (dl) {
-              dl.innerHTML = '';
-              state.teachers.filter(function (t) { return t.status === 'ACTIVE'; }).forEach(function (t) {
-                var o = document.createElement('option');
-                o.value = t.email;
-                o.label = t.name;
-                dl.appendChild(o);
-              });
-            }
-            renderTeachers();
+
+        // Server returns the refreshed list
+        if (res.teachers) {
+          state.teachers = res.teachers;
+          var dl = el('teacherEmailList');
+          if (dl) {
+            dl.innerHTML = '';
+            state.teachers.filter(function (t) { return t.status === 'ACTIVE'; }).forEach(function (t) {
+              var o = document.createElement('option');
+              o.value = t.email; o.label = t.name;
+              dl.appendChild(o);
+            });
           }
-        } catch (e) {}
+          renderTeachers();
+        }
       } catch (e) {
         showMsg('teachersMsg', 'error', 'Error: ' + e.message);
       }
@@ -903,9 +800,8 @@
         const res = await callGAS('adminRemoveTeacher', { password: state.adminPassword, email: email });
         if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
         showMsg('teachersMsg', 'success', res.message || 'Deactivated.');
-        const list = await callGAS('adminListTeachers', { password: state.adminPassword });
-        if (list && list.success) {
-          state.teachers = list.teachers || [];
+        if (res.teachers) {
+          state.teachers = res.teachers;
           renderTeachers();
         }
       } catch (e) {
@@ -922,9 +818,8 @@
         const res = await callGAS('adminReactivateTeacher', { password: state.adminPassword, email: email });
         if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
         showMsg('teachersMsg', 'success', res.message || 'Reactivated.');
-        const list = await callGAS('adminListTeachers', { password: state.adminPassword });
-        if (list && list.success) {
-          state.teachers = list.teachers || [];
+        if (res.teachers) {
+          state.teachers = res.teachers;
           renderTeachers();
         }
       } catch (e) {
@@ -1087,15 +982,12 @@
           if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
           showMsg('assignMsg', 'success', 'Assignment added.');
 
-          // Refresh in background — no overlay needed
-          try {
-            const list = await callGAS('adminListAssignments', { password: state.adminPassword });
-            if (list && list.success) {
-              state.assignments = list.assignments || [];
-              renderAssignments();
-              populateClassFilter();
-            }
-          } catch (e) {}
+          // Server returns the fresh list — no second call
+          if (res.assignments) {
+            state.assignments = res.assignments;
+            renderAssignments();
+            populateClassFilter();
+          }
         } catch (e) {
           showMsg('assignMsg', 'error', 'Error: ' + e.message);
         }
@@ -1114,15 +1006,11 @@
         });
         if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
         showMsg('assignMsg', 'success', 'Removed ' + (res.removed || 0) + ' assignment(s).');
-
-        try {
-          const list = await callGAS('adminListAssignments', { password: state.adminPassword });
-          if (list && list.success) {
-            state.assignments = list.assignments || [];
-            renderAssignments();
-            populateClassFilter();
-          }
-        } catch (e) {}
+        if (res.assignments) {
+          state.assignments = res.assignments;
+          renderAssignments();
+          populateClassFilter();
+        }
       } catch (e) {
         showMsg('assignMsg', 'error', 'Error: ' + e.message);
       }
@@ -1242,15 +1130,11 @@
           state.bulkSelected.clear();
           updateBulkChips();
           document.querySelectorAll('#bulkSubjectsWrap input[type=checkbox]').forEach(function (cb) { cb.checked = false; });
-
-          try {
-            const list = await callGAS('adminListAssignments', { password: state.adminPassword });
-            if (list && list.success) {
-              state.assignments = list.assignments || [];
-              renderAssignments();
-              populateClassFilter();
-            }
-          } catch (e) {}
+          if (res.assignments) {
+            state.assignments = res.assignments;
+            renderAssignments();
+            populateClassFilter();
+          }
         } catch (e) {
           showMsg('bulkMsg', 'error', 'Error: ' + e.message);
         }
@@ -1383,7 +1267,6 @@
         });
         if (!res || !res.success) { showMsg('pcMsg', 'error', (res && res.error) || 'Failed.'); return; }
         showMsg('pcMsg', 'success', 'Reset to defaults.');
-
         const fresh = await callGAS('adminGetPaperConfig', {
           password: state.adminPassword,
           studentClass: cls,
@@ -1463,6 +1346,16 @@
     }
 
     setTimeout(warmServer, 100);
+
+    // Warm the server on hover/focus of key action buttons
+    setTimeout(function () {
+      ['addTeacherBtn','addAssignmentBtn','saveBulkBtn'].forEach(function (id) {
+        var b = el(id);
+        if (!b) return;
+        b.addEventListener('mouseenter', warmServer);
+        b.addEventListener('focus', warmServer);
+      });
+    }, 200);
 
     ['asgClass','bulkClass','pcClass'].forEach(function (id) {
       var sel = el(id);
