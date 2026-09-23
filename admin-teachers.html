@@ -86,6 +86,17 @@
   .btn.red { background: rgba(220,38,38,0.75); }
   .btn.red:hover:not(:disabled) { background: rgba(220,38,38,1); }
   .btn.sm { padding: 6px 11px; font-size: 12px; }
+  .btn .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+  }
+  .btn.loading .spinner { display: inline-block; }
+  .btn.loading .label { opacity: 0.5; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   .msg {
     padding: 11px 14px; border-radius: 10px; font-size: 12.5px;
@@ -202,6 +213,22 @@
   }
   .sandbox-badge.show { display:inline-block; }
 
+  /* Connection banner */
+  .conn-banner {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: rgba(245,158,11,0.95);
+    color: #1e293b;
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 9999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .conn-banner.show { display: block; }
+
   @media (max-width: 600px) {
     body { padding: 10px; }
     .card { padding: 16px; }
@@ -211,6 +238,11 @@
 </style>
 </head>
 <body>
+
+<div id="connBanner" class="conn-banner">
+  🔄 Connecting to server… if this takes more than 10 seconds, please wait — retrying automatically.
+</div>
+
 <div class="wrap">
 
   <div class="card">
@@ -240,7 +272,10 @@
           <input type="text" id="newTeacherName" placeholder="Mr. John Banda">
         </div>
       </div>
-      <button class="btn green" onclick="addTeacher()">➕ Add / Update Teacher</button>
+      <button class="btn green" id="addTeacherBtn" onclick="addTeacher()">
+        <span class="spinner"></span>
+        <span class="label">➕ Add / Update Teacher</span>
+      </button>
 
       <h2 style="margin-top:24px;">Registered Teachers</h2>
       <div class="filter-bar">
@@ -250,7 +285,10 @@
           <option value="ACTIVE">Active</option>
           <option value="INACTIVE">Inactive</option>
         </select>
-        <button class="btn purple sm" onclick="loadTeachers(true)">🔄 Reload</button>
+        <button class="btn purple sm" id="loadTeachersBtn" onclick="loadTeachers(true)">
+          <span class="spinner"></span>
+          <span class="label">🔄 Reload</span>
+        </button>
       </div>
       <div id="teachersMsg" class="msg"></div>
       <div id="teachersTableWrap"></div>
@@ -280,7 +318,10 @@
           <select id="asgSubject"></select>
         </div>
       </div>
-      <button class="btn green" onclick="addAssignment()">➕ Add Assignment</button>
+      <button class="btn green" id="addAssignmentBtn" onclick="addAssignment()">
+        <span class="spinner"></span>
+        <span class="label">➕ Add Assignment</span>
+      </button>
 
       <h2 style="margin-top:24px;">All Assignments</h2>
       <div class="filter-bar">
@@ -288,7 +329,10 @@
         <select id="asgClassFilter" onchange="renderAssignments()">
           <option value="">All classes</option>
         </select>
-        <button class="btn purple sm" onclick="loadAssignments(true)">🔄 Reload</button>
+        <button class="btn purple sm" id="loadAssignmentsBtn" onclick="loadAssignments(true)">
+          <span class="spinner"></span>
+          <span class="label">🔄 Reload</span>
+        </button>
       </div>
       <div id="assignMsg" class="msg"></div>
       <div id="assignTableWrap"></div>
@@ -335,7 +379,10 @@
         </div>
       </div>
 
-      <button class="btn green" onclick="saveBulkAssignments()">➕ Add Selected Subjects</button>
+      <button class="btn green" id="saveBulkBtn" onclick="saveBulkAssignments()">
+        <span class="spinner"></span>
+        <span class="label">➕ Add Selected Subjects</span>
+      </button>
       <div id="bulkMsg" class="msg"></div>
     </div>
 
@@ -359,9 +406,18 @@
       </div>
 
       <div class="filter-bar" style="margin-top:8px;">
-        <button class="btn purple sm" onclick="loadPaperConfig()">🔄 Load Paper Config</button>
-        <button class="btn green sm" onclick="savePaperConfig()">💾 Save Changes</button>
-        <button class="btn red sm" onclick="resetPaperConfig()">↺ Reset to Defaults</button>
+        <button class="btn purple sm" id="loadPcBtn" onclick="loadPaperConfig()">
+          <span class="spinner"></span>
+          <span class="label">🔄 Load Paper Config</span>
+        </button>
+        <button class="btn green sm" id="savePcBtn" onclick="savePaperConfig()">
+          <span class="spinner"></span>
+          <span class="label">💾 Save Changes</span>
+        </button>
+        <button class="btn red sm" id="resetPcBtn" onclick="resetPaperConfig()">
+          <span class="spinner"></span>
+          <span class="label">↺ Reset to Defaults</span>
+        </button>
       </div>
 
       <div id="pcMsg" class="msg"></div>
@@ -378,7 +434,10 @@
           <option value="500">Last 500</option>
           <option value="1000">Last 1000</option>
         </select>
-        <button class="btn purple sm" onclick="loadAudit()">🔄 Reload</button>
+        <button class="btn purple sm" id="loadAuditBtn" onclick="loadAudit()">
+          <span class="spinner"></span>
+          <span class="label">🔄 Reload</span>
+        </button>
       </div>
       <div id="auditMsg" class="msg"></div>
       <div id="auditTableWrap"></div>
@@ -408,6 +467,8 @@
 
   const SANDBOX_MODE = (new URLSearchParams(window.location.search).get('sandbox') === 'true');
 
+  const CACHE_TTL_MS = 60 * 1000;  // client-side cache: 60 seconds
+
   // ============================================================
   // State
   // ============================================================
@@ -420,16 +481,71 @@
     terms: [],
     bulkSelected: new Set(),
     paperConfigRows: [],
-    sandbox: SANDBOX_MODE
+    sandbox: SANDBOX_MODE,
+    inflight: 0
   };
 
   // ============================================================
-  // API caller — assignment-form JSONP
+  // Connection banner — shows while any API call is in-flight
   // ============================================================
-  function callGAS(action, params, retryCount) {
-    retryCount = retryCount || 0;
-    const MAX = 3;
-    return new Promise((resolve, reject) => {
+  function updateConnBanner() {
+    var b = el('connBanner');
+    if (!b) return;
+    if (state.inflight > 0) b.classList.add('show');
+    else b.classList.remove('show');
+  }
+
+  // ============================================================
+  // NETWORK-RESILIENT JSONP CALLER
+  // - Exponential backoff: 500ms, 1.5s, 4s, 8s
+  // - localStorage cache fallback
+  // - Per-attempt 15s timeout; 5 attempts max
+  // - Shows connection banner while in-flight
+  // ============================================================
+  function hashParams(action, params) {
+    try {
+      var p = Object.assign({}, params || {});
+      delete p.callback;
+      var keys = Object.keys(p).sort();
+      var parts = [action];
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        var v = p[k];
+        if (v === undefined || v === null || k === 'password' || k === 'token') continue;
+        parts.push(k + '=' + String(v).substring(0, 60));
+      }
+      return parts.join('|');
+    } catch (e) { return action; }
+  }
+
+  function cacheGet(action, params) {
+    try {
+      var key = 'gas_cache_' + hashParams(action, params);
+      var raw = localStorage.getItem(key);
+      if (!raw) return null;
+      var obj = JSON.parse(raw);
+      if (Date.now() - (obj.at || 0) > CACHE_TTL_MS) return null;
+      return obj.data || null;
+    } catch (e) { return null; }
+  }
+
+  function cacheSet(action, params, data) {
+    try {
+      var key = 'gas_cache_' + hashParams(action, params);
+      localStorage.setItem(key, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+
+  function callGAS(action, params, attempt) {
+    attempt = attempt || 1;
+    const MAX_ATTEMPTS = 5;
+    const PER_ATTEMPT_MS = 15000;
+    const BACKOFF = [0, 500, 1500, 4000, 8000];
+
+    state.inflight++;
+    updateConnBanner();
+
+    return new Promise(function (resolve, reject) {
       const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
       const globalName = '__gasResponse_' + cb;
       const p = Object.assign({}, params || {});
@@ -437,48 +553,108 @@
       p.callback = cb;
 
       const url = GAS_URL + '?' + Object.keys(p)
-        .filter(k => p[k] !== undefined && p[k] !== null)
-        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k]))
+        .filter(function (k) { return p[k] !== undefined && p[k] !== null; })
+        .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]); })
         .join('&');
 
-      const s = document.createElement('script');
-      s.src = url;
-
-      const to = setTimeout(() => {
-        cleanup();
-        if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-        else reject(new Error('Request timeout'));
-      }, 25000);
+      const script = document.createElement('script');
+      script.src = url;
+      let settled = false;
 
       function cleanup() {
-        clearTimeout(to);
         try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
-        if (s.parentNode) s.parentNode.removeChild(s);
+        if (script.parentNode) script.parentNode.removeChild(script);
       }
 
-      s.onload = () => {
-        setTimeout(() => {
-          if (window[globalName] !== undefined) {
-            const r = window[globalName];
-            cleanup();
-            if (r && r.error) reject(new Error(r.error));
-            else resolve(r);
-          } else {
-            cleanup();
-            if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-            else reject(new Error('No response from server (callback may have been stripped)'));
-          }
-        }, 20);
-      };
+      function finalize(fn, arg) {
+        state.inflight = Math.max(0, state.inflight - 1);
+        updateConnBanner();
+        fn(arg);
+      }
 
-      s.onerror = () => {
+      function attemptFailed(reason) {
+        if (settled) return;
+        settled = true;
         cleanup();
-        if (retryCount < MAX) resolve(callGAS(action, params, retryCount + 1));
-        else reject(new Error('Network error'));
+
+        if (attempt < MAX_ATTEMPTS) {
+          setTimeout(function () {
+            callGAS(action, params, attempt + 1).then(
+              function (r) { finalize(resolve, r); },
+              function (e) { finalize(reject, e); }
+            );
+          }, BACKOFF[attempt]);
+        } else {
+          var cached = cacheGet(action, params);
+          if (cached) {
+            console.warn('callGAS: using cached response for ' + action + ' after ' + attempt + ' attempts. Reason: ' + reason);
+            finalize(resolve, cached);
+          } else {
+            finalize(reject, new Error(reason + ' (after ' + attempt + ' attempts)'));
+          }
+        }
+      }
+
+      const timeoutId = setTimeout(function () {
+        attemptFailed('Request timeout');
+      }, PER_ATTEMPT_MS);
+
+      script.onload = function () {
+        setTimeout(function () {
+          if (settled) return;
+          if (window[globalName] !== undefined) {
+            const response = window[globalName];
+            clearTimeout(timeoutId);
+            settled = true;
+            cleanup();
+
+            if (response && !response.error) {
+              cacheSet(action, params, response);
+              finalize(resolve, response);
+            } else if (response && response.error) {
+              var isRead = action.indexOf('adminGet') === 0 ||
+                           action.indexOf('adminList') === 0 ||
+                           action.indexOf('get') === 0 ||
+                           action.indexOf('list') === 0;
+              if (isRead) {
+                var cached = cacheGet(action, params);
+                if (cached) {
+                  console.warn('callGAS: server returned error for ' + action + ', using cache. Error: ' + response.error);
+                  finalize(resolve, cached);
+                  return;
+                }
+              }
+              finalize(reject, new Error(response.error));
+            } else {
+              finalize(resolve, response);
+            }
+          } else {
+            attemptFailed('No response (callback stripped or script empty)');
+          }
+        }, 30);
       };
 
-      document.head.appendChild(s);
+      script.onerror = function () {
+        clearTimeout(timeoutId);
+        attemptFailed('Network error');
+      };
+
+      document.head.appendChild(script);
     });
+  }
+
+  function warmServer() {
+    try { callGAS('test', {}).catch(function () {}); } catch (e) {}
+  }
+
+  // ============================================================
+  // Button spinner helper
+  // ============================================================
+  function setBtnLoading(id, on) {
+    var b = el(id);
+    if (!b) return;
+    b.classList.toggle('loading', on);
+    b.disabled = on;
   }
 
   // ============================================================
@@ -493,6 +669,11 @@
     var e = el(id); if (!e) return;
     e.className = 'msg show ' + type;
     e.textContent = text;
+    if (type === 'success') {
+      setTimeout(function () {
+        if (e.className.indexOf('success') !== -1) hideMsg(id);
+      }, 5000);
+    }
   }
   function hideMsg(id) {
     var e = el(id); if (!e) return;
@@ -547,6 +728,8 @@
     if (!ensurePassword()) return;
     hideMsg('teachersMsg');
     if (!force && state.teachers.length) { renderTeachers(); return; }
+
+    setBtnLoading('loadTeachersBtn', true);
     try {
       const res = await callGAS('adminListTeachers', { password: state.adminPassword });
       if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
@@ -564,6 +747,8 @@
       renderTeachers();
     } catch (e) {
       showMsg('teachersMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      setBtnLoading('loadTeachersBtn', false);
     }
   }
 
@@ -613,6 +798,8 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       showMsg('teachersMsg', 'error', 'Please enter a valid email address.'); return;
     }
+
+    setBtnLoading('addTeacherBtn', true);
     try {
       const res = await callGAS('adminAddTeacher', { password: state.adminPassword, email: email, name: name });
       if (!res || !res.success) { showMsg('teachersMsg', 'error', (res && res.error) || 'Failed.'); return; }
@@ -622,6 +809,8 @@
       await loadTeachers(true);
     } catch (e) {
       showMsg('teachersMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      setBtnLoading('addTeacherBtn', false);
     }
   }
 
@@ -662,6 +851,8 @@
     if (!ensurePassword()) return;
     hideMsg('assignMsg');
     if (!force && state.assignments.length) { renderAssignments(); return; }
+
+    setBtnLoading('loadAssignmentsBtn', true);
     try {
       const res = await callGAS('adminListAssignments', { password: state.adminPassword });
       if (!res || !res.success) { showMsg('assignMsg', 'error', (res && res.error) || 'Failed.'); return; }
@@ -670,6 +861,8 @@
       populateClassFilter();
     } catch (e) {
       showMsg('assignMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      setBtnLoading('loadAssignmentsBtn', false);
     }
   }
 
@@ -789,6 +982,8 @@
       showMsg('assignMsg', 'error', 'All fields required.');
       return;
     }
+
+    setBtnLoading('addAssignmentBtn', true);
     try {
       const res = await callGAS('adminAddAssignment', {
         password: state.adminPassword, email: email, studentClass: cls, subject: subject, term: term
@@ -798,6 +993,8 @@
       await loadAssignments(true);
     } catch (e) {
       showMsg('assignMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      setBtnLoading('addAssignmentBtn', false);
     }
   }
 
@@ -914,6 +1111,8 @@
     if (state.bulkSelected.size === 0) { showMsg('bulkMsg', 'error', 'Select at least one subject.'); return; }
 
     var subjects = Array.from(state.bulkSelected);
+
+    setBtnLoading('saveBulkBtn', true);
     try {
       const res = await callGAS('adminAddAssignmentsBulk', {
         password: state.adminPassword, email: email, studentClass: cls,
@@ -927,6 +1126,8 @@
       await loadAssignments(true);
     } catch (e) {
       showMsg('bulkMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      setBtnLoading('saveBulkBtn', false);
     }
   }
 
@@ -972,6 +1173,7 @@
     var realTerm = resolveRealTerm();
     if (!cls || !realTerm) return;
 
+    setBtnLoading('loadPcBtn', true);
     try {
       const res = await callGAS('adminGetPaperConfig', {
         password: state.adminPassword,
@@ -983,6 +1185,8 @@
       renderPaperConfig();
     } catch (e) {
       showMsg('pcMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      setBtnLoading('loadPcBtn', false);
     }
   }
 
@@ -1021,6 +1225,7 @@
     var realTerm = resolveRealTerm();
     if (!cls || !realTerm) { showMsg('pcMsg', 'error', 'Class and term required.'); return; }
 
+    setBtnLoading('savePcBtn', true);
     try {
       const res = await callGAS('adminSavePaperConfig', {
         password: state.adminPassword,
@@ -1033,6 +1238,8 @@
       await loadPaperConfig();
     } catch (e) {
       showMsg('pcMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      setBtnLoading('savePcBtn', false);
     }
   }
 
@@ -1043,6 +1250,7 @@
     var cls = getVal('pcClass');
     var realTerm = resolveRealTerm();
 
+    setBtnLoading('resetPcBtn', true);
     try {
       const res = await callGAS('adminResetPaperConfig', {
         password: state.adminPassword,
@@ -1054,6 +1262,8 @@
       await loadPaperConfig();
     } catch (e) {
       showMsg('pcMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      setBtnLoading('resetPcBtn', false);
     }
   }
 
@@ -1064,6 +1274,8 @@
     if (!ensurePassword()) return;
     hideMsg('auditMsg');
     var limit = parseInt(getVal('auditLimit'), 10) || 200;
+
+    setBtnLoading('loadAuditBtn', true);
     try {
       const res = await callGAS('adminGetAuditLog', { password: state.adminPassword, limit: limit });
       if (!res || !res.success) { showMsg('auditMsg', 'error', (res && res.error) || 'Failed.'); return; }
@@ -1071,6 +1283,8 @@
       renderAudit();
     } catch (e) {
       showMsg('auditMsg', 'error', 'Error: ' + e.message);
+    } finally {
+      setBtnLoading('loadAuditBtn', false);
     }
   }
 
@@ -1118,6 +1332,10 @@
       if (badge) badge.classList.add('show');
     }
 
+    // Warm the server
+    setTimeout(warmServer, 100);
+
+    // Populate class dropdowns
     ['asgClass','bulkClass','pcClass'].forEach(function (id) {
       var sel = el(id);
       if (!sel) return;
@@ -1129,6 +1347,7 @@
       });
     });
 
+    // Fetch terms
     try {
       const terms = await callGAS('getAvailableTerms', {
         sandbox: state.sandbox ? 'true' : 'false'
@@ -1149,6 +1368,7 @@
       }
     } catch (e) {}
 
+    // Load teachers (also prompts for admin password on first visit)
     loadTeachers();
   }
 
