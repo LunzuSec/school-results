@@ -844,17 +844,29 @@
     });
   }
 
+  // FIX: Show ONLY the subjects this teacher is assigned to for the selected class.
+  // state.byClass[cls] comes from the teacher's assignments. state.subjectsByClass[cls]
+  // is the full list of subjects that exist on the class sheet — we do NOT use it here.
   function populateSubjectDropdown() {
     var cls = getVal('selClass');
     var sel = el('selSubject'); if (!sel) return;
     sel.innerHTML = '';
-    var subjects = state.subjectsByClass[cls];
-    if (!subjects || !subjects.length) subjects = (state.byClass[cls] || []).slice();
+
+    var subjects = (state.byClass[cls] || []).slice();
+
+    if (!subjects.length) {
+      var o = document.createElement('option');
+      o.value = ''; o.disabled = true; o.selected = true;
+      o.textContent = '-- No subjects assigned for ' + cls + ' --';
+      sel.appendChild(o);
+      return;
+    }
+
     subjects.sort();
     subjects.forEach(function (s) {
-      var o = document.createElement('option');
-      o.value = s; o.textContent = s;
-      sel.appendChild(o);
+      var op = document.createElement('option');
+      op.value = s; op.textContent = s;
+      sel.appendChild(op);
     });
   }
 
@@ -877,8 +889,25 @@
     populateSubjectDropdown();
     onSubjectChange();
   }
-  function onSubjectChange() { loadRoster(); }
-  function onTermChange() { loadRoster(); }
+
+  function onSubjectChange() {
+    var subj = getVal('selSubject');
+    if (!subj) {
+      // No subject assigned — don't call the server
+      var wrap = el('rosterWrap');
+      if (wrap) {
+        wrap.innerHTML = '<div class="tp-empty">You have no subjects assigned for this class.<br>Contact the admin.</div>';
+      }
+      return;
+    }
+    loadRoster();
+  }
+
+  function onTermChange() {
+    var subj = getVal('selSubject');
+    if (!subj) return;
+    loadRoster();
+  }
 
   // ============================================================
   // Roster loading
@@ -1564,7 +1593,6 @@
         }
       });
 
-      // Clear the draft since it's now persisted
       clearDraft(state.currentClass, state.currentSubject, state.currentTerm);
 
       var key = cacheKey(state.currentClass, state.currentSubject, state.currentTerm);
