@@ -526,6 +526,7 @@
     activeTerm: null,
     byClass: {},
     subjectsByClass: {},
+    assignments: [],
     currentClass: null,
     currentSubject: null,
     currentTerm: null,
@@ -812,6 +813,7 @@
       }
       state.byClass = bs.byClass || {};
       state.subjectsByClass = bs.subjectsByClass || {};
+      state.assignments = bs.assignments || [];
       state.terms = bs.terms || [];
       state.activeTerm = bs.activeTerm || (state.terms[0] && state.terms[0].key);
 
@@ -823,7 +825,6 @@
       }
 
       populateClassDropdown();
-      populateTermDropdown();
       onClassChange();
     } catch (e) {
       hideLoading();
@@ -844,9 +845,7 @@
     });
   }
 
-  // FIX: Show ONLY the subjects this teacher is assigned to for the selected class.
-  // state.byClass[cls] comes from the teacher's assignments. state.subjectsByClass[cls]
-  // is the full list of subjects that exist on the class sheet — we do NOT use it here.
+  // Show ONLY the subjects the teacher is assigned to for the selected class.
   function populateSubjectDropdown() {
     var cls = getVal('selClass');
     var sel = el('selSubject'); if (!sel) return;
@@ -870,16 +869,58 @@
     });
   }
 
+  // Show ONLY the terms the teacher is assigned to for the selected class.
+  // If any assignment for this class has term = "ALL", all non-sandbox terms are allowed.
   function populateTermDropdown() {
     var sel = el('selTerm'); if (!sel) return;
     sel.innerHTML = '';
-    state.terms.forEach(function (t) {
+
+    var cls = getVal('selClass');
+    var assigned = state.assignments || [];
+
+    var forClass = assigned.filter(function (a) { return a.studentClass === cls; });
+
+    var hasAll = forClass.some(function (a) {
+      return String(a.term || '').toUpperCase() === 'ALL';
+    });
+
+    var specificTerms = {};
+    forClass.forEach(function (a) {
+      var t = String(a.term || '').toUpperCase();
+      if (t && t !== 'ALL') specificTerms[a.term] = true;
+    });
+
+    var allowed = state.terms.filter(function (t) {
+      if (hasAll) return true;
+      return specificTerms[t.key] === true;
+    });
+
+    if (!allowed.length) {
+      var o = document.createElement('option');
+      o.value = ''; o.disabled = true; o.selected = true;
+      o.textContent = '-- No terms assigned --';
+      sel.appendChild(o);
+      state.activeTerm = null;
+      return;
+    }
+
+    var selectedKey;
+    if (state.activeTerm && allowed.some(function (t) { return t.key === state.activeTerm; })) {
+      selectedKey = state.activeTerm;
+    } else {
+      var active = allowed.find(function (t) { return t.isActive; });
+      selectedKey = active ? active.key : allowed[0].key;
+    }
+
+    allowed.forEach(function (t) {
       var o = document.createElement('option');
       o.value = t.key;
       o.textContent = t.display + (t.isLocked ? '  🔒' : '');
-      if (t.key === state.activeTerm) o.selected = true;
+      if (t.key === selectedKey) o.selected = true;
       sel.appendChild(o);
     });
+
+    state.activeTerm = selectedKey;
   }
 
   // ============================================================
@@ -887,13 +928,13 @@
   // ============================================================
   function onClassChange() {
     populateSubjectDropdown();
+    populateTermDropdown();
     onSubjectChange();
   }
 
   function onSubjectChange() {
     var subj = getVal('selSubject');
     if (!subj) {
-      // No subject assigned — don't call the server
       var wrap = el('rosterWrap');
       if (wrap) {
         wrap.innerHTML = '<div class="tp-empty">You have no subjects assigned for this class.<br>Contact the admin.</div>';
@@ -927,8 +968,9 @@
       if (!confirm('You have unsaved changes. Discard them?')) {
         var sc = el('selClass'); if (sc) sc.value = state.currentClass || cls;
         populateSubjectDropdown();
+        populateTermDropdown();
         var ss = el('selSubject'); if (ss && state.currentSubject) ss.value = state.currentSubject;
-        var st = el('selTerm'); if (st) st.value = state.currentTerm || term;
+        var st = el('selTerm'); if (st && state.currentTerm) st.value = state.currentTerm;
         return;
       }
       state.dirty = false;
@@ -996,7 +1038,6 @@
       };
       state.dirty = false;
 
-      // Check for unsaved draft
       var draft = loadDraft(cls, subj, term);
       if (draft && draft.rows && draft.rows.length) {
         var draftChangedCount = draft.rows.filter(function (dr) {
@@ -1607,7 +1648,6 @@
       state.dirty = false;
       renderRoster();
 
-      // Refresh version after save
       try {
         var r2 = await callGAS('teacherGetRoster', {
           token: state.token,
