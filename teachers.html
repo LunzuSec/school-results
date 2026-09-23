@@ -69,6 +69,8 @@
   .tp-btn.gray:hover:not(:disabled) { background: rgba(100,116,139,0.9); }
   .tp-btn.warn { background: rgba(220,38,38,0.75); }
   .tp-btn.warn:hover:not(:disabled) { background: rgba(220,38,38,1); }
+  .tp-btn.amber { background: rgba(245,158,11,0.85); color:#1e293b; }
+  .tp-btn.amber:hover:not(:disabled) { background: rgba(245,158,11,1); }
   .tp-btn.sm { padding:7px 11px; font-size:12px; }
 
   .tp-field { margin-bottom:12px; }
@@ -244,7 +246,6 @@
   }
   .tp-offline.show { display:block; }
 
-  /* ---- Save progress ---- */
   .save-progress {
     display: none;
     margin-top: 12px;
@@ -280,7 +281,6 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* ---- Leave warning bar ---- */
   .leave-warning-bar {
     display: none;
     position: sticky;
@@ -300,7 +300,6 @@
   .leave-warning-bar.show { display: flex; }
   .leave-warning-icon { font-size: 16px; }
 
-  /* ---- Undo bar ---- */
   .undo-bar {
     display: none;
     position: fixed;
@@ -472,7 +471,6 @@
       </div>
     </div>
 
-    <!-- Leave warning bar -->
     <div id="leaveWarningBar" class="leave-warning-bar">
       <span class="leave-warning-icon">⚠️</span>
       <span>
@@ -485,7 +483,6 @@
 
 </div>
 
-<!-- Undo bar (fixed to bottom) -->
 <div id="undoBar" class="undo-bar">
   <span>🧹 All inputs cleared.</span>
   <button class="undo-btn" onclick="undoClearAll()">↺ Undo</button>
@@ -770,6 +767,10 @@
 
   async function doSignInWithToken(idToken) {
     showMsg('loginMsg', 'info', 'Verifying your Google account...');
+
+    // Warm the server immediately so bootstrap finds a hot container
+    warmServer();
+
     try {
       var login = await callGAS('teacherLogin', { idToken: idToken });
       if (!login || !login.success) {
@@ -781,6 +782,10 @@
       sessionStorage.setItem('tToken', login.token);
       sessionStorage.setItem('tName', login.teacher.name);
       sessionStorage.setItem('tEmail', login.teacher.email);
+
+      // Warm again right before bootstrap
+      warmServer();
+
       await enterPortal();
     } catch (e) {
       showMsg('loginMsg', 'error', 'Error: ' + e.message);
@@ -797,10 +802,14 @@
     var lb = el('logoutBtn'); if (lb) lb.classList.remove('tp-hidden');
     setText('userName', state.teacher.name || state.teacher.email);
 
+    // Double warm-up in parallel
+    warmServer();
+    setTimeout(warmServer, 300);
+
     showLoading('Loading your assignments...');
 
     try {
-      var includeSandbox = (new URLSearchParams(window.location.search).get('sandbox') === 'true');
+      var includeSandbox = (new URLSearchParams(location.search).get('sandbox') === 'true');
       var bs = await callGAS('teacherGetBootstrap', {
         token: state.token,
         sandbox: includeSandbox ? 'true' : 'false'
@@ -845,7 +854,7 @@
     });
   }
 
-  // Show ONLY the subjects the teacher is assigned to for the selected class.
+  // Show only subjects assigned to the teacher for the selected class.
   function populateSubjectDropdown() {
     var cls = getVal('selClass');
     var sel = el('selSubject'); if (!sel) return;
@@ -869,8 +878,7 @@
     });
   }
 
-  // Show ONLY the terms the teacher is assigned to for the selected class.
-  // If any assignment for this class has term = "ALL", all non-sandbox terms are allowed.
+  // Show only terms the teacher is assigned to for the selected class.
   function populateTermDropdown() {
     var sel = el('selTerm'); if (!sel) return;
     sel.innerHTML = '';
@@ -1753,6 +1761,16 @@
       var b = el('offlineBanner'); if (b) b.classList.add('show');
     }
     setTimeout(warmServer, 100);
+
+    // Warm the server when user hovers/clicks the sign-in button
+    setTimeout(function () {
+      var wrap = el('googleBtnWrap');
+      if (wrap) {
+        wrap.addEventListener('mouseenter', warmServer);
+        wrap.addEventListener('focusin', warmServer);
+        wrap.addEventListener('click', warmServer);
+      }
+    }, 500);
 
     var tok = sessionStorage.getItem('tToken');
     var name = sessionStorage.getItem('tName');
