@@ -72,6 +72,17 @@
   .tp-btn.amber { background: rgba(245,158,11,0.85); color:#1e293b; }
   .tp-btn.amber:hover:not(:disabled) { background: rgba(245,158,11,1); }
   .tp-btn.sm { padding:7px 11px; font-size:12px; }
+  .tp-btn .btn-spin {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: btnspin 0.7s linear infinite;
+    display: none;
+  }
+  .tp-btn.loading .btn-spin { display: inline-block; }
+  .tp-btn.loading .label { opacity: 0.75; }
+  @keyframes btnspin { to { transform: rotate(360deg); } }
 
   .tp-field { margin-bottom:12px; }
   .tp-field label { display:block; font-size:12px; color:#e2e8f0; font-weight:600; margin-bottom:4px; }
@@ -182,6 +193,10 @@
     border-color:#ef4444;
     background: rgba(239,68,68,0.10);
   }
+  .tp-grid input.score-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
   .tp-grid .preview-grade {
     display:inline-block; min-width:24px;
     padding:3px 8px; border-radius:6px;
@@ -246,6 +261,7 @@
   }
   .tp-offline.show { display:block; }
 
+  /* Inline save progress (kept for reference, hidden while overlay is up) */
   .save-progress {
     display: none;
     margin-top: 12px;
@@ -279,6 +295,94 @@
   #saveProgressEstimate {
     color: #94a3b8;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* ============================================================
+     FULL-SCREEN SAVE OVERLAY
+     Blocks the entire UI while a save is in flight. Prevents any
+     interaction with score inputs, filters, buttons — no accidental
+     edits while the server is writing.
+     ============================================================ */
+  .save-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 22, 40, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 20px;
+  }
+  .save-overlay.show { display: flex; }
+  .save-overlay-box {
+    background: rgba(20, 35, 55, 0.98);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 20px;
+    padding: 30px 34px 26px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    min-width: 320px;
+    max-width: 90vw;
+    text-align: center;
+  }
+  .save-overlay-spinner {
+    width: 56px;
+    height: 56px;
+    border: 5px solid rgba(255,255,255,0.10);
+    border-top-color: #fbbf24;
+    border-radius: 50%;
+    animation: saveSpin 0.85s linear infinite;
+  }
+  @keyframes saveSpin { to { transform: rotate(360deg); } }
+  .save-overlay-title {
+    color: #fcd34d;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .save-overlay-sub {
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .save-overlay-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .save-overlay-bar {
+    height: 100%;
+    width: 5%;
+    background: linear-gradient(90deg,#fbbf24,#f59e0b);
+    border-radius: 20px;
+    box-shadow: 0 0 12px rgba(251,191,36,0.5);
+    transition: width 0.35s ease;
+  }
+  .save-overlay-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-size: 12px;
+    color: #94a3b8;
+    font-variant-numeric: tabular-nums;
+  }
+  .save-overlay-meta .elapsed {
+    color: #fbbf24;
+    font-weight: 700;
+  }
+  .save-overlay-warn {
+    color: #fca5a5;
+    font-size: 12px;
+    margin-top: 4px;
   }
 
   .leave-warning-bar {
@@ -444,12 +548,15 @@
       <div class="tp-toolbar">
         <div class="tp-toolbar-left">
           <input type="text" class="tp-search" id="rosterSearch" placeholder="🔍 Search student..." oninput="renderRoster()">
-          <button class="tp-btn gray sm" onclick="loadRoster(true)">🔄 Reload</button>
+          <button class="tp-btn gray sm" id="reloadBtn" onclick="loadRoster(true)">🔄 Reload</button>
         </div>
         <div class="tp-toolbar-right">
-          <button class="tp-btn gray sm" onclick="clearAll()" title="Clear all inputs">🧹 Clear all</button>
-          <button class="tp-btn gray sm" onclick="resetChanges()">↺ Reset</button>
-          <button class="tp-btn green" id="saveBtn" onclick="saveScores()">💾 Save</button>
+          <button class="tp-btn gray sm" id="clearAllBtn" onclick="clearAll()" title="Clear all inputs">🧹 Clear all</button>
+          <button class="tp-btn gray sm" id="resetBtn" onclick="resetChanges()">↺ Reset</button>
+          <button class="tp-btn green" id="saveBtn" onclick="saveScores()">
+            <span class="btn-spin"></span>
+            <span class="label">💾 Save</span>
+          </button>
         </div>
       </div>
 
@@ -481,6 +588,23 @@
 
   </div>
 
+</div>
+
+<!-- Full-screen save overlay -->
+<div id="saveOverlay" class="save-overlay">
+  <div class="save-overlay-box">
+    <div class="save-overlay-spinner"></div>
+    <div class="save-overlay-title" id="saveOverlayTitle">Saving scores…</div>
+    <div class="save-overlay-sub" id="saveOverlaySub">Please wait. Do not close or refresh this tab.</div>
+    <div class="save-overlay-track">
+      <div id="saveOverlayBar" class="save-overlay-bar"></div>
+    </div>
+    <div class="save-overlay-meta">
+      <span id="saveOverlayStatus">Uploading…</span>
+      <span class="elapsed" id="saveOverlayElapsed">0s</span>
+    </div>
+    <div class="save-overlay-warn" id="saveOverlayWarn"></div>
+  </div>
 </div>
 
 <div id="undoBar" class="undo-bar">
@@ -686,6 +810,100 @@
   }
 
   // ============================================================
+  // Full-screen save overlay
+  // ============================================================
+  var __saveTimer = null;
+  var __saveStart = 0;
+
+  function showSaveOverlay(rowCount) {
+    var overlay = el('saveOverlay');
+    if (!overlay) return;
+
+    setText('saveOverlayTitle', 'Saving ' + rowCount + ' row' + (rowCount > 1 ? 's' : '') + '…');
+    setText('saveOverlaySub', 'Please wait. Do not close or refresh this tab.');
+    setText('saveOverlayStatus', 'Uploading to server…');
+    setText('saveOverlayElapsed', '0s');
+    setText('saveOverlayWarn', '');
+
+    var bar = el('saveOverlayBar');
+    if (bar) {
+      bar.style.transition = 'none';
+      bar.style.background = 'linear-gradient(90deg,#fbbf24,#f59e0b)';
+      bar.style.width = '5%';
+      // Animate from 5% to 92% over ~4s
+      setTimeout(function () {
+        bar.style.transition = 'width 4000ms ease-out';
+        bar.style.width = '92%';
+      }, 50);
+    }
+
+    overlay.classList.add('show');
+    __saveStart = Date.now();
+
+    if (__saveTimer) clearInterval(__saveTimer);
+    __saveTimer = setInterval(function () {
+      var secs = Math.floor((Date.now() - __saveStart) / 1000);
+      var label = secs + 's';
+      if (secs >= 10) {
+        label += '  (still working…)';
+        setText('saveOverlayStatus', 'Processing on the server. This can take a bit longer on a busy connection.');
+      }
+      if (secs >= 25) {
+        setText('saveOverlayWarn', 'Taking longer than usual. Please do not close the tab.');
+      }
+      setText('saveOverlayElapsed', label);
+    }, 500);
+  }
+
+  function hideSaveOverlay() {
+    var overlay = el('saveOverlay');
+    if (overlay) overlay.classList.remove('show');
+    if (__saveTimer) { clearInterval(__saveTimer); __saveTimer = null; }
+  }
+
+  function markSaveSuccess() {
+    var bar = el('saveOverlayBar');
+    if (bar) {
+      bar.style.transition = 'width 250ms ease';
+      bar.style.width = '100%';
+      bar.style.background = 'linear-gradient(90deg,#10b981,#059669)';
+    }
+    setText('saveOverlayTitle', '✅ Saved successfully');
+    setText('saveOverlaySub', 'Your scores have been recorded.');
+    setText('saveOverlayStatus', 'Done');
+  }
+
+  function markSaveFailed() {
+    var bar = el('saveOverlayBar');
+    if (bar) {
+      bar.style.transition = 'width 250ms ease';
+      bar.style.width = '100%';
+      bar.style.background = 'linear-gradient(90deg,#ef4444,#dc2626)';
+    }
+    setText('saveOverlayTitle', '❌ Save failed');
+    setText('saveOverlaySub', 'Check the error message below and try again.');
+    setText('saveOverlayStatus', 'Failed');
+  }
+
+  /**
+   * Disable all interactive controls while saving.
+   */
+  function setPortalBusy(busy) {
+    var ids = ['saveBtn', 'reloadBtn', 'clearAllBtn', 'resetBtn', 'rosterSearch'];
+    ids.forEach(function (id) {
+      var e = el(id);
+      if (e) e.disabled = !!busy;
+    });
+    var selectIds = ['selClass', 'selSubject', 'selTerm'];
+    selectIds.forEach(function (id) {
+      var e = el(id);
+      if (e) e.disabled = !!busy;
+    });
+    var inputs = document.querySelectorAll('#rosterWrap input.score-input');
+    for (var i = 0; i < inputs.length; i++) inputs[i].disabled = !!busy;
+  }
+
+  // ============================================================
   // Draft auto-save
   // ============================================================
   function draftKey(cls, subj, term) {
@@ -767,10 +985,7 @@
 
   async function doSignInWithToken(idToken) {
     showMsg('loginMsg', 'info', 'Verifying your Google account...');
-
-    // Warm the server immediately so bootstrap finds a hot container
     warmServer();
-
     try {
       var login = await callGAS('teacherLogin', { idToken: idToken });
       if (!login || !login.success) {
@@ -782,10 +997,7 @@
       sessionStorage.setItem('tToken', login.token);
       sessionStorage.setItem('tName', login.teacher.name);
       sessionStorage.setItem('tEmail', login.teacher.email);
-
-      // Warm again right before bootstrap
       warmServer();
-
       await enterPortal();
     } catch (e) {
       showMsg('loginMsg', 'error', 'Error: ' + e.message);
@@ -802,7 +1014,6 @@
     var lb = el('logoutBtn'); if (lb) lb.classList.remove('tp-hidden');
     setText('userName', state.teacher.name || state.teacher.email);
 
-    // Double warm-up in parallel
     warmServer();
     setTimeout(warmServer, 300);
 
@@ -854,7 +1065,6 @@
     });
   }
 
-  // Show only subjects assigned to the teacher for the selected class.
   function populateSubjectDropdown() {
     var cls = getVal('selClass');
     var sel = el('selSubject'); if (!sel) return;
@@ -878,7 +1088,6 @@
     });
   }
 
-  // Show only terms the teacher is assigned to for the selected class.
   function populateTermDropdown() {
     var sel = el('selTerm'); if (!sel) return;
     sel.innerHTML = '';
@@ -966,6 +1175,7 @@
   }
 
   async function loadRoster(force) {
+    if (state.saving) return;
     hideMsg('rosterMsg');
     var cls = getVal('selClass');
     var subj = getVal('selSubject');
@@ -1279,6 +1489,7 @@
                 + 'type="number" min="0" max="' + pp.maxMark + '" step="1" inputmode="numeric" '
                 + 'value="' + (pv === '' || pv === null || pv === undefined ? '' : escapeHtml(String(pv))) + '" '
                 + 'data-row="' + r.row + '" data-paper="' + pj + '" '
+                + (state.saving ? 'disabled ' : '')
                 + 'oninput="onPaperScoreInput(this, event)" '
                 + 'onkeydown="onScoreKeyDown(event)">';
           html += '</td>';
@@ -1290,6 +1501,7 @@
               + 'type="number" min="0" max="100" step="1" inputmode="numeric" '
               + 'value="' + (r.score === '' ? '' : escapeHtml(String(r.score))) + '" '
               + 'data-row="' + r.row + '" '
+              + (state.saving ? 'disabled ' : '')
               + 'oninput="onScoreInput(this, event)" '
               + 'onkeydown="onScoreKeyDown(event)">';
         html += '</td>';
@@ -1304,6 +1516,7 @@
   }
 
   function onScoreInput(inputEl, ev) {
+    if (state.saving) return;
     var row = parseInt(inputEl.dataset.row, 10);
     var r = state.roster.find(function (x) { return x.row === row; });
     if (!r) return;
@@ -1338,6 +1551,7 @@
   }
 
   function onPaperScoreInput(inputEl, ev) {
+    if (state.saving) return;
     var row = parseInt(inputEl.dataset.row, 10);
     var pi = parseInt(inputEl.dataset.paper, 10);
     var r = state.roster.find(function (x) { return x.row === row; });
@@ -1414,6 +1628,7 @@
   var __clearAllTimer = null;
 
   function clearAll() {
+    if (state.saving) return;
     var isMulti = state.currentPapers && state.currentPapers.length > 0;
 
     __clearAllSnapshot = state.roster.map(function (r) {
@@ -1448,6 +1663,7 @@
   }
 
   function undoClearAll() {
+    if (state.saving) return;
     if (!__clearAllSnapshot) { hideUndoBar(); return; }
     state.roster = __clearAllSnapshot.map(function (r) {
       return Object.assign({}, r, {
@@ -1489,6 +1705,7 @@
   }
 
   function resetChanges() {
+    if (state.saving) return;
     if (!confirm('Discard unsaved changes?')) return;
     var isMulti = state.currentPapers && state.currentPapers.length > 0;
     var maxMarks = isMulti ? state.currentPapers.map(function (p) { return p.maxMark; }) : [];
@@ -1506,76 +1723,11 @@
   }
 
   // ============================================================
-  // Save progress indicator
-  // ============================================================
-  function startSaveProgress(rowCount) {
-    var container = el('saveProgress');
-    var bar = el('saveProgressBar');
-    var text = el('saveProgressText');
-    var estimate = el('saveProgressEstimate');
-    if (!container) return { finish: function () {}, fail: function () {} };
-
-    var estSeconds = Math.max(2, Math.min(40, 2 + rowCount * 0.2));
-    var estMs = estSeconds * 1000;
-    var start = Date.now();
-
-    container.classList.add('show');
-    bar.style.transition = 'none';
-    bar.style.width = '5%';
-    text.textContent = 'Saving ' + rowCount + ' row' + (rowCount > 1 ? 's' : '') + '…';
-    estimate.textContent = 'Estimated: ' + Math.ceil(estSeconds) + 's';
-
-    var finishTimer = setTimeout(function () {
-      bar.style.transition = 'width ' + Math.round(estMs * 0.9) + 'ms linear';
-      bar.style.width = '95%';
-    }, 50);
-
-    var cancelCountdown = setInterval(function () {
-      var elapsed = (Date.now() - start) / 1000;
-      var remaining = Math.max(0, estSeconds - elapsed);
-      if (remaining > 0) {
-        estimate.textContent = 'Estimated: ' + Math.ceil(remaining) + 's remaining';
-      } else {
-        estimate.textContent = 'Taking longer than expected…';
-      }
-    }, 1000);
-
-    function cleanup() {
-      clearTimeout(finishTimer);
-      clearInterval(cancelCountdown);
-    }
-
-    return {
-      finish: function () {
-        cleanup();
-        bar.style.transition = 'width 250ms ease';
-        bar.style.width = '100%';
-        text.textContent = 'Saved successfully';
-        estimate.textContent = '';
-        setTimeout(function () {
-          container.classList.remove('show');
-          bar.style.width = '0%';
-        }, 900);
-      },
-      fail: function () {
-        cleanup();
-        bar.style.transition = 'width 250ms ease';
-        bar.style.background = 'linear-gradient(90deg,#ef4444,#dc2626)';
-        text.textContent = 'Save failed';
-        estimate.textContent = '';
-        setTimeout(function () {
-          container.classList.remove('show');
-          bar.style.width = '0%';
-          bar.style.background = 'linear-gradient(90deg,#fbbf24,#f59e0b)';
-        }, 2000);
-      }
-    };
-  }
-
-  // ============================================================
   // Save
   // ============================================================
   async function saveScores() {
+    if (state.saving) return;
+
     hideMsg('rosterMsg');
     var isMulti = state.currentPapers && state.currentPapers.length > 0;
 
@@ -1602,11 +1754,30 @@
       return;
     }
 
+    // ---- Lock everything ----
     state.saving = true;
-    var saveBtn = el('saveBtn');
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '💾 Saving…'; }
 
-    var progress = startSaveProgress(scores.length);
+    // Save button shows spinner + disabled state
+    var saveBtn = el('saveBtn');
+    if (saveBtn) {
+      saveBtn.classList.add('loading');
+      saveBtn.disabled = true;
+    }
+
+    // Disable all other interactive controls
+    setPortalBusy(true);
+
+    // Show full-screen overlay
+    showSaveOverlay(scores.length);
+
+    // Remember original score values so we can restore on failure
+    var backup = state.roster.map(function (r) {
+      return {
+        row: r.row,
+        original: r.original,
+        paperScoresOriginal: r.paperScoresOriginal ? r.paperScoresOriginal.slice() : null
+      };
+    });
 
     try {
       var res = await callGAS('teacherSaveScores', {
@@ -1619,19 +1790,29 @@
       });
 
       if (!res || !res.success) {
-        progress.fail();
-        if (res && res.code === 'SESSION_EXPIRED') return logout(true);
-        if (res && res.code === 'VERSION_CONFLICT') {
-          if (confirm(res.error + '\n\nReload the roster now?')) {
-            loadRoster(true);
-          }
+        markSaveFailed();
+        if (res && res.code === 'SESSION_EXPIRED') {
+          setTimeout(function () { hideSaveOverlay(); logout(true); }, 1800);
           return;
         }
-        showMsg('rosterMsg', 'error', (res && res.error) || 'Save failed.');
+        if (res && res.code === 'VERSION_CONFLICT') {
+          setTimeout(function () {
+            hideSaveOverlay();
+            if (confirm(res.error + '\n\nReload the roster now?')) {
+              loadRoster(true);
+            }
+          }, 1500);
+          return;
+        }
+        setTimeout(function () {
+          hideSaveOverlay();
+          showMsg('rosterMsg', 'error', (res && res.error) || 'Save failed.');
+        }, 1500);
         return;
       }
 
-      progress.finish();
+      // Success — commit new "original" values
+      markSaveSuccess();
 
       state.roster.forEach(function (r) {
         if (isMulti) {
@@ -1654,28 +1835,31 @@
         }); })
       };
       state.dirty = false;
-      renderRoster();
 
-      try {
-        var r2 = await callGAS('teacherGetRoster', {
-          token: state.token,
-          studentClass: state.currentClass,
-          subject: state.currentSubject,
-          term: state.currentTerm
-        });
-        if (r2 && r2.success && r2.version) {
-          state.currentRosterVersion = r2.version;
-        }
-      } catch (e) {}
+      // Hold the success state for 800ms, then hide the overlay
+      setTimeout(function () {
+        hideSaveOverlay();
+        renderRoster();
+        showMsg('rosterMsg', 'success', res.message + ' Grades and positions have been recomputed.');
+      }, 800);
 
-      showMsg('rosterMsg', 'success', res.message + ' Grades and positions have been recomputed.');
     } catch (e) {
-      progress.fail();
-      showMsg('rosterMsg', 'error', 'Error: ' + e.message);
+      markSaveFailed();
+      setTimeout(function () {
+        hideSaveOverlay();
+        showMsg('rosterMsg', 'error', 'Error: ' + e.message);
+      }, 1500);
+
     } finally {
-      state.saving = false;
-      if (saveBtn) { saveBtn.textContent = '💾 Save'; }
-      updateChangedCount();
+      // Unlock UI
+      setTimeout(function () {
+        state.saving = false;
+        if (saveBtn) {
+          saveBtn.classList.remove('loading');
+        }
+        setPortalBusy(false);
+        updateChangedCount();
+      }, 900);
     }
   }
 
@@ -1683,6 +1867,9 @@
   // Logout
   // ============================================================
   async function logout(silent) {
+    if (state.saving) {
+      if (!confirm('A save is in progress. Sign out anyway?')) return;
+    }
     if (state.dirty && !silent) {
       try { saveDraftToStorage(); } catch (e) {}
 
@@ -1694,7 +1881,7 @@
       if (saveNow) {
         var saveBtn = el('saveBtn');
         if (saveBtn) saveBtn.click();
-        await new Promise(function (r) { setTimeout(r, 2000); });
+        await new Promise(function (r) { setTimeout(r, 3000); });
         if (state.dirty) {
           if (!confirm('Save failed. Sign out anyway? (Draft kept)')) return;
         }
@@ -1736,7 +1923,7 @@
   }
 
   window.addEventListener('beforeunload', function (ev) {
-    if (state.dirty) {
+    if (state.dirty || state.saving) {
       try { saveDraftToStorage(); } catch (e) {}
       ev.preventDefault();
       ev.returnValue = '';
@@ -1762,7 +1949,6 @@
     }
     setTimeout(warmServer, 100);
 
-    // Warm the server when user hovers/clicks the sign-in button
     setTimeout(function () {
       var wrap = el('googleBtnWrap');
       if (wrap) {
