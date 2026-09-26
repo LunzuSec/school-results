@@ -295,7 +295,7 @@
 <div class="am-wrap">
   <div class="am-header">
     <h3>📧 Result Alerts Manager <span class="badge">ADMIN</span></h3>
-    <button class="am-close" onclick="closeAlertsManager()" title="Close">×</button>
+    <button class="am-close" id="amCloseBtn" onclick="closeAlertsManager()" title="Close">×</button>
   </div>
 
   <div class="am-tabs">
@@ -306,7 +306,6 @@
 
   <div class="am-body">
 
-    <!-- ============ TAB: SEND ============ -->
     <div id="am-tab-send">
       <div class="am-section-title">Send Result Alerts</div>
 
@@ -370,7 +369,6 @@
       <div id="amPreviewOutput"></div>
     </div>
 
-    <!-- ============ TAB: SUBSCRIBERS ============ -->
     <div id="am-tab-subs" class="hidden">
       <div class="am-section-title">Active Subscribers</div>
 
@@ -410,7 +408,6 @@
       <div id="amSubsTableWrap"></div>
     </div>
 
-    <!-- ============ TAB: HISTORY ============ -->
     <div id="am-tab-batches" class="hidden">
       <div class="am-section-title">Send History</div>
 
@@ -434,21 +431,68 @@
   </div>
 </div>
 
+<script src="nav.js"></script>
 <script>
   // ============================================================
-  // Bridge to parent (index.html)
+  // Context detection + auth + nav
+  // ============================================================
+  var IS_IFRAME = (window.parent && window.parent !== window);
+  var IS_STANDALONE = !IS_IFRAME;
+
+  if (IS_STANDALONE && typeof LSS !== 'undefined') {
+    if (!LSS.requireAdmin()) {
+      // redirect in progress
+    } else {
+      // render admin nav bar
+      document.addEventListener('DOMContentLoaded', function () {
+        LSS.renderAdminNav('alerts');
+      });
+      if (document.readyState !== 'loading') LSS.renderAdminNav('alerts');
+    }
+  }
+
+  // ============================================================
+  // JSONP caller — works both as iframe (uses parent.gasCall) and
+  // standalone (uses LSS.callGAS)
   // ============================================================
   function gasCall(action, params) {
-    if (window.parent && typeof window.parent.gasCall === 'function') {
+    // Prefer parent's bridge (avoids duplicate JSONP on shared origin)
+    if (IS_IFRAME && window.parent && typeof window.parent.gasCall === 'function') {
       return window.parent.gasCall(action, params || {});
     }
-    return Promise.reject(new Error('gasCall bridge unavailable. Open this page inside the portal.'));
+    if (typeof LSS !== 'undefined' && LSS.callGAS) {
+      return LSS.callGAS(action, params || {});
+    }
+    return Promise.reject(new Error('No API bridge available.'));
+  }
+
+  // Standalone pages: hide the close × button
+  if (IS_STANDALONE) {
+    document.addEventListener('DOMContentLoaded', function () {
+      var btn = document.getElementById('amCloseBtn');
+      if (btn) btn.style.display = 'none';
+    });
+    if (document.readyState !== 'loading') {
+      var b = document.getElementById('amCloseBtn');
+      if (b) b.style.display = 'none';
+    }
   }
 
   function closeAlertsManager() {
-    if (window.parent && window.parent !== window) {
+    if (IS_IFRAME) {
       window.parent.postMessage({ type: 'closeAdminAlerts' }, '*');
     }
+  }
+
+  // ============================================================
+  // Admin password source
+  // ============================================================
+  function getAdminPassword() {
+    if (window.__adminPassword) return window.__adminPassword;
+    if (typeof LSS !== 'undefined' && LSS.getAdminPassword) {
+      return LSS.getAdminPassword() || '';
+    }
+    return '';
   }
 
   // ============================================================
@@ -492,7 +536,7 @@
   }
 
   // ============================================================
-  // Term selects + parent init handshake
+  // Term selects + handshake
   // ============================================================
   function populateAmTerms(terms) {
     amTerms = terms || [];
@@ -524,12 +568,27 @@
   });
 
   function requestTerms() {
-    if (window.parent && window.parent !== window) {
+    if (IS_IFRAME) {
       window.parent.postMessage({ type: 'requestTerms' }, '*');
     }
   }
+
+  // Standalone: load terms ourselves
+  async function loadTermsStandalone() {
+    try {
+      var terms = await gasCall('getAvailableTerms', {});
+      if (Array.isArray(terms)) populateAmTerms(terms);
+    } catch (e) {
+      showAmMsg('amSendMsg', 'error', 'Failed to load terms: ' + e.message);
+    }
+  }
+
   window.addEventListener('load', function () {
-    setTimeout(requestTerms, 50);
+    if (IS_IFRAME) {
+      setTimeout(requestTerms, 50);
+    } else {
+      setTimeout(loadTermsStandalone, 50);
+    }
   });
 
   // ============================================================
@@ -577,7 +636,7 @@
         term: term,
         studentClass: cls || '',
         dryRun: 'true',
-        adminPassword: window.__adminPassword || ''
+        adminPassword: getAdminPassword()
       });
       if (!res || !res.success) {
         showAmMsg('amSendMsg', 'error', (res && res.error) || 'Preview failed.');
@@ -627,7 +686,7 @@
       var res = await gasCall('sendResultAlertsNow', {
         term: term,
         studentClass: cls || '',
-        adminPassword: window.__adminPassword || ''
+        adminPassword: getAdminPassword()
       });
       if (!res || !res.success) {
         showAmMsg('amSendMsg', 'error', (res && res.error) || 'Send failed.');
