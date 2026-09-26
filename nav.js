@@ -147,12 +147,13 @@
   // ============================================================
   // Navigation renderers
   // ============================================================
-  var PUBLIC_LINKS = [
-    { href: 'index.html',     label: '🏠 Home',       key: 'home' },
-    { href: 'results.html',   label: '🎓 Results',    key: 'results' },
-    { href: 'Subscribe.html', label: '📬 Subscribe',  key: 'subscribe' },
-    { href: 'https://lunzusec.github.io/bursar',label: '💳 Fee Portal', key: 'fee' }
-  ];
+ var PUBLIC_LINKS = [
+  { href: 'index.html',     label: '🏠 Home',      key: 'home' },
+  { href: 'results.html',   label: '🎓 Results',   key: 'results' },
+  { href: 'Subscribe.html', label: '📬 Subscribe', key: 'subscribe' },
+  { href: 'https://lunzusec.github.io/bursar', label: '💳 Fee Portal', key: 'fee', external: true },
+  { href: 'teachers.html',  label: '👨‍🏫 Teacher Login', key: 'teachers' }
+];
 
   var ADMIN_LINKS = [
     { href: 'admin.html',          label: '🔧 Hub',      key: 'hub' },
