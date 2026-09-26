@@ -151,7 +151,7 @@
     { href: 'index.html',     label: '🏠 Home',       key: 'home' },
     { href: 'results.html',   label: '🎓 Results',    key: 'results' },
     { href: 'Subscribe.html', label: '📬 Subscribe',  key: 'subscribe' },
-    { href: 'fee-portal.html',label: '💳 Fee Portal', key: 'fee' }
+    { href: 'https://lunzusec.github.io/bursar',label: '💳 Fee Portal', key: 'fee' }
   ];
 
   var ADMIN_LINKS = [
