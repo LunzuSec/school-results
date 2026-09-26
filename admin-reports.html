@@ -435,15 +435,26 @@ function callGAS(action, params, attempt) {
     s.onload = function () {
       setTimeout(function () {
         if (settled) return;
-        if (window[globalName] !== undefined) {
+
+        // Use hasOwnProperty so an explicitly-undefined assignment is still
+        // treated as a real (but empty) response and NOT as a success.
+        var hasProp = Object.prototype.hasOwnProperty.call(window, globalName);
+        var resp = hasProp ? window[globalName] : undefined;
+
+        if (!hasProp || resp === undefined || resp === null) {
           clearTimeout(timeoutId);
-          settled = true;
-          cleanup();
-          var resp = window[globalName];
-          if (resp && resp.error) reject(new Error(resp.error));
-          else resolve(resp);
+          attemptFailed('No response (callback property not set)');
+          return;
+        }
+
+        clearTimeout(timeoutId);
+        settled = true;
+        cleanup();
+
+        if (resp && resp.error) {
+          reject(new Error(resp.error));
         } else {
-          attemptFailed('No response');
+          resolve(resp);
         }
       }, 30);
     };
@@ -678,7 +689,15 @@ async function initializePage() {
     }
 
     if (!terms || !terms.length) {
-      throw new Error('Unexpected response: ' + (typeof raw === 'string' ? raw.slice(0, 200) : JSON.stringify(raw).slice(0, 200)));
+      var preview;
+      if (raw === undefined) preview = 'undefined';
+      else if (raw === null) preview = 'null';
+      else if (typeof raw === 'string') preview = raw.slice(0, 200);
+      else {
+        try { preview = JSON.stringify(raw).slice(0, 200); }
+        catch (err) { preview = String(raw).slice(0, 200); }
+      }
+      throw new Error('Unexpected response (' + typeof raw + '): ' + preview);
     }
 
     // Filter sandbox terms unless ?sandbox=true
