@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>Reports & Notice Boards — Lunzu Secondary School</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Segoe UI', Roboto, Arial, sans-serif;
+    min-height:100vh;
+    padding: 20px;
+    background:#0a1628;
+    position:relative;
+    overflow-x:hidden;
+  }
+  #bg-canvas-container {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    z-index:0; pointer-events:none;
+  }
+  #bg-canvas-container canvas {
+    display:block; width:100%; height:100%; object-fit:cover;
+  }
+
+  .container {
+    position:relative;
+    z-index:1;
+    max-width:900px;
+    margin: 0 auto;
+  }
+
+  /* ---------- Header ---------- */
+  .page-header {
+    background: rgba(10,30,50,0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 20px;
+    padding: 22px 26px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .page-header h1 {
+    color: #fff;
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .page-header .sub {
+    color: #94a3b8;
+    font-size: 13px;
+  }
+  .page-header .sub strong { color: #fbbf24; }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .card h2 {
+    font-size: 15px;
+    color: #fbbf24;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    font-weight: 700;
+  }
+  .card .hint {
+    color: #94a3b8;
+    font-size: 12.5px;
+    margin-bottom: 16px;
+    line-height: 1.55;
+  }
+
+  /* ---------- Fields ---------- */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display:block;
+    font-size: 12.5px;
+    color: #e2e8f0;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  .field select, .field input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 13.5px;
+    font-family: inherit;
+  }
+  .field select option { background:#1a2a3a; color:#fff; }
+  .field select:focus, .field input:focus {
+    outline: none;
+    border-color: #fbbf24;
+    background: rgba(255,255,255,0.14);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 620px) {
+    .row { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.15s;
+    color: #fff;
+    width: 100%;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.primary { background: rgba(37,99,235,0.85); }
+  .btn.primary:hover:not(:disabled) { background: rgba(37,99,235,1); }
+  .btn.amber { background: rgba(245,158,11,0.85); color: #1e293b; }
+  .btn.amber:hover:not(:disabled) { background: rgba(245,158,11,1); }
+  .btn.green { background: rgba(22,163,74,0.85); }
+  .btn.green:hover:not(:disabled) { background: rgba(22,163,74,1); }
+  .btn.gray { background: rgba(100,116,139,0.6); }
+  .btn.gray:hover:not(:disabled) { background: rgba(100,116,139,0.9); }
+  .btn .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+  }
+  .btn.loading .spinner { display: inline-block; }
+  .btn.loading .label { opacity: 0.6; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Grid of class buttons ---------- */
+  .class-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  /* ---------- Combined section ---------- */
+  .combined-section {
+    background: rgba(251,191,36,0.10);
+    border: 1px solid rgba(251,191,36,0.35);
+    border-left: 4px solid #fbbf24;
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 14px;
+  }
+  .combined-section .note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #fef3c7;
+    line-height: 1.55;
+  }
+  .combined-section .note strong { color: #fbbf24; }
+
+  /* ---------- Status message ---------- */
+  .status {
+    margin-top: 16px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.5;
+  }
+  .status.show { display: flex; }
+  .status.loading { background: rgba(59,130,246,0.15); border-left: 4px solid #3b82f6; color:#dbeafe; }
+  .status.error   { background: rgba(220,38,38,0.15);  border-left: 4px solid #ef4444; color:#fecaca; }
+  .status.success { background: rgba(34,197,94,0.15);  border-left: 4px solid #10b981; color:#dcfce7; }
+  .status.info    { background: rgba(139,92,246,0.15); border-left: 4px solid #8b5cf6; color:#e9d5ff; }
+
+  .status .mini-spin {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #fbbf24;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* ---------- Footer ---------- */
+  .footer {
+    text-align: center;
+    padding: 16px;
+    color: #64748b;
+    font-size: 12px;
+  }
+  .footer a { color:#fbbf24; text-decoration:none; }
+
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div id="bg-canvas-container">
+  <canvas id="bgCanvas"></canvas>
+</div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>📊 Reports & Notice Boards</h1>
+    <div class="sub">
+      Term: <strong id="currentTermDisplay">Loading...</strong>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CARD 1 — Detailed Class Reports
+       ============================================================ -->
+  <div class="card">
+    <h2>📄 Detailed Class Reports</h2>
+    <div class="hint">
+      Generate a comprehensive PDF report for one class: all subjects, per-subject scores,
+      positions, grades, class average, pass rate, and subject-level pass rates.
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="reportClass">Class:</label>
+        <select id="reportClass"></select>
+      </div>
+      <div class="field">
+        <label for="reportTerm">Term:</label>
+        <select id="reportTerm" onchange="onTermChange('reportTerm')"></select>
+      </div>
+    </div>
+
+    <button id="generateBtn" class="btn primary" onclick="generateClassReport()">
+      <span class="spinner"></span>
+      <span class="label">Generate Detailed Class Report</span>
+    </button>
+
+    <div id="reportStatus" class="status"></div>
+  </div>
+
+  <!-- ============================================================
+       CARD 2 — Notice Boards
+       ============================================================ -->
+  <div class="card">
+    <h2>📋 Notice Board Lists</h2>
+    <div class="hint">
+      Simplified lists for posting on the notice board — student name, position, total, remarks.
+      No subject-level breakdown. Print-ready A4 portrait.
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="noticeTerm">Term:</label>
+        <select id="noticeTerm" onchange="onTermChange('noticeTerm')"></select>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="btn gray" onclick="reloadClassesForTerm('noticeTerm', 'noticeGrid')">
+          <span class="spinner"></span>
+          <span class="label">🔄 Reload Classes</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="noticeGrid" class="class-grid"></div>
+
+    <div id="noticeStatus" class="status"></div>
+
+    <!-- Combined -->
+    <div class="combined-section">
+      <button class="btn green" id="allNoticeBtn" onclick="generateAllNoticeBoard()">
+        <span class="spinner"></span>
+        <span class="label">🏆 Generate ALL Classes Notice Board</span>
+      </button>
+      <div class="note">
+        <strong>Note:</strong> This will generate one combined PDF containing every student
+        from every class in the selected term.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CARD 3 — System Info (hidden by default)
+       ============================================================ -->
+  <div class="card hidden" id="debugSection">
+    <h2>🔧 System Information</h2>
+    <button class="btn amber" id="debugBtn" onclick="loadSystemInfo()">
+      <span class="spinner"></span>
+      <span class="label">Check System Status</span>
+    </button>
+    <pre id="debugInfo" style="margin-top:14px; padding:14px; background:rgba(0,0,0,0.35); border-radius:12px; color:#cbd5e1; font-size:11.5px; overflow-x:auto; white-space:pre-wrap;"></pre>
+  </div>
+
+  <div class="footer">
+    Lunzu Secondary School · Reports &amp; Notice Boards
+  </div>
+
+</div>
+
+<!-- ============================================================
+     BACKGROUND — Floating emoji canvas (matches other portals)
+     ============================================================ -->
+<script>
+(function initBackground() {
+  var canvas = document.getElementById('bgCanvas');
+  var container = document.getElementById('bg-canvas-container');
+  var ctx = canvas.getContext('2d');
+  var w, h, items = [];
+  var ITEM_COUNT = 24;
+  var symbols = ['📊','📋','🎓','📘','📚','🏆','⭐','📖','✏️','📝','🏅','🔬','🧪','📐','🧮','🌍','⚛️'];
+
+  function resizeCanvas() {
+    var rect = container.getBoundingClientRect();
+    canvas.width = rect.width || window.innerWidth;
+    canvas.height = rect.height || window.innerHeight;
+    w = canvas.width; h = canvas.height;
+  }
+  function randomItem() {
+    return {
+      x: Math.random() * w,
+      y: Math.random() * h - 20,
+      size: 30 + Math.random() * 40,
+      speedX: (Math.random() - 0.5) * 0.6,
+      speedY: 0.12 + Math.random() * 0.5,
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 0.02,
+      opacity: 0.15 + Math.random() * 0.28,
+      symbol: symbols[Math.floor(Math.random() * symbols.length)],
+      phase: Math.random() * 100
+    };
+  }
+  function initItems() {
+    items = [];
+    for (var i = 0; i < ITEM_COUNT; i++) items.push(randomItem());
+  }
+  function drawItems() {
+    ctx.clearRect(0, 0, w, h);
+    var grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w, h) * 0.7);
+    grad.addColorStop(0, 'rgba(10,22,40,0.05)');
+    grad.addColorStop(1, 'rgba(10,22,40,0.40)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    items.forEach(function (item) {
+      ctx.save();
+      ctx.translate(item.x, item.y);
+      ctx.rotate(item.rotation * Math.PI / 180);
+      ctx.globalAlpha = item.opacity;
+      ctx.font = item.size + 'px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 22;
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText(item.symbol, 0, 0);
+      ctx.restore();
+
+      item.x += item.speedX + Math.sin(item.phase + performance.now() * 0.0002) * 0.15;
+      item.y += item.speedY * 0.3 + Math.sin(item.phase + performance.now() * 0.00035) * 0.12;
+      item.rotation += item.rotSpeed;
+      if (item.x > w + 60) item.x = -60;
+      if (item.x < -60) item.x = w + 60;
+      if (item.y > h + 60) item.y = -60;
+      if (item.y < -60) item.y = h + 60;
+    });
+    requestAnimationFrame(drawItems);
+  }
+  function start() { resizeCanvas(); initItems(); drawItems(); }
+  window.addEventListener('resize', function () {
+    resizeCanvas();
+    items.forEach(function (it) {
+      it.x = Math.min(Math.max(it.x, 0), w);
+      it.y = Math.min(Math.max(it.y, 0), h);
+    });
+  });
+  start();
+})();
+</script>
+
+<!-- ============================================================
+     APP LOGIC — JSONP API (works from GitHub Pages)
+     ============================================================ -->
+<script>
+// ============================================================
+// Config
+// ============================================================
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
+
+var state = {
+  terms: [],
+  activeTerm: null,
+  currentTermByDropdown: {}
+};
+
+// ============================================================
+// JSONP caller (same resilient pattern as other pages)
+// ============================================================
+function callGAS(action, params, attempt) {
+  attempt = attempt || 1;
+  var MAX = 5;
+  var PER_ATTEMPT_MS = 15000;
+  var BACKOFF = [0, 500, 1500, 4000, 8000];
+
+  return new Promise(function (resolve, reject) {
+    var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    var globalName = '__gasResponse_' + cb;
+    var p = Object.assign({}, params || {});
+    p.action = action;
+    p.callback = cb;
+
+    var qs = Object.keys(p)
+      .filter(function (k) { return p[k] !== undefined && p[k] !== null; })
+      .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]); })
+      .join('&');
+
+    var s = document.createElement('script');
+    s.src = GAS_URL + '?' + qs;
+    var settled = false;
+
+    function cleanup() {
+      try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+    }
+
+    function attemptFailed(reason) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      if (attempt < MAX) {
+        setTimeout(function () {
+          callGAS(action, params, attempt + 1).then(resolve, reject);
+        }, BACKOFF[attempt]);
+      } else {
+        reject(new Error(reason + ' (after ' + attempt + ' attempts)'));
+      }
+    }
+
+    var timeoutId = setTimeout(function () { attemptFailed('Request timeout'); }, PER_ATTEMPT_MS);
+
+    s.onload = function () {
+      setTimeout(function () {
+        if (settled) return;
+        if (window[globalName] !== undefined) {
+          clearTimeout(timeoutId);
+          settled = true;
+          cleanup();
+          var resp = window[globalName];
+          if (resp && resp.error) reject(new Error(resp.error));
+          else resolve(resp);
+        } else {
+          attemptFailed('No response');
+        }
+      }, 30);
+    };
+    s.onerror = function () {
+      clearTimeout(timeoutId);
+      attemptFailed('Network error');
+    };
+    document.head.appendChild(s);
+  });
+}
+
+// ============================================================
+// Status helpers
+// ============================================================
+function showStatus(id, type, html) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'status show ' + type;
+  el.innerHTML = html;
+}
+function hideStatus(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'status';
+  el.innerHTML = '';
+}
+function setBtnLoading(id, on) {
+  var b = document.getElementById(id);
+  if (!b) return;
+  b.classList.toggle('loading', on);
+  b.disabled = on;
+}
+
+// ============================================================
+// Populate term dropdowns
+// ============================================================
+function populateTermSelects() {
+  var ids = ['reportTerm', 'noticeTerm'];
+  ids.forEach(function (id) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    state.terms.forEach(function (t) {
+      var o = document.createElement('option');
+      o.value = t.key;
+      o.textContent = t.display + (t.isActive ? '  (active)' : '');
+      if (t.isActive) o.selected = true;
+      sel.appendChild(o);
+    });
+  });
+}
+
+function getSelectedTerm(selId) {
+  var sel = document.getElementById(selId);
+  return sel ? sel.value : null;
+}
+
+// ============================================================
+// Classes — build list from active term's sheets
+// ============================================================
+function getClassesForTerm(termKey) {
+  var t = state.terms.find(function (x) { return x.key === termKey; });
+  if (!t) return [];
+  // Prefer the term config's classes list (server returns it)
+  return t.classes || [];
+}
+
+function populateReportClassDropdown() {
+  var sel = document.getElementById('reportClass');
+  var term = getSelectedTerm('reportTerm');
+  var classes = getClassesForTerm(term);
+  sel.innerHTML = '';
+  classes.forEach(function (c) {
+    var o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+}
+
+function populateNoticeGrid() {
+  var term = getSelectedTerm('noticeTerm');
+  var classes = getClassesForTerm(term);
+  var grid = document.getElementById('noticeGrid');
+  grid.innerHTML = '';
+  classes.forEach(function (c) {
+    var btn = document.createElement('button');
+    btn.className = 'btn amber';
+    btn.innerHTML = '<span class="spinner"></span><span class="label">' + c + ' Notice Board</span>';
+    btn.addEventListener('click', function () { generateNoticeBoard(c); });
+    grid.appendChild(btn);
+  });
+}
+
+function onTermChange() {
+  // Refresh both class lists based on their own term dropdown
+  populateReportClassDropdown();
+  populateNoticeGrid();
+}
+
+function reloadClassesForTerm() {
+  populateReportClassDropdown();
+  populateNoticeGrid();
+}
+
+// ============================================================
+// PDF download helper
+// ============================================================
+function downloadPDF(base64, fileName) {
+  var byteCharacters = atob(base64);
+  var byteNumbers = new Array(byteCharacters.length);
+  for (var i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  var byteArray = new Uint8Array(byteNumbers);
+  var blob = new Blob([byteArray], { type: 'application/pdf' });
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.href = url;
+  link.download = fileName + '.pdf';
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(function () {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 200);
+}
+
+// ============================================================
+// Generate class report
+// ============================================================
+async function generateClassReport() {
+  var studentClass = document.getElementById('reportClass').value;
+  var term = getSelectedTerm('reportTerm');
+  if (!studentClass || !term) {
+    showStatus('reportStatus', 'error', '❌ Please select a class and term.');
+    return;
+  }
+
+  setBtnLoading('generateBtn', true);
+  showStatus('reportStatus', 'loading',
+    '<span class="mini-spin"></span> Generating detailed report for ' + studentClass + '…');
+
+  try {
+    var pdfBase64 = await callGAS('generateClassPDF', {
+      studentClass: studentClass,
+      term: term
+    });
+    if (!pdfBase64 || typeof pdfBase64 !== 'string') {
+      throw new Error('Empty PDF response');
+    }
+    downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Detailed_Report');
+    showStatus('reportStatus', 'success', '✅ PDF downloaded successfully.');
+    setTimeout(function () { hideStatus('reportStatus'); }, 4000);
+  } catch (e) {
+    showStatus('reportStatus', 'error', '❌ ' + e.message);
+  } finally {
+    setBtnLoading('generateBtn', false);
+  }
+}
+
+// ============================================================
+// Generate single class notice board
+// ============================================================
+async function generateNoticeBoard(studentClass) {
+  var term = getSelectedTerm('noticeTerm');
+  if (!term) {
+    showStatus('noticeStatus', 'error', '❌ Please select a term.');
+    return;
+  }
+
+  showStatus('noticeStatus', 'loading',
+    '<span class="mini-spin"></span> Generating notice board for ' + studentClass + '…');
+
+  try {
+    var pdfBase64 = await callGAS('generateNoticeBoardPDF', {
+      studentClass: studentClass,
+      term: term
+    });
+    if (!pdfBase64 || typeof pdfBase64 !== 'string') {
+      throw new Error('Empty PDF response');
+    }
+    downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Notice_Board');
+    showStatus('noticeStatus', 'success', '✅ Notice board for ' + studentClass + ' downloaded.');
+    setTimeout(function () { hideStatus('noticeStatus'); }, 4000);
+  } catch (e) {
+    showStatus('noticeStatus', 'error', '❌ ' + e.message);
+  }
+}
+
+// ============================================================
+// Generate combined all-classes notice board
+// ============================================================
+async function generateAllNoticeBoard() {
+  var term = getSelectedTerm('noticeTerm');
+  if (!term) {
+    showStatus('noticeStatus', 'error', '❌ Please select a term.');
+    return;
+  }
+
+  setBtnLoading('allNoticeBtn', true);
+  showStatus('noticeStatus', 'loading',
+    '<span class="mini-spin"></span> Generating combined notice board for all classes…');
+
+  try {
+    var pdfBase64 = await callGAS('generateAllNoticeBoardPDF', {
+      term: term
+    });
+    if (!pdfBase64 || typeof pdfBase64 !== 'string') {
+      throw new Error('Empty PDF response');
+    }
+    downloadPDF(pdfBase64, 'All_Classes_Notice_Board');
+    showStatus('noticeStatus', 'success', '✅ Combined notice board downloaded.');
+    setTimeout(function () { hideStatus('noticeStatus'); }, 4000);
+  } catch (e) {
+    showStatus('noticeStatus', 'error', '❌ ' + e.message);
+  } finally {
+    setBtnLoading('allNoticeBtn', false);
+  }
+}
+
+// ============================================================
+// System info (debug)
+// ============================================================
+async function loadSystemInfo() {
+  setBtnLoading('debugBtn', true);
+  var pre = document.getElementById('debugInfo');
+  pre.textContent = 'Loading...';
+  try {
+    var stats = await callGAS('getAllClassStats', {});
+    pre.textContent = JSON.stringify(stats, null, 2);
+  } catch (e) {
+    pre.textContent = 'Error: ' + e.message;
+  } finally {
+    setBtnLoading('debugBtn', false);
+  }
+}
+
+// ============================================================
+// Init
+// ============================================================
+async function initializePage() {
+  // Warm server
+  try { callGAS('test', {}).catch(function () {}); } catch (e) {}
+
+  try {
+    var terms = await callGAS('getAvailableTerms', {});
+    if (!Array.isArray(terms)) throw new Error('No terms returned');
+    state.terms = terms;
+    var active = terms.find(function (t) { return t.isActive; });
+    state.activeTerm = active ? active.key : (terms[0] && terms[0].key);
+
+    // Show active term in header
+    if (active) {
+      document.getElementById('currentTermDisplay').textContent = active.display;
+    }
+
+    populateTermSelects();
+    onTermChange();
+  } catch (e) {
+    document.getElementById('currentTermDisplay').textContent = 'Error loading terms';
+    showStatus('reportStatus', 'error', '❌ Failed to load terms: ' + e.message);
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function (ev) {
+    if (ev.ctrlKey && ev.key === 'Enter') generateClassReport();
+    if (ev.key === 'Escape') { hideStatus('reportStatus'); hideStatus('noticeStatus'); }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializePage);
+} else {
+  setTimeout(initializePage, 0);
+}
+</script>
+
+</body>
+</html>
