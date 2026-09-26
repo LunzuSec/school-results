@@ -6,10 +6,6 @@
     <link rel="icon" href="data:,">
     <title>Student Results - Lunzu Secondary School</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Slab:wght@500;600;700&display=swap" rel="stylesheet">
-
     <style>
         :root {
             --primary-color: #003366;
@@ -22,7 +18,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
             background-color: var(--light-bg);
             color: #333;
             padding: 10px;
@@ -53,7 +49,7 @@
         }
 
         .school-title {
-            font-family: 'Roboto Slab', serif;
+            font-family: Georgia, 'Times New Roman', serif;
             color: var(--primary-color);
             font-weight: 700;
             font-size: 1.3rem;
@@ -86,6 +82,9 @@
             margin-bottom: 8px;
             font-size: 0.9rem;
         }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
 
         .section-title {
             color: var(--primary-color);
@@ -295,6 +294,7 @@
             .action-buttons, .btn-action, .loading-overlay, .fee-alert { display: none !important; }
             .table-container { overflow: visible !important; }
             .results-table { min-width: 100% !important; }
+            #lssPublicNav { display: none !important; }
         }
     </style>
 </head>
@@ -315,13 +315,13 @@
         <div id="feeAlertContainer"></div>
 
         <div class="student-info">
-            <div class="row">
-                <div class="col-md-6">
+            <div class="info-grid">
+                <div>
                     <p><span class="info-label">STUDENT NAME:</span> <span class="info-value" id="studentName">-</span></p>
                     <p><span class="info-label">DATE OF BIRTH:</span> <span class="info-value" id="dob">-</span></p>
                     <p><span class="info-label">CLASS:</span> <span class="info-value" id="studentClass">-</span></p>
                 </div>
-                <div class="col-md-6">
+                <div>
                     <p><span class="info-label">NUMBER OF STUDENTS:</span> <span class="info-value" id="studentCount">-</span></p>
                     <p><span class="info-label">NUMBER SAT FOR EXAMS:</span> <span class="info-value" id="examSitters">-</span></p>
                     <p><span class="info-label">OVERALL POSITION:</span> <span class="info-value" id="overallPosition">-</span></p>
@@ -329,7 +329,7 @@
             </div>
         </div>
 
-        <h3 class="section-title"><i class="fas fa-book-open me-2"></i>SUBJECT PERFORMANCE</h3>
+        <h3 class="section-title">📖 SUBJECT PERFORMANCE</h3>
 
         <div class="table-container">
             <table class="results-table">
@@ -344,44 +344,44 @@
                     </tr>
                 </thead>
                 <tbody id="resultsBody">
-                    <tr><td colspan="6" class="text-center py-4">Loading subjects...</td></tr>
+                    <tr><td colspan="6" style="text-align:center;padding:20px;">Loading subjects...</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-6" id="totalMarksContainer" style="display: none;">
-                <div class="alert alert-primary p-2">
-                    <strong><i class="fas fa-calculator me-2"></i>TOTAL MARKS:</strong>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;">
+            <div id="totalMarksContainer" style="display:none;flex:1;min-width:220px;">
+                <div style="background:#e7f1ff;border-left:4px solid var(--primary-color);padding:10px 12px;border-radius:8px;">
+                    <strong>🧮 TOTAL MARKS:</strong>
                     <span id="totalMarks">-</span>
                 </div>
             </div>
-            <div class="col-md-6" id="totalPointsContainer" style="display: none;">
-                <div class="alert alert-primary p-2">
-                    <strong><i class="fas fa-chart-line me-2"></i>TOTAL POINTS:</strong>
+            <div id="totalPointsContainer" style="display:none;flex:1;min-width:220px;">
+                <div style="background:#e7f1ff;border-left:4px solid var(--primary-color);padding:10px 12px;border-radius:8px;">
+                    <strong>📈 TOTAL POINTS:</strong>
                     <span id="totalPoints">-</span>
                 </div>
             </div>
         </div>
 
         <div class="remarks-section">
-            <h4><i class="fas fa-comment me-2"></i>REMARKS</h4>
+            <h4>💬 REMARKS</h4>
             <p id="remarks">-</p>
         </div>
 
         <div class="footer-section">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5 class="footer-title"><i class="fas fa-money-bill-wave me-2"></i>SCHOOL FEES</h5>
+            <div class="info-grid">
+                <div>
+                    <h5 class="footer-title">💰 SCHOOL FEES</h5>
                     <p class="footer-info" id="feesInfo">-</p>
                     <p class="footer-info" id="accountInfo">-</p>
                 </div>
-                <div class="col-md-6">
-                    <h5 class="footer-title"><i class="fas fa-calendar-alt me-2"></i>IMPORTANT DATES</h5>
+                <div>
+                    <h5 class="footer-title">📅 IMPORTANT DATES</h5>
                     <p class="footer-info"><strong>Next Term Starts:</strong> <span id="nextTermStart">-</span></p>
-                    <h5 class="footer-title mt-3"><i class="fas fa-map-marker-alt me-2"></i>SCHOOL ADDRESS</h5>
+                    <h5 class="footer-title" style="margin-top:12px;">📍 SCHOOL ADDRESS</h5>
                     <p class="footer-info" id="schoolAddress">-</p>
-                    <h5 class="footer-title mt-3"><i class="fas fa-info-circle me-2"></i>GOVERNMENT POLICY</h5>
+                    <h5 class="footer-title" style="margin-top:12px;">ℹ️ GOVERNMENT POLICY</h5>
                     <p class="footer-info" id="governmentPolicy">-</p>
                 </div>
             </div>
@@ -389,24 +389,24 @@
 
         <div class="action-buttons">
             <button onclick="printResults()" class="btn-action btn-print">
-                <i class="fas fa-print"></i> Print Results
+                🖨 Print Results
             </button>
             <button onclick="closeWindow()" class="btn-action btn-close">
-                <i class="fas fa-times"></i> Close Window
+                ✖ Close Window
             </button>
             <button onclick="downloadPDF()" class="btn-action btn-print" id="downloadPdfBtn">
-                <i class="fas fa-download"></i> Download PDF
+                ⬇ Download PDF
             </button>
         </div>
     </div>
 
     <div id="errorContainer" style="display: none;"></div>
 
+    <script src="nav.js"></script>
     <script>
-        // ============================================
-        // CONFIGURATION
-        // ============================================
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
+        const GAS_URL = (typeof LSS !== 'undefined' && LSS.GAS_URL)
+          ? LSS.GAS_URL
+          : 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
 
         let cachedResults = null;
         let isGeneratingPDF = false;
@@ -423,9 +423,6 @@
             isAdminMode = true;
         }
 
-        // ============================================
-        // API CALL — assignment-form JSONP
-        // ============================================
         function callGASAPI(action, params = {}, retryCount = 0) {
             const MAX_RETRIES = 3;
             return new Promise((resolve, reject) => {
@@ -491,9 +488,6 @@
             });
         }
 
-        // ============================================
-        // LOAD RESULTS
-        // ============================================
         async function loadResults() {
             if (!studentName || !studentClass) {
                 showError('Missing student information.');
@@ -543,9 +537,6 @@
             }
         }
 
-        // ============================================
-        // RENDER RESULTS
-        // ============================================
         function renderResults(results) {
             const config = results.termConfig || {};
 
@@ -560,14 +551,12 @@
             const headerText = term ? `${academicYear} ${term} ${examType}` : `${academicYear} ${examType}`;
             document.getElementById('academicHeader').textContent = headerText.trim();
 
-            // Fee Alert - Only show for normal users with negative balance
             const feeAlertContainer = document.getElementById('feeAlertContainer');
             if (!results.isAdmin && results.feeBalance < 0) {
                 var amountOwed = Math.abs(results.feeBalance);
                 feeAlertContainer.innerHTML = `
                     <div class="fee-alert">
-                        <i class="fas fa-exclamation-triangle me-2" style="color: #f44336;"></i>
-                        <strong style="color: #c62828;">OUTSTANDING FEE BALANCE:</strong>
+                        <strong style="color: #c62828;">⚠️ OUTSTANDING FEE BALANCE:</strong>
                         <span style="color: #c62828;">You have an outstanding balance of K${amountOwed.toLocaleString()}.</span>
                         <br><span style="font-size: 13px; color: #666;">Please clear your fee balance to access results.</span>
                     </div>
@@ -576,7 +565,6 @@
                 feeAlertContainer.innerHTML = '';
             }
 
-            // Student info
             const studentInfo = {
                 studentName: results.name,
                 dob: results.dob || 'N/A',
@@ -591,7 +579,6 @@
                 if (el) el.textContent = value || '-';
             }
 
-            // Subject table
             const resultsBody = document.getElementById('resultsBody');
             if (results.subjects && results.subjects.length > 0) {
                 let html = '';
@@ -623,13 +610,11 @@
                     document.getElementById('totalMarksContainer').style.display = 'none';
                 }
             } else {
-                resultsBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No subject data available</td></tr>';
+                resultsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No subject data available</td></tr>';
             }
 
-            // Remarks
             document.getElementById('remarks').textContent = results.additionalInfo?.remarks || 'No remarks available.';
 
-            // Fees info
             const contactInfo = isODL ?
                 (config.contacts?.odl || { fees: "SCHOOL FEES PER TERM: K40,000", accountNumber: "129 00000 41337" }) :
                 (config.contacts?.regular || { fees: "BOARDING FEES PER TERM: K165,000", accountNumber: "129 00000 98673" });
@@ -637,7 +622,6 @@
             document.getElementById('feesInfo').textContent = contactInfo.fees;
             document.getElementById('accountInfo').textContent = "SCHOOL ACC NO.: " + contactInfo.accountNumber;
 
-            // Other info
             document.getElementById('nextTermStart').textContent = config.nextTermStart || "Contact school";
             document.getElementById('schoolAddress').textContent = config.schoolAddress || "Private bag 130, Lunzu";
             document.getElementById('governmentPolicy').textContent = config.governmentPolicy || "The grace period for payment of school fees is 2 weeks from the beginning of each term.";
@@ -646,9 +630,6 @@
             document.title = `${results.name} - ${headerText}`;
         }
 
-        // ============================================
-        // HELPER FUNCTIONS
-        // ============================================
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -692,9 +673,6 @@
             return map[g] || '';
         }
 
-        // ============================================
-        // UI FUNCTIONS
-        // ============================================
         function showLoading(show) {
             const overlay = document.getElementById('loadingOverlay');
             if (overlay) overlay.style.display = show ? 'flex' : 'none';
@@ -709,15 +687,15 @@
             const errorContainer = document.getElementById('errorContainer');
             errorContainer.innerHTML = `
                 <div class="error-message">
-                    <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="error-icon">⚠️</div>
                     <h4 style="color: #dc3545;">Error Loading Results</h4>
                     <p>${escapeHtml(message)}</p>
-                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                        <button onclick="window.location.href='https://lunzusec.github.io/school-results/'" class="btn-action btn-close">
-                            <i class="fas fa-arrow-left"></i> Go Back
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;flex-wrap:wrap;">
+                        <button onclick="window.location.href='index.html'" class="btn-action btn-close">
+                            ← Go Back
                         </button>
                         <button onclick="location.reload()" class="btn-action btn-print">
-                            <i class="fas fa-redo"></i> Try Again
+                            🔄 Try Again
                         </button>
                     </div>
                 </div>
@@ -726,16 +704,11 @@
             document.getElementById('resultsContainer').style.display = 'none';
         }
 
-        function printResults() {
-            window.print();
-        }
+        function printResults() { window.print(); }
 
         function closeWindow() {
-            if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                window.close();
-            }
+            if (window.history.length > 1) window.history.back();
+            else window.close();
         }
 
         async function downloadPDF() {
@@ -747,7 +720,7 @@
             isGeneratingPDF = true;
             const btn = document.getElementById('downloadPdfBtn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            btn.innerHTML = '⏳ Generating...';
             btn.disabled = true;
 
             try {
@@ -806,10 +779,10 @@
             }
         }
 
-        // ============================================
-        // INITIALIZE
-        // ============================================
         document.addEventListener('DOMContentLoaded', function() {
+            if (typeof LSS !== 'undefined' && LSS.renderPublicNav) {
+                LSS.renderPublicNav('results');
+            }
             loadResults();
         });
 
@@ -818,9 +791,7 @@
                 e.preventDefault();
                 printResults();
             }
-            if (e.key === 'Escape') {
-                closeWindow();
-            }
+            if (e.key === 'Escape') closeWindow();
         });
     </script>
 </body>
