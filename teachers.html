@@ -261,7 +261,6 @@
   }
   .tp-offline.show { display:block; }
 
-  /* Inline save progress (kept for reference, hidden while overlay is up) */
   .save-progress {
     display: none;
     margin-top: 12px;
@@ -297,12 +296,6 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* ============================================================
-     FULL-SCREEN SAVE OVERLAY
-     Blocks the entire UI while a save is in flight. Prevents any
-     interaction with score inputs, filters, buttons — no accidental
-     edits while the server is writing.
-     ============================================================ */
   .save-overlay {
     position: fixed;
     inset: 0;
@@ -613,6 +606,7 @@
   <span class="undo-countdown">Auto-dismiss in <span id="undoCountdown">30s</span></span>
 </div>
 
+<script src="nav.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
   // ============================================================
@@ -626,7 +620,9 @@
   // ============================================================
   // Config
   // ============================================================
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
+  const GAS_URL = (typeof LSS !== 'undefined' && LSS.GAS_URL)
+    ? LSS.GAS_URL
+    : 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
 
   const CLASS_ORDER = [
     'Form 1','Form 2','Form 3','Form 4',
@@ -830,7 +826,6 @@
       bar.style.transition = 'none';
       bar.style.background = 'linear-gradient(90deg,#fbbf24,#f59e0b)';
       bar.style.width = '5%';
-      // Animate from 5% to 92% over ~4s
       setTimeout(function () {
         bar.style.transition = 'width 4000ms ease-out';
         bar.style.width = '92%';
@@ -885,9 +880,6 @@
     setText('saveOverlayStatus', 'Failed');
   }
 
-  /**
-   * Disable all interactive controls while saving.
-   */
   function setPortalBusy(busy) {
     var ids = ['saveBtn', 'reloadBtn', 'clearAllBtn', 'resetBtn', 'rosterSearch'];
     ids.forEach(function (id) {
@@ -1754,23 +1746,17 @@
       return;
     }
 
-    // ---- Lock everything ----
     state.saving = true;
 
-    // Save button shows spinner + disabled state
     var saveBtn = el('saveBtn');
     if (saveBtn) {
       saveBtn.classList.add('loading');
       saveBtn.disabled = true;
     }
 
-    // Disable all other interactive controls
     setPortalBusy(true);
-
-    // Show full-screen overlay
     showSaveOverlay(scores.length);
 
-    // Remember original score values so we can restore on failure
     var backup = state.roster.map(function (r) {
       return {
         row: r.row,
@@ -1811,7 +1797,6 @@
         return;
       }
 
-      // Success — commit new "original" values
       markSaveSuccess();
 
       state.roster.forEach(function (r) {
@@ -1836,7 +1821,6 @@
       };
       state.dirty = false;
 
-      // Hold the success state for 800ms, then hide the overlay
       setTimeout(function () {
         hideSaveOverlay();
         renderRoster();
@@ -1851,7 +1835,6 @@
       }, 1500);
 
     } finally {
-      // Unlock UI
       setTimeout(function () {
         state.saving = false;
         if (saveBtn) {
@@ -1944,6 +1927,11 @@
   // Init
   // ============================================================
   async function initializeTeacherPage() {
+    // Public nav bar (teachers link into the site, so they get the same nav as parents)
+    if (typeof LSS !== 'undefined' && LSS.renderPublicNav) {
+      LSS.renderPublicNav('teachers');
+    }
+
     if (!state.online) {
       var b = el('offlineBanner'); if (b) b.classList.add('show');
     }
