@@ -30,7 +30,6 @@
     margin: 0 auto;
   }
 
-  /* ---------- Header ---------- */
   .page-header {
     background: rgba(10,30,50,0.85);
     backdrop-filter: blur(10px);
@@ -53,7 +52,6 @@
   }
   .page-header .sub strong { color: #fbbf24; }
 
-  /* ---------- Cards ---------- */
   .card {
     background: rgba(255,255,255,0.05);
     backdrop-filter: blur(10px);
@@ -79,7 +77,6 @@
     line-height: 1.55;
   }
 
-  /* ---------- Fields ---------- */
   .field { margin-bottom: 14px; }
   .field label {
     display:block;
@@ -114,7 +111,6 @@
     .row { grid-template-columns: 1fr; }
   }
 
-  /* ---------- Buttons ---------- */
   .btn {
     padding: 12px 16px;
     border: none;
@@ -152,14 +148,12 @@
   .btn.loading .label { opacity: 0.6; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ---------- Grid of class buttons ---------- */
   .class-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 10px;
   }
 
-  /* ---------- Combined section ---------- */
   .combined-section {
     background: rgba(251,191,36,0.10);
     border: 1px solid rgba(251,191,36,0.35);
@@ -176,7 +170,6 @@
   }
   .combined-section .note strong { color: #fbbf24; }
 
-  /* ---------- Status message ---------- */
   .status {
     margin-top: 16px;
     padding: 13px 16px;
@@ -216,6 +209,8 @@
 </head>
 <body>
 
+<div id="lssAdminNav"></div>
+
 <div id="bg-canvas-container">
   <canvas id="bgCanvas"></canvas>
 </div>
@@ -229,7 +224,6 @@
     </div>
   </div>
 
-  <!-- Detailed Class Reports -->
   <div class="card">
     <h2>📄 Detailed Class Reports</h2>
     <div class="hint">
@@ -256,7 +250,6 @@
     <div id="reportStatus" class="status"></div>
   </div>
 
-  <!-- Notice Boards -->
   <div class="card">
     <h2>📋 Notice Board Lists</h2>
     <div class="hint">
@@ -297,116 +290,40 @@
 
 </div>
 
-<!-- Background canvas -->
+<script src="nav.js"></script>
 <script>
-(function initBackground() {
-  var canvas = document.getElementById('bgCanvas');
-  var container = document.getElementById('bg-canvas-container');
-  var ctx = canvas.getContext('2d');
-  var w, h, items = [];
-  var ITEM_COUNT = 24;
-  var symbols = ['📊','📋','🎓','📘','📚','🏆','⭐','📖','✏️','📝','🏅','🔬','🧪','📐','🧮','🌍','⚛️'];
-
-  function resizeCanvas() {
-    var rect = container.getBoundingClientRect();
-    canvas.width = rect.width || window.innerWidth;
-    canvas.height = rect.height || window.innerHeight;
-    w = canvas.width; h = canvas.height;
-  }
-  function randomItem() {
-    return {
-      x: Math.random() * w,
-      y: Math.random() * h - 20,
-      size: 30 + Math.random() * 40,
-      speedX: (Math.random() - 0.5) * 0.6,
-      speedY: 0.12 + Math.random() * 0.5,
-      rotation: Math.random() * 360,
-      rotSpeed: (Math.random() - 0.5) * 0.02,
-      opacity: 0.15 + Math.random() * 0.28,
-      symbol: symbols[Math.floor(Math.random() * symbols.length)],
-      phase: Math.random() * 100
-    };
-  }
-  function initItems() {
-    items = [];
-    for (var i = 0; i < ITEM_COUNT; i++) items.push(randomItem());
-  }
-  function drawItems() {
-    ctx.clearRect(0, 0, w, h);
-    var grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w, h) * 0.7);
-    grad.addColorStop(0, 'rgba(10,22,40,0.05)');
-    grad.addColorStop(1, 'rgba(10,22,40,0.40)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-
-    items.forEach(function (item) {
-      ctx.save();
-      ctx.translate(item.x, item.y);
-      ctx.rotate(item.rotation * Math.PI / 180);
-      ctx.globalAlpha = item.opacity;
-      ctx.font = item.size + 'px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(0,0,0,0.4)';
-      ctx.shadowBlur = 22;
-      ctx.fillStyle = '#fbbf24';
-      ctx.fillText(item.symbol, 0, 0);
-      ctx.restore();
-
-      item.x += item.speedX + Math.sin(item.phase + performance.now() * 0.0002) * 0.15;
-      item.y += item.speedY * 0.3 + Math.sin(item.phase + performance.now() * 0.00035) * 0.12;
-      item.rotation += item.rotSpeed;
-      if (item.x > w + 60) item.x = -60;
-      if (item.x < -60) item.x = w + 60;
-      if (item.y > h + 60) item.y = -60;
-      if (item.y < -60) item.y = h + 60;
-    });
-    requestAnimationFrame(drawItems);
-  }
-  function start() { resizeCanvas(); initItems(); drawItems(); }
-  window.addEventListener('resize', function () {
-    resizeCanvas();
-    items.forEach(function (it) {
-      it.x = Math.min(Math.max(it.x, 0), w);
-      it.y = Math.min(Math.max(it.y, 0), h);
-    });
+// ============================================================
+// Auth guard + nav bar
+// ============================================================
+if (LSS.requireAdmin()) {
+  document.addEventListener('DOMContentLoaded', function () {
+    LSS.renderAdminNav('reports');
   });
-  start();
-})();
-</script>
+  // in case DOMContentLoaded already fired
+  if (document.readyState !== 'loading') LSS.renderAdminNav('reports');
+}
 
-<!-- App logic -->
-<script>
 // ============================================================
 // Config
 // ============================================================
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
-
-var state = {
-  terms: [],
-  activeTerm: null
-};
-
+var GAS_URL = LSS.GAS_URL;
+var state = { terms: [], activeTerm: null };
 var SANDBOX_MODE = (new URLSearchParams(location.search).get('sandbox') === 'true');
 
-// Long-running actions: single attempt, extended timeout, no retry.
 var LONG_ACTIONS = {
   generateClassPDF: true,
   generateNoticeBoardPDF: true,
   generateAllNoticeBoardPDF: true
 };
-
-var QUICK_TIMEOUT_MS = 20000;     // 20 s for quick lookups (terms, names)
-var LONG_TIMEOUT_MS  = 300000;    // 5 min for PDF generation
+var QUICK_TIMEOUT_MS = 20000;
+var LONG_TIMEOUT_MS  = 300000;
 
 // ============================================================
 // JSONP caller
 // ============================================================
 function callGAS(action, params, attempt) {
   attempt = attempt || 1;
-
   var isLong = LONG_ACTIONS[action] === true;
-
   var MAX = isLong ? 1 : 5;
   var PER_ATTEMPT_MS = isLong ? LONG_TIMEOUT_MS : QUICK_TIMEOUT_MS;
   var BACKOFF = isLong ? [0] : [0, 500, 1500, 4000, 8000];
@@ -451,7 +368,6 @@ function callGAS(action, params, attempt) {
     s.onload = function () {
       setTimeout(function () {
         if (settled) return;
-
         var hasProp = Object.prototype.hasOwnProperty.call(window, globalName);
         var resp = hasProp ? window[globalName] : undefined;
 
@@ -460,16 +376,12 @@ function callGAS(action, params, attempt) {
           attemptFailed('No response from server');
           return;
         }
-
         clearTimeout(timeoutId);
         settled = true;
         cleanup();
 
-        if (resp && resp.error) {
-          reject(new Error(resp.error));
-        } else {
-          resolve(resp);
-        }
+        if (resp && resp.error) reject(new Error(resp.error));
+        else resolve(resp);
       }, 30);
     };
     s.onerror = function () {
@@ -481,7 +393,7 @@ function callGAS(action, params, attempt) {
 }
 
 // ============================================================
-// Status
+// Status helpers
 // ============================================================
 function showStatus(id, type, html) {
   var el = document.getElementById(id);
@@ -502,9 +414,6 @@ function setBtnLoading(id, on) {
   b.disabled = on;
 }
 
-// ============================================================
-// Elapsed-time helper
-// ============================================================
 function makeElapsedTicker(statusId, messagePrefix) {
   var startTime = Date.now();
   var timerId = setInterval(function () {
@@ -513,12 +422,7 @@ function makeElapsedTicker(statusId, messagePrefix) {
       '<span class="mini-spin"></span> ' + messagePrefix +
       ' <strong>(' + elapsed + 's — first run may take 1–3 min)</strong>');
   }, 1000);
-  return {
-    stop: function () {
-      clearInterval(timerId);
-      return Math.round((Date.now() - startTime) / 1000);
-    }
-  };
+  return { stop: function () { clearInterval(timerId); return Math.round((Date.now() - startTime) / 1000); } };
 }
 
 // ============================================================
@@ -634,14 +538,9 @@ async function generateClassReport() {
     'Generating detailed report for <strong>' + studentClass + '</strong>…');
 
   try {
-    var pdfBase64 = await callGAS('generateClassPDF', {
-      studentClass: studentClass,
-      term: term
-    });
+    var pdfBase64 = await callGAS('generateClassPDF', { studentClass: studentClass, term: term });
     var elapsed = ticker.stop();
-    if (!pdfBase64 || typeof pdfBase64 !== 'string') {
-      throw new Error('Empty PDF response');
-    }
+    if (!pdfBase64 || typeof pdfBase64 !== 'string') throw new Error('Empty PDF response');
     downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Detailed_Report');
     showStatus('reportStatus', 'success', '✅ PDF downloaded in ' + elapsed + 's.');
     setTimeout(function () { hideStatus('reportStatus'); }, 5000);
@@ -662,15 +561,11 @@ async function generateNoticeBoard(studentClass) {
     showStatus('noticeStatus', 'error', '❌ Please select a term.');
     return;
   }
-
   var ticker = makeElapsedTicker('noticeStatus',
     'Generating notice board for <strong>' + studentClass + '</strong>…');
 
   try {
-    var pdfBase64 = await callGAS('generateNoticeBoardPDF', {
-      studentClass: studentClass,
-      term: term
-    });
+    var pdfBase64 = await callGAS('generateNoticeBoardPDF', { studentClass: studentClass, term: term });
     var elapsed = ticker.stop();
     if (!pdfBase64 || typeof pdfBase64 !== 'string') throw new Error('Empty PDF response');
     downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Notice_Board');
@@ -691,10 +586,8 @@ async function generateAllNoticeBoard() {
     showStatus('noticeStatus', 'error', '❌ Please select a term.');
     return;
   }
-
   setBtnLoading('allNoticeBtn', true);
-  var ticker = makeElapsedTicker('noticeStatus',
-    'Generating combined notice board for all classes…');
+  var ticker = makeElapsedTicker('noticeStatus', 'Generating combined notice board for all classes…');
 
   try {
     var pdfBase64 = await callGAS('generateAllNoticeBoardPDF', { term: term });
