@@ -62,7 +62,8 @@
   .field select option { background:#1a2a3a; color:#fff; }
 
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 700px) { .row { grid-template-columns: 1fr; } }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 700px) { .row, .row3 { grid-template-columns: 1fr; } }
 
   .btn {
     padding: 10px 15px; border: none; border-radius: 10px;
@@ -80,6 +81,8 @@
   .btn.gray:hover:not(:disabled) { background: rgba(100,116,139,0.9); }
   .btn.red { background: rgba(220,38,38,0.75); }
   .btn.red:hover:not(:disabled) { background: rgba(220,38,38,1); }
+  .btn.amber { background: rgba(245,158,11,0.85); color:#1e293b; }
+  .btn.amber:hover:not(:disabled) { background: rgba(245,158,11,1); }
   .btn.sm { padding: 6px 11px; font-size: 12px; }
 
   .msg {
@@ -229,6 +232,58 @@
     font-variant-numeric: tabular-nums; font-weight: 700;
   }
 
+  /* CA Setup specific */
+  .ca-info-bar {
+    padding: 10px 14px;
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-left: 4px solid #a78bfa;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    color: #e9d5ff;
+    line-height: 1.5;
+  }
+  .ca-info-bar strong { color: #fff; }
+  .ca-table input {
+    width: 100%;
+    padding: 6px 9px;
+    border-radius: 8px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .ca-table input:focus {
+    outline: none;
+    border-color: #a78bfa;
+    background: rgba(255,255,255,0.14);
+  }
+  .ca-table .col-name { width: 40%; }
+  .ca-table .col-max { width: 15%; }
+  .ca-table .col-order { width: 15%; }
+  .ca-table .col-actions { width: 30%; text-align: right; }
+  .weight-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    align-items: center;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 14px;
+  }
+  .weight-row label { font-size: 12px; color: #e2e8f0; font-weight: 600; }
+  .weight-row input {
+    width: 80px;
+    padding: 6px 9px;
+    border-radius: 8px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #fff; font-size: 13px; font-family: inherit;
+  }
+  .weight-row input:focus { outline: none; border-color: #a78bfa; }
+
   @media (max-width: 600px) {
     body { padding: 10px; }
     .card { padding: 16px; }
@@ -263,9 +318,11 @@
       <button class="tab" data-tab="assign" onclick="switchTab('assign')">🎯 Assignments</button>
       <button class="tab" data-tab="bulk" onclick="switchTab('bulk')">⚡ Bulk Assign</button>
       <button class="tab" data-tab="papers" onclick="switchTab('papers')">📄 Paper Config</button>
+      <button class="tab" data-tab="ca" onclick="switchTab('ca')">📝 CA Setup</button>
       <button class="tab" data-tab="audit" onclick="switchTab('audit')">📋 Audit Log</button>
     </div>
 
+    <!-- ================= TEACHERS ================= -->
     <div id="tab-teachers">
       <h2>Add New Teacher</h2>
       <div class="row">
@@ -294,6 +351,7 @@
       <div id="teachersTableWrap"></div>
     </div>
 
+    <!-- ================= ASSIGNMENTS ================= -->
     <div id="tab-assign" class="hidden">
       <h2>Add Assignment</h2>
       <div class="row">
@@ -331,6 +389,7 @@
       <div id="assignTableWrap"></div>
     </div>
 
+    <!-- ================= BULK ================= -->
     <div id="tab-bulk" class="hidden">
       <h2>Bulk Assign Subjects</h2>
       <div class="sub" style="margin-bottom:12px;">
@@ -375,6 +434,7 @@
       <div id="bulkMsg" class="msg"></div>
     </div>
 
+    <!-- ================= PAPER CONFIG ================= -->
     <div id="tab-papers" class="hidden">
       <h2>Paper Configuration</h2>
       <div class="sub" style="margin-bottom:12px;">
@@ -403,6 +463,73 @@
       <div id="pcTableWrap"></div>
     </div>
 
+    <!-- ================= CA SETUP ================= -->
+    <div id="tab-ca" class="hidden">
+      <h2>Continuous Assessment Setup</h2>
+      <div class="sub" style="margin-bottom:12px;">
+        Define the CA items for each class+subject+term. Teachers enter scores against
+        these items in the teacher portal. Weights apply when combining CA and exam scores.
+      </div>
+
+      <div class="row3">
+        <div class="field">
+          <label>Class</label>
+          <select id="caClass" onchange="onCaClassChange()"></select>
+        </div>
+        <div class="field">
+          <label>Subject</label>
+          <select id="caSubject" onchange="onCaSubjectChange()"></select>
+        </div>
+        <div class="field">
+          <label>Term</label>
+          <select id="caTerm" onchange="onCaTermChange()"><option value="ALL">ALL TERMS</option></select>
+        </div>
+      </div>
+
+      <div class="weight-row">
+        <div>
+          <label for="caWeightInput">CA Weight (%)</label><br>
+          <input type="number" id="caWeightInput" min="0" max="100" step="1" value="40">
+        </div>
+        <div>
+          <label for="examWeightInput">Exam Weight (%)</label><br>
+          <input type="number" id="examWeightInput" min="0" max="100" step="1" value="60">
+        </div>
+        <div>
+          <label for="caFallbackSelect">If CA missing:</label><br>
+          <select id="caFallbackSelect" style="padding:6px 9px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;font-family:inherit;font-size:13px;">
+            <option value="EXAM_ONLY">Use exam score as final</option>
+            <option value="ZERO_CA">CA counts as zero (harsh)</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn amber sm" onclick="saveCAOverride()">💾 Save Weights</button>
+        </div>
+        <div>
+          <button class="btn gray sm" onclick="resetCAOverride()">↺ Reset to 40/60</button>
+        </div>
+      </div>
+
+      <div class="filter-bar" style="margin-top:8px;">
+        <button class="btn purple sm" onclick="loadCAItems()">🔄 Load CA Items</button>
+        <button class="btn green sm" onclick="addCAItemRow()">➕ Add Item</button>
+        <button class="btn amber sm" onclick="seedCADefaults()">🌱 Seed Defaults</button>
+        <button class="btn green sm" onclick="saveCAItems()">💾 Save All CA Items</button>
+      </div>
+
+      <div id="caMsg" class="msg"></div>
+      <div id="caTableWrap"></div>
+
+      <div class="ca-info-bar" style="margin-top:16px;">
+        <strong>How CA works:</strong> For each subject, define one or more CA items
+        (e.g. Test 1, Test 2, Assignment). Teachers enter raw scores against each item.
+        The final subject score combines CA and exam per the weights above.
+        If no CA is entered for a subject, the exam score is used as the final
+        (or CA counts as zero, depending on the fallback rule).
+      </div>
+    </div>
+
+    <!-- ================= AUDIT ================= -->
     <div id="tab-audit" class="hidden">
       <h2>Audit Log</h2>
       <div class="filter-bar">
@@ -454,6 +581,8 @@
     terms: [],
     bulkSelected: new Set(),
     paperConfigRows: [],
+    caItems: [],
+    caOriginalItems: [],
     sandbox: SANDBOX_MODE,
     busy: false
   };
@@ -665,11 +794,9 @@
   }
 
   function ensurePassword() {
-    // Use shared session first
     var shared = LSS.getAdminPassword();
     if (shared) { state.adminPassword = shared; return true; }
     if (state.adminPassword) return true;
-    // No session — redirect to admin.html
     LSS.requireAdmin();
     return false;
   }
@@ -679,7 +806,7 @@
   // ============================================================
   function switchTab(t) {
     document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
-    ['teachers','assign','bulk','papers','audit'].forEach(function (x) {
+    ['teachers','assign','bulk','papers','ca','audit'].forEach(function (x) {
       var e = el('tab-' + x);
       if (e) e.classList.toggle('hidden', x !== t);
     });
@@ -687,6 +814,7 @@
     if (t === 'assign' && !state.assignments.length) loadAssignments();
     if (t === 'bulk') initBulkTab();
     if (t === 'papers') initPaperTab();
+    if (t === 'ca') initCATab();
     if (t === 'audit' && !state.audit.length) loadAudit();
   }
 
@@ -1293,6 +1421,374 @@
   }
 
   // ============================================================
+  // CA SETUP
+  // ============================================================
+  function initCATab() {
+    var cls = el('caClass');
+    if (cls && cls.options.length === 0) {
+      ALL_CLASSES.forEach(function (c) {
+        var o = document.createElement('option');
+        o.value = c; o.textContent = c;
+        cls.appendChild(o);
+      });
+    }
+    var term = el('caTerm');
+    if (term && term.options.length <= 1) {
+      state.terms.forEach(function (t) {
+        var o = document.createElement('option');
+        o.value = t.key; o.textContent = t.display;
+        term.appendChild(o);
+      });
+    }
+  }
+
+  async function onCaClassChange() {
+    // Populate the subject dropdown based on the selected class + term
+    var cls = getVal('caClass');
+    var term = getVal('caTerm');
+    var realTerm = term === 'ALL'
+      ? ((state.terms.find(function (t) { return t.isActive; }) || state.terms[0] || {}).key || TERM_DEFAULT)
+      : term;
+
+    var subjSel = el('caSubject');
+    if (!subjSel) return;
+    subjSel.innerHTML = '<option value="">Loading...</option>';
+
+    if (!cls) {
+      subjSel.innerHTML = '<option value="">-- Select Class first --</option>';
+      return;
+    }
+
+    try {
+      const res = await callGAS('adminGetSubjectsForClass', {
+        password: state.adminPassword,
+        studentClass: cls,
+        term: realTerm
+      });
+      if (!res || !res.success) {
+        subjSel.innerHTML = '<option value="">-- Failed to load --</option>';
+        return;
+      }
+      subjSel.innerHTML = '';
+      var def = document.createElement('option');
+      def.value = ''; def.disabled = true; def.selected = true;
+      def.textContent = '-- Select Subject --';
+      subjSel.appendChild(def);
+      (res.subjects || []).forEach(function (s) {
+        var o = document.createElement('option');
+        o.value = s; o.textContent = s;
+        subjSel.appendChild(o);
+      });
+    } catch (e) {
+      subjSel.innerHTML = '<option value="">-- Error: ' + esc(e.message) + ' --</option>';
+    }
+  }
+
+  function onCaSubjectChange() {
+    if (getVal('caSubject')) loadCAItems();
+  }
+
+  function onCaTermChange() {
+    // Reset subject, then reload
+    var subjSel = el('caSubject');
+    if (subjSel) subjSel.innerHTML = '<option value="">-- Select Class first --</option>';
+    onCaClassChange();
+  }
+
+  async function loadCAItems() {
+    if (!ensurePassword()) return;
+    hideMsg('caMsg');
+    var cls = getVal('caClass');
+    var subj = getVal('caSubject');
+    var term = getVal('caTerm');
+    var realTerm = term === 'ALL'
+      ? ((state.terms.find(function (t) { return t.isActive; }) || state.terms[0] || {}).key || TERM_DEFAULT)
+      : term;
+
+    if (!cls || !subj || !realTerm) {
+      showMsg('caMsg', 'warn', 'Select Class, Subject, and Term first.');
+      return;
+    }
+
+    await withBusy('Loading CA items…', cls + ' / ' + subj, async function () {
+      try {
+        const res = await callGAS('adminGetCAItems', {
+          password: state.adminPassword,
+          studentClass: cls,
+          subject: subj,
+          term: realTerm
+        });
+        if (!res || !res.success) {
+          showMsg('caMsg', 'error', (res && res.error) || 'Failed.');
+          return;
+        }
+        state.caItems = (res.items || []).map(function (it) {
+          return { itemName: it.itemName, maxScore: it.maxScore, order: it.order };
+        });
+        state.caOriginalItems = JSON.parse(JSON.stringify(state.caItems));
+
+        // Reflect weights in the inputs
+        if (res.weights) {
+          var caPct = Math.round((res.weights.ca || 0.4) * 100);
+          var exPct = Math.round((res.weights.exam || 0.6) * 100);
+          var caInput = el('caWeightInput'); if (caInput) caInput.value = caPct;
+          var exInput = el('examWeightInput'); if (exInput) exInput.value = exPct;
+          var fbSel = el('caFallbackSelect');
+          if (fbSel) fbSel.value = res.weights.fallbackOnMissingCA || 'EXAM_ONLY';
+        }
+
+        renderCATable();
+      } catch (e) {
+        showMsg('caMsg', 'error', 'Error: ' + e.message);
+      }
+    });
+  }
+
+  function renderCATable() {
+    var rows = state.caItems;
+    if (!rows.length) {
+      setHtml('caTableWrap',
+        '<div class="empty">No CA items defined for this class+subject+term. ' +
+        'Use <strong>Add Item</strong> or <strong>Seed Defaults</strong> to start.</div>');
+      return;
+    }
+
+    var h = '<div class="table-wrap ca-table"><table><thead><tr>';
+    h += '<th class="col-name">Item Name</th>';
+    h += '<th class="col-max">Max Score</th>';
+    h += '<th class="col-order">Order</th>';
+    h += '<th class="col-actions">Actions</th>';
+    h += '</tr></thead><tbody>';
+    rows.forEach(function (it, i) {
+      h += '<tr>';
+      h += '<td><input type="text" value="' + esc(it.itemName) + '" onchange="caEdit(' + i + ',\'itemName\',this.value)"></td>';
+      h += '<td><input type="number" min="1" max="1000" value="' + it.maxScore + '" onchange="caEdit(' + i + ',\'maxScore\',this.value)"></td>';
+      h += '<td><input type="number" min="1" max="999" value="' + it.order + '" onchange="caEdit(' + i + ',\'order\',this.value)"></td>';
+      h += '<td style="text-align:right;">'
+         + '<button class="btn red sm" onclick="caRemoveRow(' + i + ')">🗑 Remove</button>'
+         + '</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    setHtml('caTableWrap', h);
+  }
+
+  function caEdit(i, key, value) {
+    if (!state.caItems[i]) return;
+    if (key === 'maxScore') value = Math.max(1, Math.min(1000, Number(value) || 0));
+    if (key === 'order') value = Math.max(1, Math.min(999, Number(value) || 0));
+    if (key === 'itemName') value = String(value || '').trim();
+    state.caItems[i][key] = value;
+  }
+
+  function caRemoveRow(i) {
+    if (!state.caItems[i]) return;
+    var name = state.caItems[i].itemName;
+    if (!confirm('Remove CA item "' + name + '"? Any scores entered for it will also be removed when you save.')) return;
+    state.caItems.splice(i, 1);
+    // Re-number the orders sequentially
+    state.caItems.forEach(function (it, idx) { it.order = idx + 1; });
+    renderCATable();
+  }
+
+  function addCAItemRow() {
+    var nextOrder = state.caItems.length + 1;
+    state.caItems.push({ itemName: '', maxScore: 20, order: nextOrder });
+    renderCATable();
+    // Focus the new item name input
+    setTimeout(function () {
+      var inputs = document.querySelectorAll('.ca-table input[type="text"]');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }, 50);
+  }
+
+  async function seedCADefaults() {
+    if (!ensurePassword()) return;
+    var cls = getVal('caClass');
+    var subj = getVal('caSubject');
+    var term = getVal('caTerm');
+    var realTerm = term === 'ALL'
+      ? ((state.terms.find(function (t) { return t.isActive; }) || state.terms[0] || {}).key || TERM_DEFAULT)
+      : term;
+
+    if (!cls || !subj || !realTerm) {
+      showMsg('caMsg', 'warn', 'Select Class, Subject, and Term first.');
+      return;
+    }
+    if (!confirm('Seed defaults (Test 1, Test 2, Assignment @ 20 marks each) for ' + cls + ' / ' + subj + '?')) return;
+
+    hideMsg('caMsg');
+    await withBusy('Seeding defaults…', cls + ' / ' + subj, async function () {
+      try {
+        const res = await callGAS('adminSeedDefaultCAItems', {
+          password: state.adminPassword,
+          studentClass: cls,
+          subject: subj,
+          term: realTerm
+        });
+        if (!res || !res.success) {
+          showMsg('caMsg', 'error', (res && res.error) || 'Failed.');
+          return;
+        }
+        showMsg('caMsg', 'success', 'Seeded ' + res.seeded + ' new item(s). Reloading…');
+        await loadCAItems();
+      } catch (e) {
+        showMsg('caMsg', 'error', 'Error: ' + e.message);
+      }
+    });
+  }
+
+  async function saveCAItems() {
+    if (!ensurePassword()) return;
+    hideMsg('caMsg');
+    var cls = getVal('caClass');
+    var subj = getVal('caSubject');
+    var term = getVal('caTerm');
+    var realTerm = term === 'ALL'
+      ? ((state.terms.find(function (t) { return t.isActive; }) || state.terms[0] || {}).key || TERM_DEFAULT)
+      : term;
+
+    if (!cls || !subj || !realTerm) {
+      showMsg('caMsg', 'warn', 'Select Class, Subject, and Term first.');
+      return;
+    }
+    if (!state.caItems.length) {
+      showMsg('caMsg', 'warn', 'Add at least one CA item before saving.');
+      return;
+    }
+
+    // Client-side validation
+    var seen = {};
+    for (var i = 0; i < state.caItems.length; i++) {
+      var it = state.caItems[i];
+      if (!it.itemName) { showMsg('caMsg', 'error', 'Item #' + (i + 1) + ' has no name.'); return; }
+      if (!it.maxScore || it.maxScore < 1) { showMsg('caMsg', 'error', 'Item #' + (i + 1) + ' needs a valid max score.'); return; }
+      var key = it.itemName.toUpperCase();
+      if (seen[key]) { showMsg('caMsg', 'error', 'Duplicate item name: ' + it.itemName); return; }
+      seen[key] = true;
+    }
+
+    var removedCount = 0;
+    var orig = {};
+    state.caOriginalItems.forEach(function (it) { orig[it.itemName.toUpperCase()] = true; });
+    state.caItems.forEach(function (it) {
+      if (!orig[it.itemName.toUpperCase()]) return;
+    });
+    state.caOriginalItems.forEach(function (it) {
+      var stillThere = state.caItems.some(function (x) {
+        return x.itemName.toUpperCase() === it.itemName.toUpperCase();
+      });
+      if (!stillThere) removedCount++;
+    });
+
+    var confirmMsg = 'Save ' + state.caItems.length + ' CA item(s) for ' + cls + ' / ' + subj + '?';
+    if (removedCount > 0) {
+      confirmMsg += '\n\n⚠️ ' + removedCount + ' existing item(s) will be removed, ' +
+                    'along with any scores entered against them.';
+    }
+    if (!confirm(confirmMsg)) return;
+
+    await withBusy('Saving CA items…', cls + ' / ' + subj, async function () {
+      try {
+        const res = await callGAS('adminSaveCAItems', {
+          password: state.adminPassword,
+          studentClass: cls,
+          subject: subj,
+          term: realTerm,
+          items: JSON.stringify(state.caItems)
+        });
+        if (!res || !res.success) {
+          showMsg('caMsg', 'error', (res && res.error) || 'Failed.');
+          return;
+        }
+        var msg = 'Saved ' + res.saved + ' item(s).';
+        if (res.deleted) msg += ' Removed ' + res.deleted + ' old item(s).';
+        showMsg('caMsg', 'success', msg);
+        state.caOriginalItems = JSON.parse(JSON.stringify(state.caItems));
+      } catch (e) {
+        showMsg('caMsg', 'error', 'Error: ' + e.message);
+      }
+    });
+  }
+
+  async function saveCAOverride() {
+    if (!ensurePassword()) return;
+    hideMsg('caMsg');
+    var cls = getVal('caClass');
+    var subj = getVal('caSubject');
+    var term = getVal('caTerm');
+    var realTerm = term === 'ALL'
+      ? ((state.terms.find(function (t) { return t.isActive; }) || state.terms[0] || {}).key || TERM_DEFAULT)
+      : term;
+
+    var caPct = Number(getVal('caWeightInput'));
+    var exPct = Number(getVal('examWeightInput'));
+    var fallback = getVal('caFallbackSelect') || 'EXAM_ONLY';
+
+    if (!cls || !subj || !realTerm) {
+      showMsg('caMsg', 'warn', 'Select Class, Subject, and Term first.');
+      return;
+    }
+    if (isNaN(caPct) || isNaN(exPct) || caPct + exPct !== 100) {
+      showMsg('caMsg', 'error', 'CA + Exam weights must add up to 100.');
+      return;
+    }
+
+    await withBusy('Saving weights…', cls + ' / ' + subj, async function () {
+      try {
+        const res = await callGAS('adminSaveCAWeights', {
+          password: state.adminPassword,
+          studentClass: cls,
+          subject: subj,
+          term: realTerm,
+          caWeight: caPct / 100,
+          examWeight: exPct / 100,
+          fallback: fallback
+        });
+        if (!res || !res.success) {
+          showMsg('caMsg', 'error', (res && res.error) || 'Failed.');
+          return;
+        }
+        showMsg('caMsg', 'success', 'Weights saved: CA ' + caPct + '% / Exam ' + exPct + '%.');
+      } catch (e) {
+        showMsg('caMsg', 'error', 'Error: ' + e.message);
+      }
+    });
+  }
+
+  async function resetCAOverride() {
+    if (!ensurePassword()) return;
+    if (!confirm('Reset weights back to 40% CA / 60% Exam?')) return;
+    hideMsg('caMsg');
+    var cls = getVal('caClass');
+    var subj = getVal('caSubject');
+    var term = getVal('caTerm');
+    var realTerm = term === 'ALL'
+      ? ((state.terms.find(function (t) { return t.isActive; }) || state.terms[0] || {}).key || TERM_DEFAULT)
+      : term;
+
+    await withBusy('Resetting weights…', cls + ' / ' + subj, async function () {
+      try {
+        const res = await callGAS('adminResetCAWeights', {
+          password: state.adminPassword,
+          studentClass: cls,
+          subject: subj,
+          term: realTerm
+        });
+        if (!res || !res.success) {
+          showMsg('caMsg', 'error', (res && res.error) || 'Failed.');
+          return;
+        }
+        var caInput = el('caWeightInput'); if (caInput) caInput.value = 40;
+        var exInput = el('examWeightInput'); if (exInput) exInput.value = 60;
+        showMsg('caMsg', 'success', 'Weights reset to 40/60.');
+      } catch (e) {
+        showMsg('caMsg', 'error', 'Error: ' + e.message);
+      }
+    });
+  }
+
+  // ============================================================
   // AUDIT
   // ============================================================
   async function loadAudit() {
@@ -1383,7 +1879,7 @@
       });
       if (Array.isArray(terms)) {
         state.terms = terms;
-        ['asgTerm','bulkTerm','pcTerm'].forEach(function (id) {
+        ['asgTerm','bulkTerm','pcTerm','caTerm'].forEach(function (id) {
           var sel = el(id);
           if (!sel) return;
           sel.innerHTML = '<option value="ALL">ALL TERMS</option>';
