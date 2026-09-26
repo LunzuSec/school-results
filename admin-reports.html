@@ -389,14 +389,27 @@ var state = {
 
 var SANDBOX_MODE = (new URLSearchParams(location.search).get('sandbox') === 'true');
 
+// Long-running actions: single attempt, extended timeout, no retry.
+var LONG_ACTIONS = {
+  generateClassPDF: true,
+  generateNoticeBoardPDF: true,
+  generateAllNoticeBoardPDF: true
+};
+
+var QUICK_TIMEOUT_MS = 20000;     // 20 s for quick lookups (terms, names)
+var LONG_TIMEOUT_MS  = 300000;    // 5 min for PDF generation
+
 // ============================================================
 // JSONP caller
 // ============================================================
 function callGAS(action, params, attempt) {
   attempt = attempt || 1;
-  var MAX = 5;
-  var PER_ATTEMPT_MS = 15000;
-  var BACKOFF = [0, 500, 1500, 4000, 8000];
+
+  var isLong = LONG_ACTIONS[action] === true;
+
+  var MAX = isLong ? 1 : 5;
+  var PER_ATTEMPT_MS = isLong ? LONG_TIMEOUT_MS : QUICK_TIMEOUT_MS;
+  var BACKOFF = isLong ? [0] : [0, 500, 1500, 4000, 8000];
 
   return new Promise(function (resolve, reject) {
     var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -425,25 +438,26 @@ function callGAS(action, params, attempt) {
       if (attempt < MAX) {
         setTimeout(function () {
           callGAS(action, params, attempt + 1).then(resolve, reject);
-        }, BACKOFF[attempt]);
+        }, BACKOFF[attempt] || 0);
       } else {
-        reject(new Error(reason + ' (after ' + attempt + ' attempts)'));
+        reject(new Error(reason));
       }
     }
 
-    var timeoutId = setTimeout(function () { attemptFailed('Request timeout'); }, PER_ATTEMPT_MS);
+    var timeoutId = setTimeout(function () {
+      attemptFailed('Request timeout after ' + Math.round(PER_ATTEMPT_MS / 1000) + 's');
+    }, PER_ATTEMPT_MS);
+
     s.onload = function () {
       setTimeout(function () {
         if (settled) return;
 
-        // Use hasOwnProperty so an explicitly-undefined assignment is still
-        // treated as a real (but empty) response and NOT as a success.
         var hasProp = Object.prototype.hasOwnProperty.call(window, globalName);
         var resp = hasProp ? window[globalName] : undefined;
 
         if (!hasProp || resp === undefined || resp === null) {
           clearTimeout(timeoutId);
-          attemptFailed('No response (callback property not set)');
+          attemptFailed('No response from server');
           return;
         }
 
@@ -486,6 +500,25 @@ function setBtnLoading(id, on) {
   if (!b) return;
   b.classList.toggle('loading', on);
   b.disabled = on;
+}
+
+// ============================================================
+// Elapsed-time helper
+// ============================================================
+function makeElapsedTicker(statusId, messagePrefix) {
+  var startTime = Date.now();
+  var timerId = setInterval(function () {
+    var elapsed = Math.round((Date.now() - startTime) / 1000);
+    showStatus(statusId, 'loading',
+      '<span class="mini-spin"></span> ' + messagePrefix +
+      ' <strong>(' + elapsed + 's — first run may take 1–3 min)</strong>');
+  }, 1000);
+  return {
+    stop: function () {
+      clearInterval(timerId);
+      return Math.round((Date.now() - startTime) / 1000);
+    }
+  };
 }
 
 // ============================================================
@@ -563,7 +596,7 @@ function onTermChange() {
 }
 
 // ============================================================
-// PDF download
+// PDF download (base64)
 // ============================================================
 function downloadPDF(base64, fileName) {
   var byteCharacters = atob(base64);
@@ -597,21 +630,23 @@ async function generateClassReport() {
   }
 
   setBtnLoading('generateBtn', true);
-  showStatus('reportStatus', 'loading',
-    '<span class="mini-spin"></span> Generating detailed report for ' + studentClass + '…');
+  var ticker = makeElapsedTicker('reportStatus',
+    'Generating detailed report for <strong>' + studentClass + '</strong>…');
 
   try {
     var pdfBase64 = await callGAS('generateClassPDF', {
       studentClass: studentClass,
       term: term
     });
+    var elapsed = ticker.stop();
     if (!pdfBase64 || typeof pdfBase64 !== 'string') {
       throw new Error('Empty PDF response');
     }
     downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Detailed_Report');
-    showStatus('reportStatus', 'success', '✅ PDF downloaded successfully.');
-    setTimeout(function () { hideStatus('reportStatus'); }, 4000);
+    showStatus('reportStatus', 'success', '✅ PDF downloaded in ' + elapsed + 's.');
+    setTimeout(function () { hideStatus('reportStatus'); }, 5000);
   } catch (e) {
+    ticker.stop();
     showStatus('reportStatus', 'error', '❌ ' + e.message);
   } finally {
     setBtnLoading('generateBtn', false);
@@ -627,18 +662,22 @@ async function generateNoticeBoard(studentClass) {
     showStatus('noticeStatus', 'error', '❌ Please select a term.');
     return;
   }
-  showStatus('noticeStatus', 'loading',
-    '<span class="mini-spin"></span> Generating notice board for ' + studentClass + '…');
+
+  var ticker = makeElapsedTicker('noticeStatus',
+    'Generating notice board for <strong>' + studentClass + '</strong>…');
+
   try {
     var pdfBase64 = await callGAS('generateNoticeBoardPDF', {
       studentClass: studentClass,
       term: term
     });
+    var elapsed = ticker.stop();
     if (!pdfBase64 || typeof pdfBase64 !== 'string') throw new Error('Empty PDF response');
     downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Notice_Board');
-    showStatus('noticeStatus', 'success', '✅ Notice board downloaded.');
-    setTimeout(function () { hideStatus('noticeStatus'); }, 4000);
+    showStatus('noticeStatus', 'success', '✅ Notice board downloaded in ' + elapsed + 's.');
+    setTimeout(function () { hideStatus('noticeStatus'); }, 5000);
   } catch (e) {
+    ticker.stop();
     showStatus('noticeStatus', 'error', '❌ ' + e.message);
   }
 }
@@ -652,16 +691,20 @@ async function generateAllNoticeBoard() {
     showStatus('noticeStatus', 'error', '❌ Please select a term.');
     return;
   }
+
   setBtnLoading('allNoticeBtn', true);
-  showStatus('noticeStatus', 'loading',
-    '<span class="mini-spin"></span> Generating combined notice board…');
+  var ticker = makeElapsedTicker('noticeStatus',
+    'Generating combined notice board for all classes…');
+
   try {
     var pdfBase64 = await callGAS('generateAllNoticeBoardPDF', { term: term });
+    var elapsed = ticker.stop();
     if (!pdfBase64 || typeof pdfBase64 !== 'string') throw new Error('Empty PDF response');
     downloadPDF(pdfBase64, 'All_Classes_Notice_Board');
-    showStatus('noticeStatus', 'success', '✅ Combined notice board downloaded.');
-    setTimeout(function () { hideStatus('noticeStatus'); }, 4000);
+    showStatus('noticeStatus', 'success', '✅ Combined notice board downloaded in ' + elapsed + 's.');
+    setTimeout(function () { hideStatus('noticeStatus'); }, 5000);
   } catch (e) {
+    ticker.stop();
     showStatus('noticeStatus', 'error', '❌ ' + e.message);
   } finally {
     setBtnLoading('allNoticeBtn', false);
@@ -700,7 +743,6 @@ async function initializePage() {
       throw new Error('Unexpected response (' + typeof raw + '): ' + preview);
     }
 
-    // Filter sandbox terms unless ?sandbox=true
     if (!SANDBOX_MODE) {
       terms = terms.filter(function (t) { return t.isSandbox !== true; });
     }
