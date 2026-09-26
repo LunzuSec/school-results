@@ -23,114 +23,52 @@
     box-shadow: 0 25px 50px rgba(0,0,0,0.55);
     position: relative;
   }
-  .sub-wrap h3 {
-    color: #fbbf24;
-    font-size: 20px;
-    margin-bottom: 6px;
-    text-align: center;
-  }
-  .sub-wrap .sub-sub {
-    color: #cbd5e1;
-    font-size: 13px;
-    text-align: center;
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
+  .sub-wrap h3 { color: #fbbf24; font-size: 20px; margin-bottom: 6px; text-align: center; }
+  .sub-wrap .sub-sub { color: #cbd5e1; font-size: 13px; text-align: center; margin-bottom: 20px; line-height: 1.5; }
   .sub-close-x {
-    position: absolute;
-    top: 12px;
-    right: 14px;
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    font-size: 22px;
-    cursor: pointer;
-    line-height: 1;
-    padding: 4px 10px;
-    border-radius: 8px;
-    transition: 0.15s;
+    position: absolute; top: 12px; right: 14px;
+    background: transparent; border: none;
+    color: #94a3b8; font-size: 22px; cursor: pointer;
+    line-height: 1; padding: 4px 10px;
+    border-radius: 8px; transition: 0.15s;
   }
   .sub-close-x:hover { color:#fff; background: rgba(255,255,255,0.08); }
 
   .sub-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 18px;
+    display: flex; gap: 8px; margin-bottom: 18px;
     background: rgba(255,255,255,0.04);
-    padding: 6px;
-    border-radius: 12px;
+    padding: 6px; border-radius: 12px;
   }
   .sub-tab {
-    flex: 1;
-    padding: 10px 12px;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 600;
-    color: #cbd5e1;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-    border: 1px solid transparent;
-    background: transparent;
-    font-family: inherit;
+    flex: 1; padding: 10px 12px; text-align: center;
+    font-size: 13px; font-weight: 600;
+    color: #cbd5e1; border-radius: 8px; cursor: pointer;
+    transition: 0.2s; border: 1px solid transparent;
+    background: transparent; font-family: inherit;
   }
-  .sub-tab.active {
-    background: rgba(139, 92, 246, 0.25);
-    color: #fff;
-    border-color: rgba(139, 92, 246, 0.5);
-  }
-  .sub-tab:hover:not(.active) {
-    background: rgba(255,255,255,0.06);
-    color: #fff;
-  }
+  .sub-tab.active { background: rgba(139, 92, 246, 0.25); color: #fff; border-color: rgba(139, 92, 246, 0.5); }
+  .sub-tab:hover:not(.active) { background: rgba(255,255,255,0.06); color: #fff; }
   .sub-field { margin-bottom: 14px; }
-  .sub-field label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: #f0f4fa;
-    margin-bottom: 5px;
-  }
+  .sub-field label { display: block; font-size: 13px; font-weight: 600; color: #f0f4fa; margin-bottom: 5px; }
   .sub-field label .req { color: #fbbf24; margin-right: 3px; }
-  .sub-field select,
-  .sub-field input {
-    width: 100%;
-    padding: 11px 14px;
+  .sub-field select, .sub-field input {
+    width: 100%; padding: 11px 14px;
     border: 1.5px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    font-size: 14px;
+    border-radius: 12px; font-size: 14px;
     background: rgba(255, 255, 255, 0.10);
-    color: #fff;
-    transition: 0.2s;
-    font-family: inherit;
+    color: #fff; transition: 0.2s; font-family: inherit;
   }
   .sub-field select option { background: #1a2a3a; color: #fff; }
-  .sub-field select:focus,
-  .sub-field input:focus {
-    outline: none;
-    border-color: #fbbf24;
+  .sub-field select:focus, .sub-field input:focus {
+    outline: none; border-color: #fbbf24;
     background: rgba(255, 255, 255, 0.16);
   }
-  .sub-field select:disabled,
-  .sub-field input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  .sub-hint {
-    font-size: 11px;
-    color: #94a3b8;
-    margin-top: 4px;
-    display: block;
-  }
+  .sub-field select:disabled, .sub-field input:disabled { opacity: 0.5; cursor: not-allowed; }
+  .sub-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; display: block; }
 
-  /* Loading spinner inside a field */
   .sub-loading-inline {
-    display: none;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: #cbd5e1;
-    margin-top: 6px;
+    display: none; align-items: center; gap: 8px;
+    font-size: 12px; color: #cbd5e1; margin-top: 6px;
   }
   .sub-loading-inline.show { display: flex; }
   .sub-loading-inline .mini-spinner {
@@ -143,48 +81,25 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .sub-consent {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    margin: 14px 0 18px;
-    padding: 12px 14px;
+    display: flex; gap: 10px; align-items: flex-start;
+    margin: 14px 0 18px; padding: 12px 14px;
     background: rgba(255, 255, 255, 0.04);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
   .sub-consent input[type="checkbox"] {
-    width: 18px; height: 18px;
-    margin-top: 1px;
-    accent-color: #fbbf24;
-    flex-shrink: 0;
-    cursor: pointer;
+    width: 18px; height: 18px; margin-top: 1px;
+    accent-color: #fbbf24; flex-shrink: 0; cursor: pointer;
   }
-  .sub-consent label {
-    font-size: 12.5px;
-    color: #d1d9e6;
-    line-height: 1.55;
-    cursor: pointer;
-  }
-  .sub-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 8px;
-  }
+  .sub-consent label { font-size: 12.5px; color: #d1d9e6; line-height: 1.55; cursor: pointer; }
+  .sub-actions { display: flex; gap: 10px; margin-top: 8px; }
   .sub-btn {
-    flex: 1;
-    padding: 13px 16px;
-    border: none;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: 0.2s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: #fff;
+    flex: 1; padding: 13px 16px;
+    border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: 0.2s;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; color: #fff;
   }
   .sub-btn:disabled { opacity: 0.55; cursor: not-allowed; }
   .sub-btn.primary { background: rgba(139, 92, 246, 0.85); }
@@ -205,11 +120,8 @@
   .sub-btn.loading .label { display: none; }
 
   .sub-msg {
-    padding: 12px 14px;
-    border-radius: 12px;
-    font-size: 13px;
-    margin-top: 14px;
-    display: none;
+    padding: 12px 14px; border-radius: 12px;
+    font-size: 13px; margin-top: 14px; display: none;
     line-height: 1.55;
     border: 1px solid rgba(255,255,255,0.06);
   }
@@ -221,41 +133,34 @@
   .status-card {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-top: 14px;
-    font-size: 13px;
-    color: #e2e8f0;
-    line-height: 1.7;
-    display: none;
+    border-radius: 12px; padding: 14px 16px;
+    margin-top: 14px; font-size: 13px;
+    color: #e2e8f0; line-height: 1.7; display: none;
   }
   .status-card.show { display: block; }
   .status-card .row {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 3px 0;
+    display: flex; justify-content: space-between;
+    gap: 12px; padding: 3px 0;
   }
   .status-card .row .k { color: #94a3b8; }
   .status-card .row .v { color: #fff; font-weight: 600; text-align: right; word-break: break-word; }
   .badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 700;
+    display: inline-block; padding: 3px 10px;
+    border-radius: 10px; font-size: 11px; font-weight: 700;
     letter-spacing: 0.4px;
   }
   .badge.active { background: rgba(34,197,94,0.25); color: #86efac; border: 1px solid rgba(34,197,94,0.4); }
   .badge.inactive { background: rgba(148,163,184,0.2); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.35); }
 
+  .standalone-shell { max-width: 620px; margin: 0 auto; }
   .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
+<div class="standalone-shell">
 <div class="sub-wrap">
-  <button class="sub-close-x" onclick="closeSubscribeModal()" title="Close">×</button>
+  <button class="sub-close-x" id="closeX" onclick="closeSubscribeModal()" title="Close">×</button>
   <h3>📬 Result Alerts</h3>
   <div class="sub-sub">
     Subscribe to receive an email the moment your child's results are published for a term.
@@ -266,7 +171,6 @@
     <button class="sub-tab" data-tab="manage" onclick="switchSubTab('manage')">Manage</button>
   </div>
 
-  <!-- ================= SUBSCRIBE TAB ================= -->
   <div id="tab-subscribe">
     <div class="sub-field">
       <label><span class="req">*</span> Term:</label>
@@ -322,7 +226,6 @@
     <div id="subMessage" class="sub-msg"></div>
   </div>
 
-  <!-- ================= MANAGE TAB ================= -->
   <div id="tab-manage" class="hidden">
     <div class="sub-field">
       <label><span class="req">*</span> Term:</label>
@@ -367,27 +270,48 @@
     <div id="mgStatusCard" class="status-card"></div>
   </div>
 </div>
+</div>
 
+<script src="nav.js"></script>
 <script>
   // ============================================================
-  // Bridge to parent (index.html) — same origin on GitHub Pages
+  // Context detection
+  // ============================================================
+  var IS_IFRAME = (window.parent && window.parent !== window);
+
+  if (!IS_IFRAME) {
+    // Standalone: render public nav bar
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { LSS.renderPublicNav('subscribe'); });
+    } else {
+      LSS.renderPublicNav('subscribe');
+    }
+    // Hide the × close button (no parent to close)
+    var cx = document.getElementById('closeX');
+    if (cx) cx.style.display = 'none';
+  }
+
+  // ============================================================
+  // API bridge — parent first, LSS fallback
   // ============================================================
   function gasCall(action, params) {
-    if (window.parent && typeof window.parent.gasCall === 'function') {
+    if (IS_IFRAME && window.parent && typeof window.parent.gasCall === 'function') {
       return window.parent.gasCall(action, params || {});
     }
-    return Promise.reject(new Error('gasCall bridge unavailable. Open this page inside the portal.'));
+    if (typeof LSS !== 'undefined' && LSS.callGAS) {
+      return LSS.callGAS(action, params || {});
+    }
+    return Promise.reject(new Error('No API bridge available.'));
   }
 
   function closeSubscribeModal() {
-    if (window.parent && window.parent !== window) {
+    if (IS_IFRAME) {
       window.parent.postMessage({ type: 'closeSubscribeModal' }, '*');
+    } else {
+      window.location.href = 'index.html';
     }
   }
 
-  // ============================================================
-  // Class list — must match the sheet IDs in TERM_CONFIG
-  // ============================================================
   var ALL_CLASSES = [
     'Form 1', 'Form 2', 'Form 3', 'Form 4',
     'Form 1 ODL', 'Form 2 ODL', 'Form 3 ODL', 'Form 4 ODL'
@@ -395,9 +319,6 @@
 
   var availableTerms = [];
 
-  // ============================================================
-  // UI state
-  // ============================================================
   function switchSubTab(tab) {
     document.querySelectorAll('.sub-tab').forEach(function (b) {
       b.classList.toggle('active', b.dataset.tab === tab);
@@ -438,9 +359,6 @@
     el.classList.toggle('show', !!on);
   }
 
-  // ============================================================
-  // Term dropdowns
-  // ============================================================
   function populateTermSelects(terms) {
     availableTerms = terms || [];
     ['subTerm', 'mgTerm'].forEach(function (id) {
@@ -455,13 +373,10 @@
         sel.appendChild(o);
       });
     });
-    // Auto-init class dropdowns now that a default term may be selected
     refreshClassDropdown('subTerm', 'subClass');
     refreshClassDropdown('mgTerm', 'mgClass');
   }
 
-  // Rebuild class dropdown for the selected term, restricted to classes
-  // that actually have a sheet configured for that term.
   function refreshClassDropdown(termSelectId, classSelectId) {
     var termSel = document.getElementById(termSelectId);
     var classSel = document.getElementById(classSelectId);
@@ -479,10 +394,8 @@
     }
 
     var termMeta = availableTerms.find(function (t) { return t.key === termKey; });
-    // If server told us the classes available, use them; otherwise show all.
     var classList = (termMeta && Array.isArray(termMeta.classes) && termMeta.classes.length)
-      ? termMeta.classes
-      : ALL_CLASSES;
+      ? termMeta.classes : ALL_CLASSES;
 
     var defaultOpt = document.createElement('option');
     defaultOpt.value = ''; defaultOpt.disabled = true; defaultOpt.selected = true;
@@ -498,7 +411,6 @@
     classSel.disabled = false;
   }
 
-  // Listen for parent pushing the terms list
   window.addEventListener('message', function (ev) {
     var d = ev.data || {};
     if (d.type === 'termsPayload' && Array.isArray(d.terms)) {
@@ -506,19 +418,26 @@
     }
   });
 
-  // Ask parent for terms on load
   function requestTerms() {
-    if (window.parent && window.parent !== window) {
+    if (IS_IFRAME) {
       window.parent.postMessage({ type: 'requestTerms' }, '*');
     }
   }
+
+  async function loadTermsStandalone() {
+    try {
+      var terms = await gasCall('getAvailableTerms', {});
+      if (Array.isArray(terms)) populateTermSelects(terms);
+    } catch (e) {
+      // non-fatal
+    }
+  }
+
   window.addEventListener('load', function () {
-    setTimeout(requestTerms, 50);
+    if (IS_IFRAME) setTimeout(requestTerms, 50);
+    else setTimeout(loadTermsStandalone, 50);
   });
 
-  // ============================================================
-  // Term/class change wiring
-  // ============================================================
   document.getElementById('subTerm').addEventListener('change', function () {
     refreshClassDropdown('subTerm', 'subClass');
     resetStudentDropdown('subName');
@@ -545,9 +464,6 @@
     sel.disabled = true;
   }
 
-  // ============================================================
-  // Load student names for the selected class + term
-  // ============================================================
   async function loadStudentNames(termSelId, classSelId, studentSelId, loadingId) {
     var termKey = document.getElementById(termSelId).value;
     var cls = document.getElementById(classSelId).value;
@@ -557,15 +473,11 @@
 
     if (!termKey || !cls) return;
 
-    // Show loading
     sel.disabled = true;
     toggleInlineLoading(loadingId, true, 'Loading ' + cls + ' students...');
 
     try {
-      var names = await gasCall('getStudentNames', {
-        studentClass: cls,
-        term: termKey
-      });
+      var names = await gasCall('getStudentNames', { studentClass: cls, term: termKey });
 
       if (Array.isArray(names) && names.length > 0) {
         sel.innerHTML = '';
@@ -593,18 +505,15 @@
       }
     } catch (e) {
       sel.innerHTML = '';
-      var o = document.createElement('option');
-      o.value = ''; o.disabled = true; o.selected = true;
-      o.textContent = '-- Failed to load: ' + e.message + ' --';
-      sel.appendChild(o);
+      var o2 = document.createElement('option');
+      o2.value = ''; o2.disabled = true; o2.selected = true;
+      o2.textContent = '-- Failed to load: ' + e.message + ' --';
+      sel.appendChild(o2);
       sel.disabled = true;
       toggleInlineLoading(loadingId, false);
     }
   }
 
-  // ============================================================
-  // Subscribe
-  // ============================================================
   async function submitSubscription() {
     hideMsg('subMessage');
     var name    = document.getElementById('subName').value;
@@ -652,9 +561,6 @@
     }
   }
 
-  // ============================================================
-  // Check status
-  // ============================================================
   async function checkSubscriptionStatus() {
     hideMsg('mgMessage');
     var card = document.getElementById('mgStatusCard');
@@ -701,9 +607,6 @@
     }
   }
 
-  // ============================================================
-  // Unsubscribe
-  // ============================================================
   async function confirmUnsubscribe() {
     hideMsg('mgMessage');
     var name = document.getElementById('mgName').value;
@@ -738,9 +641,6 @@
     }
   }
 
-  // ============================================================
-  // Utilities
-  // ============================================================
   function escapeHtml(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
