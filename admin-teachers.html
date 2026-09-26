@@ -239,6 +239,8 @@
 </head>
 <body>
 
+<div id="lssAdminNav"></div>
+
 <div id="waitOverlay" class="wait-overlay">
   <div class="wait-box">
     <div class="wait-spinner"></div>
@@ -264,7 +266,6 @@
       <button class="tab" data-tab="audit" onclick="switchTab('audit')">📋 Audit Log</button>
     </div>
 
-    <!-- ================= TEACHERS ================= -->
     <div id="tab-teachers">
       <h2>Add New Teacher</h2>
       <div class="row">
@@ -293,7 +294,6 @@
       <div id="teachersTableWrap"></div>
     </div>
 
-    <!-- ================= ASSIGNMENTS ================= -->
     <div id="tab-assign" class="hidden">
       <h2>Add Assignment</h2>
       <div class="row">
@@ -331,7 +331,6 @@
       <div id="assignTableWrap"></div>
     </div>
 
-    <!-- ================= BULK ================= -->
     <div id="tab-bulk" class="hidden">
       <h2>Bulk Assign Subjects</h2>
       <div class="sub" style="margin-bottom:12px;">
@@ -376,7 +375,6 @@
       <div id="bulkMsg" class="msg"></div>
     </div>
 
-    <!-- ================= PAPER CONFIG ================= -->
     <div id="tab-papers" class="hidden">
       <h2>Paper Configuration</h2>
       <div class="sub" style="margin-bottom:12px;">
@@ -405,7 +403,6 @@
       <div id="pcTableWrap"></div>
     </div>
 
-    <!-- ================= AUDIT ================= -->
     <div id="tab-audit" class="hidden">
       <h2>Audit Log</h2>
       <div class="filter-bar">
@@ -424,16 +421,29 @@
   </div>
 </div>
 
+<script src="nav.js"></script>
 <script>
+  // ============================================================
+  // Auth guard + nav
+  // ============================================================
+  if (!LSS.requireAdmin()) {
+    // redirect in progress
+  } else {
+    document.addEventListener('DOMContentLoaded', function () {
+      LSS.renderAdminNav('teachers');
+    });
+    if (document.readyState !== 'loading') LSS.renderAdminNav('teachers');
+  }
+
   function el(id) { return document.getElementById(id); }
   function getVal(id) { var e = el(id); return e ? String(e.value || '') : ''; }
   function setText(id, text) { var e = el(id); if (e) e.textContent = text; }
   function setHtml(id, html) { var e = el(id); if (e) e.innerHTML = html; }
 
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
   const ALL_CLASSES = ['Form 1','Form 2','Form 3','Form 4','Form 1 ODL','Form 2 ODL','Form 3 ODL','Form 4 ODL'];
   const SANDBOX_MODE = (new URLSearchParams(window.location.search).get('sandbox') === 'true');
   const CACHE_TTL_MS = 60 * 1000;
+  const TERM_DEFAULT = '2025-2026_TERM_3';
 
   const state = {
     adminPassword: null,
@@ -535,7 +545,7 @@
       p.action = action;
       p.callback = cb;
 
-      const url = GAS_URL + '?' + Object.keys(p)
+      const url = LSS.GAS_URL + '?' + Object.keys(p)
         .filter(function (k) { return p[k] !== undefined && p[k] !== null; })
         .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]); })
         .join('&');
@@ -655,14 +665,13 @@
   }
 
   function ensurePassword() {
+    // Use shared session first
+    var shared = LSS.getAdminPassword();
+    if (shared) { state.adminPassword = shared; return true; }
     if (state.adminPassword) return true;
-    const cached = sessionStorage.getItem('adminPw');
-    if (cached) { state.adminPassword = cached; return true; }
-    const p = prompt('Enter admin password:');
-    if (!p) return false;
-    state.adminPassword = p;
-    sessionStorage.setItem('adminPw', p);
-    return true;
+    // No session — redirect to admin.html
+    LSS.requireAdmin();
+    return false;
   }
 
   // ============================================================
@@ -914,7 +923,7 @@
     try {
       var term = getVal('asgTerm') || 'ALL';
       var realTerm = term === 'ALL'
-        ? ((state.terms.find(function (t) { return t.isActive; }) || state.terms[0] || {}).key || '')
+        ? ((state.terms.find(function (t) { return t.isActive; }) || state.terms[0] || {}).key || TERM_DEFAULT)
         : term;
       const res = await callGAS('adminGetSubjectsForClass', {
         password: state.adminPassword,
@@ -1177,8 +1186,6 @@
     var active = state.terms.find(function (t) { return t.isActive; });
     return (active || state.terms[0] || {}).key || TERM_DEFAULT;
   }
-
-  var TERM_DEFAULT = '2025-2026_TERM_3';
 
   async function loadPaperConfig() {
     if (!ensurePassword()) return;
