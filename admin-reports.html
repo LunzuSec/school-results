@@ -203,7 +203,6 @@
     flex-shrink: 0;
   }
 
-  /* ---------- Footer ---------- */
   .footer {
     text-align: center;
     padding: 16px;
@@ -223,7 +222,6 @@
 
 <div class="container">
 
-  <!-- Header -->
   <div class="page-header">
     <h1>📊 Reports & Notice Boards</h1>
     <div class="sub">
@@ -231,14 +229,12 @@
     </div>
   </div>
 
-  <!-- ============================================================
-       CARD 1 — Detailed Class Reports
-       ============================================================ -->
+  <!-- Detailed Class Reports -->
   <div class="card">
     <h2>📄 Detailed Class Reports</h2>
     <div class="hint">
-      Generate a comprehensive PDF report for one class: all subjects, per-subject scores,
-      positions, grades, class average, pass rate, and subject-level pass rates.
+      Comprehensive PDF for one class: all subjects, scores, positions, grades,
+      class average, pass rate, and subject-level pass rates.
     </div>
 
     <div class="row">
@@ -248,7 +244,7 @@
       </div>
       <div class="field">
         <label for="reportTerm">Term:</label>
-        <select id="reportTerm" onchange="onTermChange('reportTerm')"></select>
+        <select id="reportTerm" onchange="onTermChange()"></select>
       </div>
     </div>
 
@@ -260,24 +256,21 @@
     <div id="reportStatus" class="status"></div>
   </div>
 
-  <!-- ============================================================
-       CARD 2 — Notice Boards
-       ============================================================ -->
+  <!-- Notice Boards -->
   <div class="card">
     <h2>📋 Notice Board Lists</h2>
     <div class="hint">
-      Simplified lists for posting on the notice board — student name, position, total, remarks.
-      No subject-level breakdown. Print-ready A4 portrait.
+      Simplified print-ready lists — name, position, total, remarks. A4 portrait.
     </div>
 
     <div class="row">
       <div class="field">
         <label for="noticeTerm">Term:</label>
-        <select id="noticeTerm" onchange="onTermChange('noticeTerm')"></select>
+        <select id="noticeTerm" onchange="onTermChange()"></select>
       </div>
       <div class="field">
         <label>&nbsp;</label>
-        <button class="btn gray" onclick="reloadClassesForTerm('noticeTerm', 'noticeGrid')">
+        <button class="btn gray" onclick="onTermChange()">
           <span class="spinner"></span>
           <span class="label">🔄 Reload Classes</span>
         </button>
@@ -285,32 +278,17 @@
     </div>
 
     <div id="noticeGrid" class="class-grid"></div>
-
     <div id="noticeStatus" class="status"></div>
 
-    <!-- Combined -->
     <div class="combined-section">
       <button class="btn green" id="allNoticeBtn" onclick="generateAllNoticeBoard()">
         <span class="spinner"></span>
         <span class="label">🏆 Generate ALL Classes Notice Board</span>
       </button>
       <div class="note">
-        <strong>Note:</strong> This will generate one combined PDF containing every student
-        from every class in the selected term.
+        <strong>Note:</strong> One combined PDF containing every student from every class in the selected term.
       </div>
     </div>
-  </div>
-
-  <!-- ============================================================
-       CARD 3 — System Info (hidden by default)
-       ============================================================ -->
-  <div class="card hidden" id="debugSection">
-    <h2>🔧 System Information</h2>
-    <button class="btn amber" id="debugBtn" onclick="loadSystemInfo()">
-      <span class="spinner"></span>
-      <span class="label">Check System Status</span>
-    </button>
-    <pre id="debugInfo" style="margin-top:14px; padding:14px; background:rgba(0,0,0,0.35); border-radius:12px; color:#cbd5e1; font-size:11.5px; overflow-x:auto; white-space:pre-wrap;"></pre>
   </div>
 
   <div class="footer">
@@ -319,9 +297,7 @@
 
 </div>
 
-<!-- ============================================================
-     BACKGROUND — Floating emoji canvas (matches other portals)
-     ============================================================ -->
+<!-- Background canvas -->
 <script>
 (function initBackground() {
   var canvas = document.getElementById('bgCanvas');
@@ -399,9 +375,7 @@
 })();
 </script>
 
-<!-- ============================================================
-     APP LOGIC — JSONP API (works from GitHub Pages)
-     ============================================================ -->
+<!-- App logic -->
 <script>
 // ============================================================
 // Config
@@ -410,12 +384,13 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPi
 
 var state = {
   terms: [],
-  activeTerm: null,
-  currentTermByDropdown: {}
+  activeTerm: null
 };
 
+var SANDBOX_MODE = (new URLSearchParams(location.search).get('sandbox') === 'true');
+
 // ============================================================
-// JSONP caller (same resilient pattern as other pages)
+// JSONP caller
 // ============================================================
 function callGAS(action, params, attempt) {
   attempt = attempt || 1;
@@ -443,7 +418,6 @@ function callGAS(action, params, attempt) {
       try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
       if (s.parentNode) s.parentNode.removeChild(s);
     }
-
     function attemptFailed(reason) {
       if (settled) return;
       settled = true;
@@ -458,7 +432,6 @@ function callGAS(action, params, attempt) {
     }
 
     var timeoutId = setTimeout(function () { attemptFailed('Request timeout'); }, PER_ATTEMPT_MS);
-
     s.onload = function () {
       setTimeout(function () {
         if (settled) return;
@@ -483,7 +456,7 @@ function callGAS(action, params, attempt) {
 }
 
 // ============================================================
-// Status helpers
+// Status
 // ============================================================
 function showStatus(id, type, html) {
   var el = document.getElementById(id);
@@ -505,11 +478,10 @@ function setBtnLoading(id, on) {
 }
 
 // ============================================================
-// Populate term dropdowns
+// Term dropdowns
 // ============================================================
 function populateTermSelects() {
-  var ids = ['reportTerm', 'noticeTerm'];
-  ids.forEach(function (id) {
+  ['reportTerm', 'noticeTerm'].forEach(function (id) {
     var sel = document.getElementById(id);
     if (!sel) return;
     sel.innerHTML = '';
@@ -528,26 +500,32 @@ function getSelectedTerm(selId) {
   return sel ? sel.value : null;
 }
 
-// ============================================================
-// Classes — build list from active term's sheets
-// ============================================================
 function getClassesForTerm(termKey) {
   var t = state.terms.find(function (x) { return x.key === termKey; });
-  if (!t) return [];
-  // Prefer the term config's classes list (server returns it)
-  return t.classes || [];
+  return t && t.classes ? t.classes : [];
 }
 
 function populateReportClassDropdown() {
   var sel = document.getElementById('reportClass');
   var term = getSelectedTerm('reportTerm');
   var classes = getClassesForTerm(term);
+  var current = sel.value;
   sel.innerHTML = '';
+  if (!classes.length) {
+    var o = document.createElement('option');
+    o.value = '';
+    o.textContent = '-- No classes for this term --';
+    o.disabled = true;
+    o.selected = true;
+    sel.appendChild(o);
+    return;
+  }
   classes.forEach(function (c) {
     var o = document.createElement('option');
     o.value = c; o.textContent = c;
     sel.appendChild(o);
   });
+  if (current && classes.indexOf(current) !== -1) sel.value = current;
 }
 
 function populateNoticeGrid() {
@@ -555,6 +533,10 @@ function populateNoticeGrid() {
   var classes = getClassesForTerm(term);
   var grid = document.getElementById('noticeGrid');
   grid.innerHTML = '';
+  if (!classes.length) {
+    grid.innerHTML = '<div style="color:#94a3b8;font-size:12.5px;font-style:italic;padding:8px;">No classes available for this term.</div>';
+    return;
+  }
   classes.forEach(function (c) {
     var btn = document.createElement('button');
     btn.className = 'btn amber';
@@ -565,18 +547,12 @@ function populateNoticeGrid() {
 }
 
 function onTermChange() {
-  // Refresh both class lists based on their own term dropdown
-  populateReportClassDropdown();
-  populateNoticeGrid();
-}
-
-function reloadClassesForTerm() {
   populateReportClassDropdown();
   populateNoticeGrid();
 }
 
 // ============================================================
-// PDF download helper
+// PDF download
 // ============================================================
 function downloadPDF(base64, fileName) {
   var byteCharacters = atob(base64);
@@ -632,7 +608,7 @@ async function generateClassReport() {
 }
 
 // ============================================================
-// Generate single class notice board
+// Generate single notice board
 // ============================================================
 async function generateNoticeBoard(studentClass) {
   var term = getSelectedTerm('noticeTerm');
@@ -640,20 +616,16 @@ async function generateNoticeBoard(studentClass) {
     showStatus('noticeStatus', 'error', '❌ Please select a term.');
     return;
   }
-
   showStatus('noticeStatus', 'loading',
     '<span class="mini-spin"></span> Generating notice board for ' + studentClass + '…');
-
   try {
     var pdfBase64 = await callGAS('generateNoticeBoardPDF', {
       studentClass: studentClass,
       term: term
     });
-    if (!pdfBase64 || typeof pdfBase64 !== 'string') {
-      throw new Error('Empty PDF response');
-    }
+    if (!pdfBase64 || typeof pdfBase64 !== 'string') throw new Error('Empty PDF response');
     downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Notice_Board');
-    showStatus('noticeStatus', 'success', '✅ Notice board for ' + studentClass + ' downloaded.');
+    showStatus('noticeStatus', 'success', '✅ Notice board downloaded.');
     setTimeout(function () { hideStatus('noticeStatus'); }, 4000);
   } catch (e) {
     showStatus('noticeStatus', 'error', '❌ ' + e.message);
@@ -661,7 +633,7 @@ async function generateNoticeBoard(studentClass) {
 }
 
 // ============================================================
-// Generate combined all-classes notice board
+// Generate all notice board
 // ============================================================
 async function generateAllNoticeBoard() {
   var term = getSelectedTerm('noticeTerm');
@@ -669,18 +641,12 @@ async function generateAllNoticeBoard() {
     showStatus('noticeStatus', 'error', '❌ Please select a term.');
     return;
   }
-
   setBtnLoading('allNoticeBtn', true);
   showStatus('noticeStatus', 'loading',
-    '<span class="mini-spin"></span> Generating combined notice board for all classes…');
-
+    '<span class="mini-spin"></span> Generating combined notice board…');
   try {
-    var pdfBase64 = await callGAS('generateAllNoticeBoardPDF', {
-      term: term
-    });
-    if (!pdfBase64 || typeof pdfBase64 !== 'string') {
-      throw new Error('Empty PDF response');
-    }
+    var pdfBase64 = await callGAS('generateAllNoticeBoardPDF', { term: term });
+    if (!pdfBase64 || typeof pdfBase64 !== 'string') throw new Error('Empty PDF response');
     downloadPDF(pdfBase64, 'All_Classes_Notice_Board');
     showStatus('noticeStatus', 'success', '✅ Combined notice board downloaded.');
     setTimeout(function () { hideStatus('noticeStatus'); }, 4000);
@@ -692,49 +658,50 @@ async function generateAllNoticeBoard() {
 }
 
 // ============================================================
-// System info (debug)
-// ============================================================
-async function loadSystemInfo() {
-  setBtnLoading('debugBtn', true);
-  var pre = document.getElementById('debugInfo');
-  pre.textContent = 'Loading...';
-  try {
-    var stats = await callGAS('getAllClassStats', {});
-    pre.textContent = JSON.stringify(stats, null, 2);
-  } catch (e) {
-    pre.textContent = 'Error: ' + e.message;
-  } finally {
-    setBtnLoading('debugBtn', false);
-  }
-}
-
-// ============================================================
 // Init
 // ============================================================
 async function initializePage() {
-  // Warm server
   try { callGAS('test', {}).catch(function () {}); } catch (e) {}
 
   try {
-    var terms = await callGAS('getAvailableTerms', {});
-    if (!Array.isArray(terms)) throw new Error('No terms returned');
-    state.terms = terms;
-    var active = terms.find(function (t) { return t.isActive; });
-    state.activeTerm = active ? active.key : (terms[0] && terms[0].key);
+    var raw = await callGAS('getAvailableTerms', SANDBOX_MODE ? { sandbox: 'true' } : {});
+    console.log('[admin-reports] getAvailableTerms raw:', raw);
 
-    // Show active term in header
-    if (active) {
-      document.getElementById('currentTermDisplay').textContent = active.display;
+    var terms = null;
+    if (Array.isArray(raw)) terms = raw;
+    else if (raw && Array.isArray(raw.terms)) terms = raw.terms;
+    else if (raw && Array.isArray(raw.data)) terms = raw.data;
+    else if (raw && Array.isArray(raw.result)) terms = raw.result;
+    else if (raw && raw.error) throw new Error(raw.error);
+    else if (typeof raw === 'string') {
+      try { var parsed = JSON.parse(raw); if (Array.isArray(parsed)) terms = parsed; } catch (e) {}
     }
+
+    if (!terms || !terms.length) {
+      throw new Error('Unexpected response: ' + (typeof raw === 'string' ? raw.slice(0, 200) : JSON.stringify(raw).slice(0, 200)));
+    }
+
+    // Filter sandbox terms unless ?sandbox=true
+    if (!SANDBOX_MODE) {
+      terms = terms.filter(function (t) { return t.isSandbox !== true; });
+    }
+
+    state.terms = terms;
+    var active = state.terms.find(function (t) { return t.isActive; });
+    state.activeTerm = active ? active.key : (state.terms[0] && state.terms[0].key);
+
+    document.getElementById('currentTermDisplay').textContent =
+      active ? active.display : (state.terms[0] ? state.terms[0].display : '—');
 
     populateTermSelects();
     onTermChange();
+
   } catch (e) {
+    console.error('[admin-reports] Failed to load terms:', e);
     document.getElementById('currentTermDisplay').textContent = 'Error loading terms';
     showStatus('reportStatus', 'error', '❌ Failed to load terms: ' + e.message);
   }
 
-  // Keyboard shortcuts
   document.addEventListener('keydown', function (ev) {
     if (ev.ctrlKey && ev.key === 'Enter') generateClassReport();
     if (ev.key === 'Escape') { hideStatus('reportStatus'); hideStatus('noticeStatus'); }
