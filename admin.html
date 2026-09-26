@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>Admin Tools — Lunzu Secondary School</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Segoe UI', Roboto, Arial, sans-serif;
+    min-height:100vh;
+    padding:20px;
+    background:#0a1628;
+    position:relative;
+    overflow-x:hidden;
+  }
+  #bg-canvas-container {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    z-index:0; pointer-events:none;
+  }
+  #bg-canvas-container canvas {
+    display:block; width:100%; height:100%; object-fit:cover;
+  }
+  .container {
+    position:relative; z-index:1; max-width:900px; margin:0 auto;
+  }
+
+  /* Login card */
+  .login-card {
+    background: rgba(20,35,55,0.85);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(139,92,246,0.35);
+    border-radius: 22px;
+    padding: 34px 30px;
+    max-width: 460px;
+    margin: 60px auto 0;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.55);
+    text-align: center;
+  }
+  .login-card h1 {
+    color:#e9d5ff; font-size:22px; font-weight:700;
+    margin-bottom: 8px;
+  }
+  .login-card .sub {
+    color:#94a3b8; font-size:13px; margin-bottom: 22px;
+    line-height:1.55;
+  }
+  .login-card input {
+    width:100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color:#fff; font-size:15px; font-family:inherit;
+    text-align:center; letter-spacing:2px;
+    margin-bottom: 14px;
+  }
+  .login-card input:focus {
+    outline:none; border-color:#a78bfa;
+    background: rgba(255,255,255,0.14);
+  }
+  .login-card .btn-confirm {
+    width:100%; padding: 14px;
+    border:none; border-radius:12px;
+    background: rgba(139,92,246,0.85); color:#fff;
+    font-size:15px; font-weight:700; cursor:pointer;
+    font-family:inherit; transition:0.2s;
+  }
+  .login-card .btn-confirm:hover:not(:disabled) {
+    background: rgba(139,92,246,1);
+    transform: translateY(-1px);
+  }
+  .login-card .btn-confirm:disabled {
+    opacity:0.5; cursor:not-allowed;
+  }
+  .login-card .err {
+    color:#fca5a5; font-size:13px;
+    min-height:18px; margin-bottom:10px;
+    line-height:1.4;
+  }
+  .login-card .hint {
+    color:#94a3b8; font-size:11.5px; margin-top:18px;
+    line-height:1.55;
+  }
+
+  /* Tools grid */
+  .tools-header {
+    text-align:center;
+    margin-bottom: 22px;
+  }
+  .tools-header h1 {
+    color:#fff; font-size:22px; font-weight:700;
+    letter-spacing:0.4px; margin-bottom:6px;
+  }
+  .tools-header .sub {
+    color:#94a3b8; font-size:13px;
+  }
+  .tools-header .sub strong { color:#fbbf24; }
+
+  .tools-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 14px;
+  }
+  .tool-card {
+    display:block;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 22px 20px;
+    text-decoration:none;
+    color:#fff;
+    transition:0.18s;
+    cursor:pointer;
+  }
+  .tool-card:hover {
+    transform: translateY(-3px);
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(251,191,36,0.35);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+  }
+  .tool-card .icon {
+    font-size: 34px; margin-bottom: 12px;
+    display:block; line-height:1;
+  }
+  .tool-card h2 {
+    font-size: 15px; color:#fbbf24;
+    text-transform: uppercase; letter-spacing:0.7px;
+    font-weight: 700; margin-bottom: 6px;
+  }
+  .tool-card p {
+    color:#94a3b8; font-size:12.5px;
+    line-height: 1.55;
+  }
+  .tool-card.reports   .icon { color:#60a5fa; }
+  .tool-card.teachers  .icon { color:#34d399; }
+  .tool-card.alerts    .icon { color:#f472b6; }
+
+  .sandbox-badge {
+    display:none;
+    background: rgba(220,38,38,0.25);
+    border:1px solid rgba(220,38,38,0.5);
+    color:#fecaca;
+    padding:3px 10px;
+    border-radius:8px;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    margin-left:8px;
+    vertical-align:middle;
+  }
+  .sandbox-badge.show { display:inline-block; }
+
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div id="bg-canvas-container"><canvas id="bgCanvas"></canvas></div>
+
+<div class="container">
+
+  <!-- LOGIN -->
+  <div id="loginView" class="login-card hidden">
+    <h1>🔒 Admin Access</h1>
+    <div class="sub">
+      Enter the admin password to open the Admin Tools hub.
+    </div>
+    <div id="loginErr" class="err"></div>
+    <input type="password" id="pwInput" placeholder="Enter password" maxlength="40" autocomplete="current-password">
+    <button class="btn-confirm" id="loginBtn" onclick="submitLogin()">Unlock</button>
+    <div class="hint">
+      Sessions last until you close the browser tab or click <strong>Log out</strong>.
+    </div>
+  </div>
+
+  <!-- TOOLS HUB -->
+  <div id="hubView" class="hidden">
+    <div class="tools-header">
+      <h1>🔧 Admin Tools <span id="sandboxBadge" class="sandbox-badge">SANDBOX MODE</span></h1>
+      <div class="sub">
+        Signed in as <strong>Admin</strong>. Choose a tool below.
+      </div>
+    </div>
+
+    <div class="tools-grid">
+      <a href="admin-reports.html" class="tool-card reports">
+        <span class="icon">📊</span>
+        <h2>Reports & Notice Boards</h2>
+        <p>Generate detailed class PDFs, single-class notice boards, and the combined all-classes notice board.</p>
+      </a>
+
+      <a href="admin-teachers.html" class="tool-card teachers">
+        <span class="icon">👥</span>
+        <h2>Manage Teachers</h2>
+        <p>Add or deactivate teachers, assign subjects and classes, configure papers, and review the audit log.</p>
+      </a>
+
+      <a href="AdminAlerts.html" class="tool-card alerts">
+        <span class="icon">📧</span>
+        <h2>Result Alerts</h2>
+        <p>Preview and send result-alert emails to parents, view active subscribers, and browse send history.</p>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<script src="nav.js"></script>
+<script>
+(function () {
+  var SANDBOX_MODE = (new URLSearchParams(location.search).get('sandbox') === 'true');
+
+  // Background canvas (very light, matches admin-reports aesthetic)
+  (function initBackground() {
+    var canvas = document.getElementById('bgCanvas');
+    var container = document.getElementById('bg-canvas-container');
+    if (!canvas || !container) return;
+    var ctx = canvas.getContext('2d');
+    var w, h, items = [];
+    var ITEM_COUNT = 18;
+    var symbols = ['🔧','🔒','📊','👥','📧','🎓','⚙️','📘'];
+    function resize() {
+      var r = container.getBoundingClientRect();
+      canvas.width = r.width || window.innerWidth;
+      canvas.height = r.height || window.innerHeight;
+      w = canvas.width; h = canvas.height;
+    }
+    function item() {
+      return {
+        x: Math.random()*w, y: Math.random()*h,
+        size: 30 + Math.random()*30,
+        vy: 0.10 + Math.random()*0.35,
+        vx: (Math.random()-0.5)*0.4,
+        rot: Math.random()*360, rs: (Math.random()-0.5)*0.02,
+        op: 0.15 + Math.random()*0.22,
+        sym: symbols[Math.floor(Math.random()*symbols.length)],
+        ph: Math.random()*100
+      };
+    }
+    function draw() {
+      ctx.clearRect(0,0,w,h);
+      var g = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*0.7);
+      g.addColorStop(0,'rgba(10,22,40,0.05)');
+      g.addColorStop(1,'rgba(10,22,40,0.40)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+      items.forEach(function (it) {
+        ctx.save();
+        ctx.translate(it.x, it.y);
+        ctx.rotate(it.rot * Math.PI / 180);
+        ctx.globalAlpha = it.op;
+        ctx.font = it.size + 'px "Segoe UI Emoji","Apple Color Emoji",sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillStyle='#a78bfa';
+        ctx.fillText(it.sym,0,0);
+        ctx.restore();
+        it.x += it.vx + Math.sin(it.ph + performance.now()*0.0002)*0.12;
+        it.y += it.vy*0.3 + Math.sin(it.ph + performance.now()*0.00035)*0.10;
+        it.rot += it.rs;
+        if (it.x > w+60) it.x = -60;
+        if (it.x < -60) it.x = w+60;
+        if (it.y > h+60) it.y = -60;
+        if (it.y < -60) it.y = h+60;
+      });
+      requestAnimationFrame(draw);
+    }
+    function start() { resize(); for (var i=0;i<ITEM_COUNT;i++) items.push(item()); draw(); }
+    window.addEventListener('resize', resize);
+    start();
+  })();
+
+  function showView(name) {
+    document.getElementById('loginView').classList.toggle('hidden', name !== 'login');
+    document.getElementById('hubView').classList.toggle('hidden', name !== 'hub');
+    if (SANDBOX_MODE) {
+      var badge = document.getElementById('sandboxBadge');
+      if (badge) badge.classList.add('show');
+    }
+  }
+
+  async function submitLogin() {
+    var input = document.getElementById('pwInput');
+    var btn = document.getElementById('loginBtn');
+    var err = document.getElementById('loginErr');
+    var pw = (input.value || '').trim();
+    err.textContent = '';
+
+    if (!pw) { err.textContent = 'Please enter a password.'; input.focus(); return; }
+
+    btn.disabled = true;
+    var originalLabel = btn.textContent;
+    btn.textContent = 'Verifying…';
+
+    try {
+      var res = await LSS.callGAS('verifyAdmin', { password: pw });
+      if (res && res.success) {
+        LSS.setAdminPassword(pw);
+        input.value = '';
+        // redirect to originally intended page, else hub
+        var dest = sessionStorage.getItem('lss_after_login');
+        if (dest && dest !== 'admin.html' && dest !== '') {
+          sessionStorage.removeItem('lss_after_login');
+          location.href = dest;
+          return;
+        }
+        showView('hub');
+        LSS.renderAdminNav('hub');
+      } else {
+        err.textContent = 'Incorrect password. Please try again.';
+        input.value = '';
+        input.focus();
+      }
+    } catch (e) {
+      err.textContent = 'Error: ' + e.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  }
+
+  function init() {
+    if (LSS.hasAdminSession()) {
+      showView('hub');
+      LSS.renderAdminNav('hub');
+    } else {
+      showView('login');
+      LSS.renderPublicNav('admin');
+      setTimeout(function () {
+        var i = document.getElementById('pwInput');
+        if (i) {
+          i.focus();
+          i.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') submitLogin();
+          });
+        }
+      }, 100);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    setTimeout(init, 0);
+  }
+
+  // expose for inline handlers
+  window.submitLogin = submitLogin;
+})();
+</script>
+</body>
+</html>
