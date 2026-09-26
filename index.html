@@ -199,6 +199,14 @@
             transform:translateY(-3px); background: rgba(236,72,153,0.95);
             box-shadow:0 12px 28px rgba(236,72,153,0.35);
         }
+        .btn-tools {
+            background: rgba(139,92,246,0.9); color:#fff;
+            border: 1px solid rgba(251,191,36,0.4);
+        }
+        .btn-tools:hover:not(:disabled) {
+            transform:translateY(-3px); background: rgba(124,58,237,1);
+            box-shadow:0 12px 28px rgba(139,92,246,0.5);
+        }
 
         .progress-container { margin:16px 0 8px 0; display:none; }
         .progress-label {
@@ -389,11 +397,11 @@
         <canvas id="bgCanvas"></canvas>
     </div>
 
-    <!-- Password Modal -->
+    <!-- Password Modal (inline admin bypass) -->
     <div id="adminModal" class="modal-overlay">
         <div class="modal-box">
-            <h3>🔒 Admin Access</h3>
-            <p>Enter the admin password to enable administrative mode.</p>
+            <h3>🔒 Enable Admin Bypass</h3>
+            <p>Enter the admin password to bypass Date of Birth for this form.</p>
             <input type="password" id="adminPasswordInput" placeholder="Enter password" maxlength="20">
             <div id="modalError" class="error-msg">Incorrect password. Please try again.</div>
             <div class="modal-buttons">
@@ -410,7 +418,7 @@
         </div>
     </div>
 
-    <!-- Admin Alerts Manager Modal -->
+    <!-- Admin Alerts Manager Modal (inline) -->
     <div id="adminAlertsModal" class="iframe-modal">
         <div class="frame-holder">
             <iframe id="adminAlertsFrame" src="about:blank"></iframe>
@@ -459,7 +467,7 @@
 
             <div id="adminNotice" class="admin-notice">
                 <span>🔑</span>
-                <span><strong>Admin Mode Active:</strong> Date of Birth is not required. Fee checking is bypassed.</span>
+                <span><strong>Admin Bypass Active:</strong> Date of Birth is not required. Fee checking is bypassed.</span>
             </div>
 
             <form id="studentForm" autocomplete="off">
@@ -524,7 +532,7 @@
                 <div class="form-group">
                     <label for="dateOfBirth">
                         <span class="required-star" id="dobStar">*</span> Date of Birth:
-                        <span id="dobAdminLabel" style="display:none; color:#8b5cf6; font-weight:400;">(Not required in Admin Mode)</span>
+                        <span id="dobAdminLabel" style="display:none; color:#8b5cf6; font-weight:400;">(Not required in Admin Bypass)</span>
                     </label>
                     <input type="date" id="dateOfBirth">
                     <small class="dob-required" id="dobRequiredText">Format: YYYY-MM-DD (e.g., 2010-05-15)</small>
@@ -545,8 +553,13 @@
                     <button type="button" class="btn btn-alerts" id="adminAlertsBtn" style="display:none;" onclick="openAdminAlertsModal()">
                         <span>📧 Manage Result Alerts</span>
                     </button>
+
+                    <button type="button" class="btn btn-tools" onclick="openAdminTools()">
+                        <span>🔧 Admin Tools</span>
+                    </button>
+
                     <button type="button" class="btn btn-admin" onclick="openAdminModal()" id="adminModeBtn">
-                        <span>🔑</span> <span id="adminModeText">Admin Mode</span>
+                        <span>🔑</span> <span id="adminModeText">Enable Admin Bypass</span>
                     </button>
                     <button type="button" class="btn btn-back" onclick="goToStudentPortal()">
                         <span>←</span> Back to home
@@ -563,6 +576,7 @@
         </div>
     </div>
 
+    <script src="nav.js"></script>
     <script>
         // ============================================================
         // 1. ANIMATED BACKGROUND
@@ -639,8 +653,6 @@
         // ============================================================
         // 2. STATE
         // ============================================================
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
-
         let allStudentNames = [];
         let isLoadingStudents = false;
         let availableTerms = [];
@@ -651,11 +663,17 @@
         let isProcessing = false;
         window.__adminPassword = null;
 
+        function callGAS(action, params) {
+            // delegate to shared helper
+            return LSS.callGAS(action, params);
+        }
+
         // ============================================================
         // 3. INIT
         // ============================================================
         window.onload = async function() {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
+            LSS.renderPublicNav('home');
             showInitialLoading(true, "Loading system configuration...");
             try {
                 await loadAvailableTerms();
@@ -715,14 +733,14 @@
         }
 
         // ============================================================
-        // 5. ADMIN MODE
+        // 5. ADMIN BYPASS MODE
         // ============================================================
         function openAdminModal() {
             if (isAdminMode) {
                 isAdminMode = false;
                 window.__adminPassword = null;
                 updateAdminUI();
-                showStatus('success', '🔒 Admin mode disabled', 3000);
+                showStatus('success', '🔒 Admin bypass disabled', 3000);
                 return;
             }
             document.getElementById('adminModal').classList.add('show');
@@ -750,7 +768,7 @@
                     window.__adminPassword = password;
                     updateAdminUI();
                     closeAdminModal();
-                    showStatus('success', '🔑 Admin mode activated successfully!', 3000);
+                    showStatus('success', '🔑 Admin bypass activated!', 3000);
                 } else {
                     document.getElementById('modalError').textContent = 'Incorrect password. Please try again.';
                     document.getElementById('modalError').classList.add('show');
@@ -782,18 +800,18 @@
             const alertsBtn = document.getElementById('adminAlertsBtn');
 
             if (isAdminMode) {
-                btnText.textContent = '🔓 Admin ON';
+                btnText.textContent = '🔓 Admin Bypass ON';
                 btn.classList.add('active');
                 notice.classList.add('show');
                 dobInput.disabled = true;
                 dobInput.value = '';
-                dobInput.placeholder = 'Not required in Admin Mode';
+                dobInput.placeholder = 'Not required';
                 dobStar.style.display = 'none';
                 dobAdminLabel.style.display = 'inline';
                 dobRequiredText.classList.add('hidden');
                 if (alertsBtn) alertsBtn.style.display = 'inline-flex';
             } else {
-                btnText.textContent = '🔑 Admin Mode';
+                btnText.textContent = 'Enable Admin Bypass';
                 btn.classList.remove('active');
                 notice.classList.remove('show');
                 dobInput.disabled = false;
@@ -804,6 +822,10 @@
                 if (alertsBtn) alertsBtn.style.display = 'none';
             }
             updateButtonStates();
+        }
+
+        function openAdminTools() {
+            window.location.href = 'admin.html';
         }
 
         // ============================================================
@@ -956,78 +978,7 @@
         }
 
         // ============================================================
-        // 7. JSONP API HELPER — assignment-form
-        // ============================================================
-        function callGAS(action, params = {}, retryCount = 0) {
-            const MAX_RETRIES = 3;
-            return new Promise((resolve, reject) => {
-                const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-                const globalName = '__gasResponse_' + callbackName;
-
-                const p = Object.assign({}, params);
-                p.callback = callbackName;
-                p.action = action;
-
-                let url = GAS_URL + '?';
-                const urlParams = [];
-                for (const key in p) {
-                    if (p[key] !== undefined && p[key] !== null) {
-                        urlParams.push(encodeURIComponent(key) + '=' + encodeURIComponent(p[key]));
-                    }
-                }
-                url += urlParams.join('&');
-
-                const script = document.createElement('script');
-                script.src = url;
-
-                function cleanup() {
-                    try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                }
-
-                const timeoutId = setTimeout(() => {
-                    cleanup();
-                    if (retryCount < MAX_RETRIES) resolve(callGAS(action, params, retryCount + 1));
-                    else reject(new Error('Request timeout after ' + MAX_RETRIES + ' retries'));
-                }, 30000);
-
-                script.onload = function() {
-                    setTimeout(() => {
-                        if (window[globalName] !== undefined) {
-                            const response = window[globalName];
-                            clearTimeout(timeoutId);
-                            cleanup();
-                            if (response && response.error) {
-                                if (retryCount < MAX_RETRIES) resolve(callGAS(action, params, retryCount + 1));
-                                else reject(new Error(response.error));
-                            } else {
-                                resolve(response);
-                            }
-                        } else {
-                            clearTimeout(timeoutId);
-                            cleanup();
-                            if (retryCount < MAX_RETRIES) resolve(callGAS(action, params, retryCount + 1));
-                            else reject(new Error('No response from server (callback may have been stripped)'));
-                        }
-                    }, 20);
-                };
-
-                script.onerror = function() {
-                    clearTimeout(timeoutId);
-                    cleanup();
-                    if (retryCount < MAX_RETRIES) resolve(callGAS(action, params, retryCount + 1));
-                    else reject(new Error('Connection failed after ' + MAX_RETRIES + ' retries'));
-                };
-
-                document.head.appendChild(script);
-            });
-        }
-
-        // Expose to iframes (same-origin on GitHub Pages)
-        window.gasCall = callGAS;
-
-        // ============================================================
-        // 8. IFRAME MODAL BRIDGE
+        // 7. IFRAME MODAL BRIDGE
         // ============================================================
         function openSubscribeModal() {
             const modal = document.getElementById('subscribeModal');
@@ -1047,7 +998,7 @@
 
         function openAdminAlertsModal() {
             if (!isAdminMode) {
-                showStatus('error', 'Admin mode required.', 3000);
+                showStatus('error', 'Admin bypass required.', 3000);
                 return;
             }
             const modal = document.getElementById('adminAlertsModal');
@@ -1096,7 +1047,7 @@
         });
 
         // ============================================================
-        // 9. FORM HANDLING
+        // 8. FORM HANDLING
         // ============================================================
         function setupForm() {
             document.getElementById('studentClass').addEventListener('change', handleClassChange);
@@ -1302,7 +1253,7 @@
         }
 
         function goToStudentPortal() {
-            window.location.href = 'https://lunzusec.github.io/School_results/index.html';
+            window.location.href = 'index.html';
         }
 
         function validateForm() {
