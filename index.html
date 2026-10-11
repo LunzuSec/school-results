@@ -7,14 +7,12 @@
     <link rel="icon" href="data:,">
     <title>Results Portal — Lunzu Secondary School</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="nav.js?v=5"></script>
+    <script src="nav.js?v=6"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         /* ============================================================
-           FLOATING MENU (results portal local widget)
-           Same visual language as the Fee Portal's floating menu,
-           but with its own CSS class names to avoid clashing.
+           FLOATING MENU — Results Portal
            ============================================================ */
         .rsp-menu {
             position: fixed !important;
@@ -56,7 +54,7 @@
             position: absolute;
             top: calc(100% + 10px);
             right: 0;
-            width: 270px;
+            width: 280px;
             background: rgba(15, 32, 52, 0.98);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
@@ -656,20 +654,6 @@
                 Download as PDF
             </button>
 
-            <div style="text-align:center; margin-top:18px;">
-                <button
-                    type="button"
-                    id="adminModeBtn"
-                    onclick="openAdminModal()"
-                    style="background:none;border:none;color:#94a3b8;font-family:inherit;
-                           font-size:12px;cursor:pointer;padding:4px 8px;
-                           display:inline-flex;align-items:center;gap:6px;"
-                >
-                    <i class="fas fa-key"></i>
-                    <span id="adminModeText">Enable admin bypass</span>
-                </button>
-            </div>
-
         </section>
 
         <footer class="portal-footer">
@@ -682,10 +666,24 @@
 
     <script>
         // ============================================================
-        // FLOATING MENU — Local to Results Portal
-        // Mirrors the Fee Portal's menu look; uses LSS for auth state.
+        // STATE — must be declared before rendering the menu
         // ============================================================
-        (function initResultsMenu() {
+        let availableTerms = [];
+        let currentTermKey = null;
+        let isLoadingStudents = false;
+        let isProcessing = false;
+        let isAdminBypass = false;
+        let allStudentNames = [];
+
+        // Auto-detect existing admin session from LSS
+        if (typeof LSS !== 'undefined' && LSS.hasAdminSession()) {
+            isAdminBypass = true;
+        }
+
+        // ============================================================
+        // FLOATING MENU
+        // ============================================================
+        function renderResultsMenu() {
             const MENU_ID = 'rspMenu';
             const existing = document.getElementById(MENU_ID);
             if (existing) existing.remove();
@@ -724,9 +722,26 @@
                       +  '<span class="rsp-menu-label">Fee Portal</span>'
                       +  '</a>';
 
+            // ---- Admin Bypass toggle ----
+            linksHtml += '<div class="rsp-menu-divider"></div>';
+
+            if (isAdminBypass) {
+                linksHtml += '<button type="button" class="rsp-menu-link logout" '
+                          +  'onclick="menuToggleAdminBypass();">'
+                          +  '<span class="rsp-menu-icon"><i class="fas fa-unlock"></i></span>'
+                          +  '<span class="rsp-menu-label">Disable Admin Bypass</span>'
+                          +  '</button>';
+            } else {
+                linksHtml += '<button type="button" class="rsp-menu-link" '
+                          +  'onclick="menuToggleAdminBypass();">'
+                          +  '<span class="rsp-menu-icon"><i class="fas fa-key"></i></span>'
+                          +  '<span class="rsp-menu-label">Enable Admin Bypass</span>'
+                          +  '</button>';
+            }
+
+            // ---- Admin Tools + Sign out ----
             let accountHtml = '';
             if (isAdmin) {
-                accountHtml += '<div class="rsp-menu-divider"></div>';
                 accountHtml += '<a href="admin.html" class="rsp-menu-link">'
                             +  '<span class="rsp-menu-icon"><i class="fas fa-user-shield"></i></span>'
                             +  '<span class="rsp-menu-label">Admin Tools</span>'
@@ -758,7 +773,6 @@
             (document.documentElement || document.body).appendChild(root);
 
             const btn = root.querySelector('.rsp-menu-btn');
-            const panel = root.querySelector('.rsp-menu-panel');
 
             function open() {
                 root.classList.add('open');
@@ -779,22 +793,90 @@
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') close();
             });
-        })();
-
-        // ============================================================
-        // STATE
-        // ============================================================
-        let availableTerms = [];
-        let currentTermKey = null;
-        let isLoadingStudents = false;
-        let isProcessing = false;
-        let isAdminBypass = false;
-        let allStudentNames = [];
-
-        // Auto-detect existing admin session from LSS
-        if (typeof LSS !== 'undefined' && LSS.hasAdminSession()) {
-            isAdminBypass = true;
         }
+
+        // ============================================================
+        // MENU-TRIGGERED ADMIN BYPASS
+        // ============================================================
+        function menuToggleAdminBypass() {
+            const root = document.getElementById('rspMenu');
+            if (root) root.classList.remove('open');
+
+            if (isAdminBypass) {
+                isAdminBypass = false;
+                if (typeof LSS !== 'undefined') LSS.clearAdminPassword();
+                applyBypassUI();
+                renderResultsMenu();
+                showMessage('success', '🔒 Admin bypass disabled');
+                return;
+            }
+
+            document.getElementById('adminModal').classList.add('show');
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('modalError').classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('adminPasswordInput').focus();
+            }, 100);
+        }
+
+        // ============================================================
+        // ADMIN MODAL HANDLERS
+        // ============================================================
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.remove('show');
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('modalError').classList.remove('show');
+        }
+
+        async function confirmAdminPassword() {
+            const password = document.getElementById('adminPasswordInput').value.trim();
+            if (!password) {
+                document.getElementById('modalError').textContent = 'Please enter a password.';
+                document.getElementById('modalError').classList.add('show');
+                return;
+            }
+            try {
+                showMessage('info', 'Verifying password…');
+                const result = await LSS.callGAS('verifyAdmin', { password: password });
+                if (result && result.success) {
+                    if (typeof LSS !== 'undefined') LSS.setAdminPassword(password);
+                    isAdminBypass = true;
+                    closeAdminModal();
+                    applyBypassUI();
+                    renderResultsMenu();
+                    showMessage('success', '🔑 Admin bypass activated');
+                } else {
+                    document.getElementById('modalError').textContent = 'Incorrect password. Please try again.';
+                    document.getElementById('modalError').classList.add('show');
+                    document.getElementById('adminPasswordInput').value = '';
+                    document.getElementById('adminPasswordInput').focus();
+                    clearMessage();
+                }
+            } catch (error) {
+                document.getElementById('modalError').textContent = 'Error verifying password: ' + error.message;
+                document.getElementById('modalError').classList.add('show');
+                clearMessage();
+            }
+        }
+
+        function applyBypassUI() {
+            const banner = document.getElementById('adminBanner');
+            const dobField = document.getElementById('dobField');
+
+            if (isAdminBypass) {
+                banner.classList.add('show');
+                dobField.classList.add('hidden');
+            } else {
+                banner.classList.remove('show');
+                dobField.classList.remove('hidden');
+            }
+            updateSubmitState();
+        }
+
+        document.getElementById('adminPasswordInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') confirmAdminPassword();
+            if (e.key === 'Escape') closeAdminModal();
+        });
 
         // ============================================================
         // BOOT
@@ -802,6 +884,8 @@
         window.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
 
+            // Render menu now (state is ready)
+            renderResultsMenu();
             applyBypassUI();
 
             try {
@@ -1011,84 +1095,6 @@
             document.getElementById('viewResultsBtn').disabled = disabled;
             document.getElementById('downloadPdfBtn').disabled = disabled;
         }
-
-        // ============================================================
-        // ADMIN BYPASS
-        // ============================================================
-        function openAdminModal() {
-            if (isAdminBypass) {
-                isAdminBypass = false;
-                if (typeof LSS !== 'undefined') LSS.clearAdminPassword();
-                applyBypassUI();
-                showMessage('success', '🔒 Admin bypass disabled');
-                return;
-            }
-            document.getElementById('adminModal').classList.add('show');
-            document.getElementById('adminPasswordInput').value = '';
-            document.getElementById('modalError').classList.remove('show');
-            document.getElementById('adminPasswordInput').focus();
-        }
-
-        function closeAdminModal() {
-            document.getElementById('adminModal').classList.remove('show');
-            document.getElementById('adminPasswordInput').value = '';
-            document.getElementById('modalError').classList.remove('show');
-        }
-
-        async function confirmAdminPassword() {
-            const password = document.getElementById('adminPasswordInput').value.trim();
-            if (!password) {
-                document.getElementById('modalError').textContent = 'Please enter a password.';
-                document.getElementById('modalError').classList.add('show');
-                return;
-            }
-            try {
-                showMessage('info', 'Verifying password…');
-                const result = await LSS.callGAS('verifyAdmin', { password: password });
-                if (result && result.success) {
-                    if (typeof LSS !== 'undefined') LSS.setAdminPassword(password);
-                    isAdminBypass = true;
-                    closeAdminModal();
-                    applyBypassUI();
-                    showMessage('success', '🔑 Admin bypass activated');
-                } else {
-                    document.getElementById('modalError').textContent = 'Incorrect password. Please try again.';
-                    document.getElementById('modalError').classList.add('show');
-                    document.getElementById('adminPasswordInput').value = '';
-                    document.getElementById('adminPasswordInput').focus();
-                    clearMessage();
-                }
-            } catch (error) {
-                document.getElementById('modalError').textContent = 'Error verifying password: ' + error.message;
-                document.getElementById('modalError').classList.add('show');
-                clearMessage();
-            }
-        }
-
-        function applyBypassUI() {
-            const banner = document.getElementById('adminBanner');
-            const dobField = document.getElementById('dobField');
-            const btnText = document.getElementById('adminModeText');
-            const btn = document.getElementById('adminModeBtn');
-
-            if (isAdminBypass) {
-                banner.classList.add('show');
-                dobField.classList.add('hidden');
-                btnText.textContent = 'Disable admin bypass';
-                btn.style.color = '#c4b5fd';
-            } else {
-                banner.classList.remove('show');
-                dobField.classList.remove('hidden');
-                btnText.textContent = 'Enable admin bypass';
-                btn.style.color = '#94a3b8';
-            }
-            updateSubmitState();
-        }
-
-        document.getElementById('adminPasswordInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') confirmAdminPassword();
-            if (e.key === 'Escape') closeAdminModal();
-        });
 
         // ============================================================
         // VIEW RESULTS
