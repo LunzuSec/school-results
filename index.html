@@ -7,11 +7,180 @@
     <link rel="icon" href="data:,">
     <title>Results Portal — Lunzu Secondary School</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="shared.css?v=4">
-    <script src="shared.js?v=4"></script>
+    <script src="nav.js?v=5"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        /* ============================================================
+           FLOATING MENU (results portal local widget)
+           Same visual language as the Fee Portal's floating menu,
+           but with its own CSS class names to avoid clashing.
+           ============================================================ */
+        .rsp-menu {
+            position: fixed !important;
+            top: 16px !important;
+            right: 16px !important;
+            z-index: 2147483000 !important;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        .rsp-menu-btn {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 215, 0, 0.4);
+            background: rgba(10, 30, 50, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #fbbf24;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .rsp-menu-btn:hover {
+            background: rgba(20, 45, 70, 1);
+            border-color: rgba(255, 215, 0, 0.7);
+            transform: translateY(-1px);
+        }
+        .rsp-menu.open .rsp-menu-btn {
+            background: rgba(20, 45, 70, 1);
+            border-color: rgba(255, 215, 0, 0.8);
+        }
+        .rsp-menu-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 270px;
+            background: rgba(15, 32, 52, 0.98);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            padding: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.98);
+            transform-origin: top right;
+            transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+            overflow: hidden;
+        }
+        .rsp-menu.open .rsp-menu-panel {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        .rsp-menu-header {
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 6px;
+        }
+        .rsp-menu-brand {
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        .rsp-menu-page {
+            color: #fbbf24;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 3px;
+            letter-spacing: 0.3px;
+        }
+        .rsp-menu-links { display: flex; flex-direction: column; gap: 1px; }
+        .rsp-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .rsp-menu-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+        .rsp-menu-link.active {
+            background: rgba(251, 191, 36, 0.12);
+            color: #fef3c7;
+        }
+        .rsp-menu-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.85;
+            flex-shrink: 0;
+        }
+        .rsp-menu-link.active .rsp-menu-icon { color: #fbbf24; opacity: 1; }
+        .rsp-menu-label { flex: 1; }
+        .rsp-menu-check {
+            color: #fbbf24;
+            font-size: 10px;
+            margin-left: auto;
+        }
+        .rsp-menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 6px 0;
+        }
+        .rsp-menu-account {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px 6px;
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+        .rsp-menu-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+            flex-shrink: 0;
+        }
+        .rsp-menu-link.logout { color: #fca5a5; }
+        .rsp-menu-link.logout:hover {
+            background: rgba(220, 38, 38, 0.12);
+            color: #fee2e2;
+        }
+
+        @media (max-width: 768px) {
+            .rsp-menu {
+                top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+                right: calc(12px + env(safe-area-inset-right, 0px)) !important;
+            }
+            .rsp-menu-btn { width: 46px; height: 46px; font-size: 16px; }
+            .rsp-menu-panel {
+                width: calc(100vw - 24px);
+                max-width: 320px;
+                top: calc(100% + 8px);
+            }
+            .rsp-menu-link { padding: 12px 14px; font-size: 14px; }
+        }
+        @media print { .rsp-menu { display: none !important; } }
+
+        /* ============================================================
+           PAGE STYLES
+           ============================================================ */
         body {
             font-family: 'Segoe UI', Roboto, Arial, sans-serif;
             min-height: 100vh;
@@ -28,7 +197,6 @@
             justify-content: center;
         }
 
-        /* ---- Portal card ---- */
         .portal {
             width: 100%;
             max-width: 460px;
@@ -41,7 +209,6 @@
             -webkit-backdrop-filter: blur(12px);
         }
 
-        /* ---- Header ---- */
         .portal-header {
             background: rgba(10, 30, 50, 0.7);
             padding: 28px 24px 22px;
@@ -72,7 +239,6 @@
             margin-top: 4px;
         }
 
-        /* ---- Admin banner ---- */
         .admin-banner {
             display: none;
             background: rgba(139, 92, 246, 0.12);
@@ -86,7 +252,6 @@
         .admin-banner i { margin-right: 5px; }
         .admin-banner strong { color: #c4b5fd; }
 
-        /* ---- Form body ---- */
         .portal-body { padding: 26px 24px 22px; }
 
         .field { margin-bottom: 18px; }
@@ -141,11 +306,8 @@
             color: #94a3b8;
             margin-top: 5px;
         }
-
-        /* ---- DOB field hidden when admin ---- */
         .field.dob-field.hidden { display: none; }
 
-        /* ---- Submit button ---- */
         .btn-submit {
             width: 100%;
             padding: 14px 20px;
@@ -177,7 +339,6 @@
             box-shadow: none;
         }
 
-        /* ---- Download PDF secondary button ---- */
         .btn-pdf {
             width: 100%;
             padding: 12px 20px;
@@ -200,12 +361,8 @@
             background: rgba(255, 255, 255, 0.1);
             border-color: rgba(251, 191, 36, 0.4);
         }
-        .btn-pdf:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
+        .btn-pdf:disabled { opacity: 0.45; cursor: not-allowed; }
 
-        /* ---- Messages ---- */
         .msg {
             padding: 10px 14px;
             border-radius: 8px;
@@ -234,7 +391,6 @@
             color: #bfdbfe;
         }
 
-        /* ---- Loading ---- */
         .inline-loading {
             display: none;
             align-items: center;
@@ -256,7 +412,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ---- Boot loader ---- */
         .boot-loader {
             position: fixed;
             inset: 0;
@@ -280,11 +435,7 @@
             animation: spin 0.9s linear infinite;
             margin-bottom: 18px;
         }
-        .boot-loader p {
-            font-size: 14px;
-            color: #cbd5e1;
-            margin-bottom: 18px;
-        }
+        .boot-loader p { font-size: 14px; color: #cbd5e1; margin-bottom: 18px; }
         .boot-loader .retry {
             padding: 10px 22px;
             background: #fbbf24;
@@ -299,7 +450,6 @@
         }
         .boot-loader .retry.show { display: inline-block; }
 
-        /* ---- Footer ---- */
         .portal-footer {
             padding: 16px 24px 20px;
             text-align: center;
@@ -308,13 +458,9 @@
             border-top: 1px solid rgba(255, 255, 255, 0.06);
             line-height: 1.7;
         }
-        .portal-footer a {
-            color: #fbbf24;
-            text-decoration: none;
-        }
+        .portal-footer a { color: #fbbf24; text-decoration: none; }
         .portal-footer a:hover { text-decoration: underline; }
 
-        /* ---- Admin bypass modal ---- */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -382,15 +528,9 @@
             font-family: inherit;
             transition: 0.2s;
         }
-        .modal-box .btn-confirm {
-            background: rgba(139, 92, 246, 0.85);
-            color: #fff;
-        }
+        .modal-box .btn-confirm { background: rgba(139, 92, 246, 0.85); color: #fff; }
         .modal-box .btn-confirm:hover { background: rgba(139, 92, 246, 1); }
-        .modal-box .btn-cancel {
-            background: rgba(100, 116, 139, 0.5);
-            color: #fff;
-        }
+        .modal-box .btn-cancel { background: rgba(100, 116, 139, 0.5); color: #fff; }
         .modal-box .btn-cancel:hover { background: rgba(100, 116, 139, 0.7); }
         .modal-box .error-msg {
             color: #f87171;
@@ -401,7 +541,6 @@
         }
         .modal-box .error-msg.show { display: block; }
 
-        /* ---- Responsive ---- */
         @media (max-width: 480px) {
             body { padding: 12px; }
             .portal-header { padding: 22px 18px 18px; }
@@ -410,7 +549,7 @@
         }
     </style>
 </head>
-<body data-nav="true" data-page="results" data-show-subscribe="false">
+<body>
 
     <!-- Boot loader -->
     <div id="bootLoader" class="boot-loader">
@@ -419,7 +558,7 @@
         <button id="bootRetryBtn" class="retry" onclick="retryBoot()">Retry</button>
     </div>
 
-    <!-- Admin bypass modal (inline, page-specific) -->
+    <!-- Admin bypass modal -->
     <div id="adminModal" class="modal-overlay">
         <div class="modal-box">
             <h3><i class="fas fa-user-shield"></i> Enable Admin Bypass</h3>
@@ -446,7 +585,6 @@
             <h2 id="academicHeader">Results Portal</h2>
         </header>
 
-        <!-- Admin banner (shown only when in-page admin bypass active) -->
         <div id="adminBanner" class="admin-banner">
             <i class="fas fa-user-shield"></i>
             <strong>Admin bypass active</strong> — DOB is not required for report access.
@@ -461,7 +599,6 @@
                 <span id="loadingStudentsText">Loading students…</span>
             </div>
 
-            <!-- Term -->
             <div class="field">
                 <label for="termSelect">Academic Term <span class="req">*</span></label>
                 <select id="termSelect" onchange="handleTermChange()">
@@ -469,7 +606,6 @@
                 </select>
             </div>
 
-            <!-- Class -->
             <div class="field">
                 <label for="studentClass">Class <span class="req">*</span></label>
                 <select id="studentClass" onchange="handleClassChange()" disabled>
@@ -485,7 +621,6 @@
                 </select>
             </div>
 
-            <!-- Student -->
             <div class="field">
                 <label for="studentName">Student <span class="req">*</span></label>
                 <select id="studentName" disabled onchange="updateSubmitState()">
@@ -493,14 +628,12 @@
                 </select>
             </div>
 
-            <!-- DOB — hidden when admin bypass is active -->
             <div class="field dob-field" id="dobField">
                 <label for="dateOfBirth">Date of Birth <span class="req">*</span></label>
                 <input type="date" id="dateOfBirth" onchange="updateSubmitState()">
                 <span class="hint">Used to verify your identity</span>
             </div>
 
-            <!-- Primary action: View Results -->
             <button
                 type="button"
                 class="btn-submit"
@@ -512,7 +645,6 @@
                 View Results
             </button>
 
-            <!-- Secondary action: Download PDF -->
             <button
                 type="button"
                 class="btn-pdf"
@@ -524,7 +656,6 @@
                 Download as PDF
             </button>
 
-            <!-- Admin bypass link (in-page, for non-shared-session users) -->
             <div style="text-align:center; margin-top:18px;">
                 <button
                     type="button"
@@ -550,34 +681,128 @@
     </main>
 
     <script>
-        // ============================================
-        // CONFIG
-        // ============================================
+        // ============================================================
+        // FLOATING MENU — Local to Results Portal
+        // Mirrors the Fee Portal's menu look; uses LSS for auth state.
+        // ============================================================
+        (function initResultsMenu() {
+            const MENU_ID = 'rspMenu';
+            const existing = document.getElementById(MENU_ID);
+            if (existing) existing.remove();
+
+            const isAdmin = (typeof LSS !== 'undefined') && LSS.hasAdminSession();
+
+            const root = document.createElement('div');
+            root.id = MENU_ID;
+            root.className = 'rsp-menu';
+
+            let linksHtml = '';
+
+            linksHtml += '<a href="index.html" class="rsp-menu-link">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-home"></i></span>'
+                      +  '<span class="rsp-menu-label">Home</span>'
+                      +  '</a>';
+
+            linksHtml += '<a href="results.html" class="rsp-menu-link active">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-graduation-cap"></i></span>'
+                      +  '<span class="rsp-menu-label">Results</span>'
+                      +  '<i class="fas fa-check rsp-menu-check"></i>'
+                      +  '</a>';
+
+            linksHtml += '<a href="Subscribe.html" class="rsp-menu-link">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-envelope"></i></span>'
+                      +  '<span class="rsp-menu-label">Subscribe</span>'
+                      +  '</a>';
+
+            linksHtml += '<a href="teachers.html" class="rsp-menu-link">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-chalkboard-teacher"></i></span>'
+                      +  '<span class="rsp-menu-label">Teacher Login</span>'
+                      +  '</a>';
+
+            linksHtml += '<a href="https://lunzusec.github.io/bursar" class="rsp-menu-link">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-wallet"></i></span>'
+                      +  '<span class="rsp-menu-label">Fee Portal</span>'
+                      +  '</a>';
+
+            let accountHtml = '';
+            if (isAdmin) {
+                accountHtml += '<div class="rsp-menu-divider"></div>';
+                accountHtml += '<a href="admin.html" class="rsp-menu-link">'
+                            +  '<span class="rsp-menu-icon"><i class="fas fa-user-shield"></i></span>'
+                            +  '<span class="rsp-menu-label">Admin Tools</span>'
+                            +  '</a>';
+                accountHtml += '<div class="rsp-menu-account">'
+                            +  '<span class="rsp-menu-dot"></span>'
+                            +  '<span>Signed in as Admin</span>'
+                            +  '</div>';
+                accountHtml += '<button type="button" class="rsp-menu-link logout" '
+                            +  'onclick="LSS.logout();">'
+                            +  '<span class="rsp-menu-icon"><i class="fas fa-sign-out-alt"></i></span>'
+                            +  '<span class="rsp-menu-label">Sign out</span>'
+                            +  '</button>';
+            }
+
+            root.innerHTML =
+                '<button type="button" class="rsp-menu-btn" aria-label="Menu" aria-expanded="false">'
+                +   '<i class="fas fa-bars"></i>'
+                + '</button>'
+                + '<div class="rsp-menu-panel">'
+                +   '<div class="rsp-menu-header">'
+                +     '<div class="rsp-menu-brand">LUNZU SEC. SCHOOL</div>'
+                +     '<div class="rsp-menu-page">Results Portal</div>'
+                +   '</div>'
+                +   '<div class="rsp-menu-links">' + linksHtml + '</div>'
+                +   accountHtml
+                + '</div>';
+
+            (document.documentElement || document.body).appendChild(root);
+
+            const btn = root.querySelector('.rsp-menu-btn');
+            const panel = root.querySelector('.rsp-menu-panel');
+
+            function open() {
+                root.classList.add('open');
+                btn.setAttribute('aria-expanded', 'true');
+            }
+            function close() {
+                root.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                root.classList.contains('open') ? close() : open();
+            });
+            document.addEventListener('click', function (e) {
+                if (!root.contains(e.target)) close();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') close();
+            });
+        })();
+
+        // ============================================================
+        // STATE
+        // ============================================================
         let availableTerms = [];
         let currentTermKey = null;
         let isLoadingStudents = false;
         let isProcessing = false;
-        let isAdminBypass = false;          // in-page bypass flag
-        let adminPasswordCache = null;      // in-page bypass password (not persisted)
+        let isAdminBypass = false;
         let allStudentNames = [];
 
-        // Detect shared-session admin — auto-activate bypass if signed in
-        const sharedAdminSession = (typeof SharedSession !== 'undefined')
-            ? SharedSession.isUnlocked()
-            : false;
+        // Auto-detect existing admin session from LSS
+        if (typeof LSS !== 'undefined' && LSS.hasAdminSession()) {
+            isAdminBypass = true;
+        }
 
-        // ============================================
+        // ============================================================
         // BOOT
-        // ============================================
+        // ============================================================
         window.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-            // If a shared admin session exists, activate bypass silently
-            if (sharedAdminSession) {
-                isAdminBypass = true;
-                adminPasswordCache = SharedSession.getPassword();
-                applyBypassUI();
-            }
+            applyBypassUI();
 
             try {
                 await loadAvailableTerms();
@@ -593,14 +818,11 @@
             document.getElementById('bootLoaderText').textContent = message;
             document.getElementById('bootRetryBtn').classList.add('show');
         }
+        function retryBoot() { window.location.reload(); }
 
-        function retryBoot() {
-            window.location.reload();
-        }
-
-        // ============================================
+        // ============================================================
         // MESSAGES
-        // ============================================
+        // ============================================================
         function showMessage(type, text) {
             const slot = document.getElementById('msgSlot');
             const icons = {
@@ -617,16 +839,15 @@
                 }, 6000);
             }
         }
-
         function clearMessage() {
             document.getElementById('msgSlot').classList.remove('show');
         }
 
-        // ============================================
+        // ============================================================
         // TERMS
-        // ============================================
+        // ============================================================
         async function loadAvailableTerms() {
-            const terms = await callGAS('getAvailableTerms', {});
+            const terms = await LSS.callGAS('getAvailableTerms', {});
             if (!Array.isArray(terms) || terms.length === 0) {
                 throw new Error('No academic terms available.');
             }
@@ -690,9 +911,9 @@
             resetForm();
         }
 
-        // ============================================
+        // ============================================================
         // CLASS + STUDENTS
-        // ============================================
+        // ============================================================
         async function handleClassChange() {
             resetStudentFields();
             const cls = document.getElementById('studentClass').value;
@@ -704,7 +925,7 @@
                 'Loading students from ' + cls + '…';
 
             try {
-                const names = await callGAS('getStudentNames', {
+                const names = await LSS.callGAS('getStudentNames', {
                     studentClass: cls,
                     term: currentTermKey
                 });
@@ -772,9 +993,9 @@
             document.getElementById('studentClass').value = '';
         }
 
-        // ============================================
+        // ============================================================
         // SUBMIT STATE
-        // ============================================
+        // ============================================================
         function updateSubmitState() {
             const name = document.getElementById('studentName').value;
             const cls  = document.getElementById('studentClass').value;
@@ -791,14 +1012,13 @@
             document.getElementById('downloadPdfBtn').disabled = disabled;
         }
 
-        // ============================================
-        // ADMIN BYPASS (in-page only)
-        // ============================================
+        // ============================================================
+        // ADMIN BYPASS
+        // ============================================================
         function openAdminModal() {
             if (isAdminBypass) {
-                // Toggle off
                 isAdminBypass = false;
-                adminPasswordCache = null;
+                if (typeof LSS !== 'undefined') LSS.clearAdminPassword();
                 applyBypassUI();
                 showMessage('success', '🔒 Admin bypass disabled');
                 return;
@@ -824,10 +1044,10 @@
             }
             try {
                 showMessage('info', 'Verifying password…');
-                const result = await callGAS('verifyAdmin', { password: password });
+                const result = await LSS.callGAS('verifyAdmin', { password: password });
                 if (result && result.success) {
+                    if (typeof LSS !== 'undefined') LSS.setAdminPassword(password);
                     isAdminBypass = true;
-                    adminPasswordCache = password;
                     closeAdminModal();
                     applyBypassUI();
                     showMessage('success', '🔑 Admin bypass activated');
@@ -865,15 +1085,14 @@
             updateSubmitState();
         }
 
-        // Keyboard for modal
         document.getElementById('adminPasswordInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') confirmAdminPassword();
             if (e.key === 'Escape') closeAdminModal();
         });
 
-        // ============================================
+        // ============================================================
         // VIEW RESULTS
-        // ============================================
+        // ============================================================
         function getResults() {
             if (isProcessing) return;
 
@@ -927,9 +1146,9 @@
             showMessage('success', 'Opening results…');
         }
 
-        // ============================================
+        // ============================================================
         // DOWNLOAD PDF
-        // ============================================
+        // ============================================================
         async function downloadResultsAsPDF() {
             if (isProcessing) return;
 
@@ -955,13 +1174,13 @@
             try {
                 let result;
                 if (isAdminBypass) {
-                    result = await callGAS('generatePDFAdmin', {
+                    result = await LSS.callGAS('generatePDFAdmin', {
                         studentName: name,
                         studentClass: cls,
                         term: term
                     });
                 } else {
-                    result = await callGAS('generatePDF', {
+                    result = await LSS.callGAS('generatePDF', {
                         studentName: name,
                         studentClass: cls,
                         dateOfBirth: dob,
@@ -1007,62 +1226,6 @@
                 }, 100);
             } catch (err) {
                 throw new Error('Failed to download PDF: ' + err.message);
-            }
-        }
-
-        // ============================================
-        // GAS CALL
-        // ============================================
-        async function callGAS(action, params = {}, attempt = 1) {
-            const body = new URLSearchParams();
-            body.append('action', action);
-            for (const key in params) {
-                if (params[key] !== undefined && params[key] !== null) {
-                    body.append(key, params[key]);
-                }
-            }
-            body.append('_cb', Date.now().toString());
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
-                    body: body.toString(),
-                    redirect: 'follow',
-                    signal: controller.signal,
-                    credentials: 'omit'
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-
-                const text = await response.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (parseErr) {
-                    const match = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-                    if (match) data = JSON.parse(match[0]);
-                    else throw new Error('Invalid response from server');
-                }
-                if (data && data.error) throw new Error(data.error);
-                return data;
-            } catch (err) {
-                clearTimeout(timeoutId);
-                const msg = (err && err.message) || '';
-                const retryable =
-                    err.name === 'AbortError' ||
-                    msg.indexOf('Failed to fetch') !== -1 ||
-                    msg.indexOf('NetworkError') !== -1 ||
-                    msg.indexOf('HTTP 5') !== -1;
-
-                if (retryable && attempt < 2) {
-                    await new Promise(r => setTimeout(r, 900));
-                    return callGAS(action, params, attempt + 1);
-                }
-                throw err;
             }
         }
     </script>
