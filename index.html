@@ -7,12 +7,12 @@
     <link rel="icon" href="data:,">
     <title>Results Portal — Lunzu Secondary School</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="nav.js?v=6"></script>
+    <script src="nav.js?v=7"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         /* ============================================================
-           FLOATING MENU — Results Portal
+           FLOATING MENU
            ============================================================ */
         .rsp-menu {
             position: fixed !important;
@@ -305,6 +305,128 @@
             margin-top: 5px;
         }
         .field.dob-field.hidden { display: none; }
+
+        /* ============================================================
+           FUZZY SEARCH BAR (below Student dropdown)
+           ============================================================ */
+        .search-wrap { position: relative; }
+
+        .search-wrap input {
+            padding-left: 38px;
+            padding-right: 38px;
+        }
+        .search-wrap .search-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 13px;
+            pointer-events: none;
+        }
+        .search-wrap .search-clear {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 6px 8px;
+            font-size: 12px;
+            display: none;
+            border-radius: 6px;
+        }
+        .search-wrap .search-clear.show { display: inline-block; }
+        .search-wrap .search-clear:hover {
+            color: #fbbf24;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .search-results {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: rgba(15, 32, 52, 0.99);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+            max-height: 260px;
+            overflow-y: auto;
+            z-index: 500;
+            display: none;
+        }
+        .search-results.show { display: block; }
+
+        .search-results-header {
+            padding: 8px 12px;
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .search-results-header .hint {
+            color: #64748b;
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 10px;
+        }
+
+        .search-result-item {
+            padding: 10px 14px;
+            color: #e2e8f0;
+            font-size: 13.5px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.12s, color 0.12s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover,
+        .search-result-item.highlighted {
+            background: rgba(251, 191, 36, 0.14);
+            color: #fef3c7;
+        }
+        .search-result-name { flex: 1; }
+        .search-result-badge {
+            font-size: 9.5px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .search-result-badge.fuzzy {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fcd34d;
+        }
+
+        .search-result-empty {
+            padding: 16px 14px;
+            color: #94a3b8;
+            font-size: 12.5px;
+            text-align: center;
+        }
+        .search-result-empty i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 6px;
+            color: #64748b;
+        }
 
         .btn-submit {
             width: 100%;
@@ -619,11 +741,39 @@
                 </select>
             </div>
 
+            <!-- Student dropdown -->
             <div class="field">
                 <label for="studentName">Student <span class="req">*</span></label>
-                <select id="studentName" disabled onchange="updateSubmitState()">
+                <select id="studentName" disabled onchange="handleStudentDropdownChange()">
                     <option value="" disabled selected>Select class first</option>
                 </select>
+            </div>
+
+            <!-- Fuzzy search bar — directly under Student -->
+            <div class="field">
+                <label for="studentSearch">
+                    Search Student
+                    <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;font-size:11px;">
+                        — don't worry about spelling
+                    </span>
+                </label>
+                <div class="search-wrap">
+                    <i class="fas fa-search search-icon"></i>
+                    <input
+                        type="text"
+                        id="studentSearch"
+                        placeholder="Type any part of the name…"
+                        autocomplete="off"
+                        disabled
+                        oninput="handleSearchInput()"
+                        onfocus="handleSearchFocus()"
+                        onkeydown="handleSearchKeydown(event)"
+                    >
+                    <button type="button" class="search-clear" id="searchClearBtn" onclick="clearSearch()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="search-results" id="searchResults"></div>
+                </div>
             </div>
 
             <div class="field dob-field" id="dobField">
@@ -666,7 +816,7 @@
 
     <script>
         // ============================================================
-        // STATE — must be declared before rendering the menu
+        // STATE
         // ============================================================
         let availableTerms = [];
         let currentTermKey = null;
@@ -674,10 +824,162 @@
         let isProcessing = false;
         let isAdminBypass = false;
         let allStudentNames = [];
+        let searchHighlightIndex = -1;
+        let currentSearchMatches = [];
 
-        // Auto-detect existing admin session from LSS
+        // Auto-detect existing admin session
         if (typeof LSS !== 'undefined' && LSS.hasAdminSession()) {
             isAdminBypass = true;
+        }
+
+        // ============================================================
+        // FUZZY SEARCH — Levenshtein + prefix + substring scoring
+        // ============================================================
+
+        /**
+         * Levenshtein distance between two strings.
+         * Standard dynamic programming with two-row optimization.
+         */
+        function levenshtein(a, b) {
+            if (a === b) return 0;
+            const al = a.length, bl = b.length;
+            if (al === 0) return bl;
+            if (bl === 0) return al;
+
+            let prev = new Array(bl + 1);
+            let curr = new Array(bl + 1);
+
+            for (let j = 0; j <= bl; j++) prev[j] = j;
+
+            for (let i = 1; i <= al; i++) {
+                curr[0] = i;
+                for (let j = 1; j <= bl; j++) {
+                    const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+                    curr[j] = Math.min(
+                        prev[j] + 1,      // deletion
+                        curr[j - 1] + 1,  // insertion
+                        prev[j - 1] + cost // substitution
+                    );
+                }
+                [prev, curr] = [curr, prev];
+            }
+            return prev[bl];
+        }
+
+        /**
+         * Score how well a query matches a target string.
+         * Higher = better. Returns 0 if no reasonable match.
+         *
+         * Signals:
+         *   - exact match       → 1000
+         *   - prefix match      → 800 - (length diff)
+         *   - substring match   → 600 - position penalty
+         *   - word-prefix match → 500 per matched word
+         *   - fuzzy (levenshtein) → 300 - (distance × 30)
+         *   - initials match    → 200
+         */
+        function scoreMatch(query, target) {
+            const q = query.toLowerCase().trim();
+            const t = target.toLowerCase().trim();
+            if (!q) return 0;
+            if (q === t) return 1000;
+
+            // Prefix match
+            if (t.startsWith(q)) {
+                return 800 - (t.length - q.length);
+            }
+
+            // Substring match (contiguous)
+            const substrIdx = t.indexOf(q);
+            if (substrIdx !== -1) {
+                return 600 - substrIdx;
+            }
+
+            // Multi-word: split query into tokens, score each token against target words
+            const qTokens = q.split(/\s+/).filter(Boolean);
+            const tWords = t.split(/\s+/).filter(Boolean);
+
+            if (qTokens.length > 1) {
+                let totalScore = 0;
+                let allTokensMatched = true;
+
+                for (const qTok of qTokens) {
+                    let bestTokScore = 0;
+                    for (const tWord of tWords) {
+                        const s = scoreSingleToken(qTok, tWord);
+                        if (s > bestTokScore) bestTokScore = s;
+                    }
+                    if (bestTokScore === 0) { allTokensMatched = false; break; }
+                    totalScore += bestTokScore;
+                }
+
+                if (allTokensMatched) {
+                    return Math.round(totalScore / qTokens.length);
+                }
+            }
+
+            // Single token vs whole string, or vs each word
+            let bestSingle = scoreSingleToken(q, t);
+            for (const tWord of tWords) {
+                const s = scoreSingleToken(q, tWord);
+                if (s > bestSingle) bestSingle = s;
+            }
+
+            return bestSingle;
+        }
+
+        /**
+         * Score a single token against a single word.
+         */
+        function scoreSingleToken(queryToken, targetWord) {
+            const q = queryToken.toLowerCase();
+            const w = targetWord.toLowerCase();
+
+            if (q === w) return 1000;
+            if (w.startsWith(q)) return 800 - (w.length - q.length);
+            if (w.indexOf(q) !== -1) return 600;
+
+            // Fuzzy: only allow if query length is meaningful
+            if (q.length < 3) return 0;
+
+            const dist = levenshtein(q, w);
+
+            // Threshold scales with query length:
+            //   3-4 chars → allow up to 1 typo
+            //   5-7 chars → allow up to 2 typos
+            //   8+ chars  → allow up to 3 typos
+            let maxDist;
+            if (q.length <= 4) maxDist = 1;
+            else if (q.length <= 7) maxDist = 2;
+            else maxDist = 3;
+
+            if (dist > maxDist) return 0;
+
+            // Score drops 30 points per edit distance
+            return 300 - (dist * 30);
+        }
+
+        /**
+         * Fuzzy-find student names matching a query.
+         * Returns array of { name, score, kind } sorted by score desc.
+         * kind = 'exact' | 'fuzzy'
+         */
+        function fuzzyFindStudents(query, names) {
+            if (!query || !query.trim()) return [];
+            const scored = [];
+            const MIN_SCORE = 100;  // filter weak matches
+
+            for (const name of names) {
+                const score = scoreMatch(query, name);
+                if (score >= MIN_SCORE) {
+                    // Classify: exact-ish if score >= 500, else fuzzy
+                    const kind = score >= 500 ? 'exact' : 'fuzzy';
+                    scored.push({ name, score, kind });
+                }
+            }
+
+            scored.sort((a, b) => b.score - a.score);
+            return scored.slice(0, 12);  // top 12
         }
 
         // ============================================================
@@ -722,7 +1024,6 @@
                       +  '<span class="rsp-menu-label">Fee Portal</span>'
                       +  '</a>';
 
-            // ---- Admin Bypass toggle ----
             linksHtml += '<div class="rsp-menu-divider"></div>';
 
             if (isAdminBypass) {
@@ -739,7 +1040,6 @@
                           +  '</button>';
             }
 
-            // ---- Admin Tools + Sign out ----
             let accountHtml = '';
             if (isAdmin) {
                 accountHtml += '<a href="admin.html" class="rsp-menu-link">'
@@ -884,7 +1184,6 @@
         window.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-            // Render menu now (state is ready)
             renderResultsMenu();
             applyBypassUI();
 
@@ -1033,6 +1332,7 @@
 
         function populateStudentSelect(names) {
             const select = document.getElementById('studentName');
+            const searchInput = document.getElementById('studentSearch');
             select.innerHTML = '';
 
             if (names.length === 0) {
@@ -1043,6 +1343,7 @@
                 opt.textContent = 'No students available';
                 select.appendChild(opt);
                 select.disabled = true;
+                searchInput.disabled = true;
                 return;
             }
 
@@ -1061,12 +1362,24 @@
             });
 
             select.disabled = false;
+            searchInput.disabled = false;
         }
 
         function resetStudentFields() {
             const nameSelect = document.getElementById('studentName');
+            const searchInput = document.getElementById('studentSearch');
+            const searchClear = document.getElementById('searchClearBtn');
+            const resultsBox = document.getElementById('searchResults');
+
             nameSelect.innerHTML = '<option value="" disabled selected>Select class first</option>';
             nameSelect.disabled = true;
+            searchInput.value = '';
+            searchInput.disabled = true;
+            searchClear.classList.remove('show');
+            resultsBox.classList.remove('show');
+            resultsBox.innerHTML = '';
+            searchHighlightIndex = -1;
+            currentSearchMatches = [];
             document.getElementById('dateOfBirth').value = '';
             clearMessage();
             updateSubmitState();
@@ -1076,6 +1389,197 @@
             resetStudentFields();
             document.getElementById('studentClass').value = '';
         }
+
+        // ============================================================
+        // SEARCH — fuzzy matching, sync with dropdown
+        // ============================================================
+        function handleSearchFocus() {
+            const q = document.getElementById('studentSearch').value.trim();
+            if (q) renderSearchResults(q);
+        }
+
+        function handleSearchInput() {
+            const q = document.getElementById('studentSearch').value;
+            const clearBtn = document.getElementById('searchClearBtn');
+            clearBtn.classList.toggle('show', !!q);
+
+            // Live-sync: if the typed value exactly equals a student name,
+            // auto-select it in the dropdown (seamless coordination).
+            const exact = allStudentNames.find(
+                n => n.toLowerCase() === q.toLowerCase()
+            );
+            if (exact) {
+                document.getElementById('studentName').value = exact;
+                updateSubmitState();
+            }
+
+            renderSearchResults(q);
+        }
+
+        function renderSearchResults(query) {
+            const box = document.getElementById('searchResults');
+            const trimmed = query.trim();
+
+            if (!trimmed || allStudentNames.length === 0) {
+                box.classList.remove('show');
+                box.innerHTML = '';
+                currentSearchMatches = [];
+                searchHighlightIndex = -1;
+                return;
+            }
+
+            const matches = fuzzyFindStudents(trimmed, allStudentNames);
+            currentSearchMatches = matches;
+            searchHighlightIndex = -1;
+
+            if (matches.length === 0) {
+                box.innerHTML =
+                    '<div class="search-result-empty">'
+                    + '<i class="fas fa-user-slash"></i>'
+                    + 'No matching students found.<br>'
+                    + '<span style="font-size:11px;">Try fewer letters or check the spelling.</span>'
+                    + '</div>';
+                box.classList.add('show');
+                return;
+            }
+
+            let html = '';
+            const hasFuzzy = matches.some(m => m.kind === 'fuzzy');
+            const headerText = matches.length === 1
+                ? '1 match'
+                : matches.length + ' matches';
+            const hintText = hasFuzzy ? 'typo-tolerant' : 'exact';
+
+            html += '<div class="search-results-header">'
+                 +   '<span>' + headerText + '</span>'
+                 +   '<span class="hint">' + hintText + '</span>'
+                 + '</div>';
+
+            matches.forEach((m, idx) => {
+                const badgeClass = m.kind === 'fuzzy' ? 'fuzzy' : '';
+                const badgeText = m.kind === 'fuzzy' ? 'close match' : 'match';
+                html += '<div class="search-result-item" '
+                     +  'data-index="' + idx + '" '
+                     +  'onclick="selectSearchResult(' + idx + ')">'
+                     +  '<span class="search-result-name">' + escapeHtml(m.name) + '</span>'
+                     +  '<span class="search-result-badge ' + badgeClass + '">' + badgeText + '</span>'
+                     +  '</div>';
+            });
+
+            box.innerHTML = html;
+            box.classList.add('show');
+        }
+
+        function selectSearchResult(idx) {
+            const match = currentSearchMatches[idx];
+            if (!match) return;
+
+            // Sync both fields: set dropdown value AND set search text
+            document.getElementById('studentName').value = match.name;
+            document.getElementById('studentSearch').value = match.name;
+
+            // Close the results panel
+            const box = document.getElementById('searchResults');
+            box.classList.remove('show');
+            box.innerHTML = '';
+            currentSearchMatches = [];
+            searchHighlightIndex = -1;
+
+            updateSubmitState();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('studentSearch');
+            input.value = '';
+            document.getElementById('searchClearBtn').classList.remove('show');
+            document.getElementById('searchResults').classList.remove('show');
+            document.getElementById('searchResults').innerHTML = '';
+            currentSearchMatches = [];
+            searchHighlightIndex = -1;
+            input.focus();
+        }
+
+        function handleSearchKeydown(e) {
+            const box = document.getElementById('searchResults');
+            const isOpen = box.classList.contains('show');
+
+            if (e.key === 'ArrowDown') {
+                if (!isOpen) { renderSearchResults(document.getElementById('studentSearch').value); return; }
+                e.preventDefault();
+                if (currentSearchMatches.length === 0) return;
+                searchHighlightIndex = (searchHighlightIndex + 1) % currentSearchMatches.length;
+                highlightSearchItem(searchHighlightIndex);
+            } else if (e.key === 'ArrowUp') {
+                if (!isOpen) return;
+                e.preventDefault();
+                if (currentSearchMatches.length === 0) return;
+                searchHighlightIndex = (searchHighlightIndex - 1 + currentSearchMatches.length) % currentSearchMatches.length;
+                highlightSearchItem(searchHighlightIndex);
+            } else if (e.key === 'Enter') {
+                if (isOpen && searchHighlightIndex >= 0) {
+                    e.preventDefault();
+                    selectSearchResult(searchHighlightIndex);
+                } else if (isOpen && currentSearchMatches.length > 0) {
+                    e.preventDefault();
+                    selectSearchResult(0);
+                }
+            } else if (e.key === 'Escape') {
+                box.classList.remove('show');
+                searchHighlightIndex = -1;
+            }
+        }
+
+        function highlightSearchItem(idx) {
+            const items = document.querySelectorAll('#searchResults .search-result-item');
+            items.forEach((el, i) => {
+                el.classList.toggle('highlighted', i === idx);
+            });
+            const active = items[idx];
+            if (active && active.scrollIntoView) {
+                active.scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        function escapeHtml(s) {
+            if (s === null || s === undefined) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Sync dropdown → search input
+        function handleStudentDropdownChange() {
+            const name = document.getElementById('studentName').value;
+            const searchInput = document.getElementById('studentSearch');
+            const clearBtn = document.getElementById('searchClearBtn');
+
+            if (name) {
+                searchInput.value = name;
+                clearBtn.classList.add('show');
+            }
+            // Close search results if open
+            const box = document.getElementById('searchResults');
+            box.classList.remove('show');
+            box.innerHTML = '';
+            currentSearchMatches = [];
+            searchHighlightIndex = -1;
+
+            updateSubmitState();
+        }
+
+        // Close search dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const wrap = document.querySelector('.search-wrap');
+            if (!wrap) return;
+            if (!wrap.contains(e.target)) {
+                const box = document.getElementById('searchResults');
+                if (box) box.classList.remove('show');
+                searchHighlightIndex = -1;
+            }
+        });
 
         // ============================================================
         // SUBMIT STATE
