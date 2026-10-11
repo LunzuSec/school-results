@@ -1,21 +1,16 @@
 // ============================================================
 // nav.js — Shared navigation + auth helper for Lunzu SS
-// Hosted at: /nav.js  (GitHub Pages root)
-// Used by: index.html, results.html, Subscribe.html,
-//          fee-portal.html, admin.html, admin-reports.html,
-//          admin-teachers.html, AdminAlerts.html
+// Uses fetch() + POST — mobile-safe, cache-proof.
+// Backend: GAS with doGet/doPost both routing via handleApiRequest.
 // ============================================================
 (function (global) {
   'use strict';
 
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
   var PW_KEY = 'lss_admin_pw';
-  var BASE = '';
 
-  // Mobile detection — mobile networks need longer timeouts + slower backoff
   var IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile|Opera Mini/i.test(navigator.userAgent);
 
-  // Actions classified by expected duration
   var LONG_ACTIONS = {
     generateClassPDF: true,
     generateNoticeBoardPDF: true,
@@ -26,15 +21,15 @@
   var MEDIUM_ACTIONS = {
     getAvailableTerms: true,
     getStudentNames: true,
-    getFeeReport: true,
-    getFeeReportAdmin: true
+    getStudentResults: true,
+    getStudentResultsAdmin: true
   };
 
-  // Timeout + retry tiers
-  var QUICK_TIMEOUT_MS  = IS_MOBILE ? 45000 : 25000;
-  var MEDIUM_TIMEOUT_MS = IS_MOBILE ? 90000 : 60000;
+  // Timeouts — generous on mobile
+  var QUICK_TIMEOUT_MS  = IS_MOBILE ? 60000 : 30000;
+  var MEDIUM_TIMEOUT_MS = IS_MOBILE ? 120000 : 90000;
   var LONG_TIMEOUT_MS   = 300000;
-  var QUICK_RETRIES     = IS_MOBILE ? 4 : 5;
+  var QUICK_RETRIES     = IS_MOBILE ? 3 : 4;
   var MEDIUM_RETRIES    = 3;
   var LONG_RETRIES      = 1;
 
@@ -64,7 +59,7 @@
   }
 
   // ============================================================
-  // JSONP caller — cache-busting + mobile-safe retries
+  // callGAS — fetch + POST
   // ============================================================
   function callGAS(action, params, attempt) {
     attempt = attempt || 1;
@@ -73,93 +68,83 @@
     var isMedium = MEDIUM_ACTIONS[action] === true;
 
     var MAX, PER_ATTEMPT_MS, BACKOFF;
-
     if (isLong) {
-      MAX = LONG_RETRIES;
-      PER_ATTEMPT_MS = LONG_TIMEOUT_MS;
+      MAX = LONG_RETRIES;     PER_ATTEMPT_MS = LONG_TIMEOUT_MS;
       BACKOFF = [0];
     } else if (isMedium) {
-      MAX = MEDIUM_RETRIES;
-      PER_ATTEMPT_MS = MEDIUM_TIMEOUT_MS;
-      BACKOFF = [0, 1500, 4000];
+      MAX = MEDIUM_RETRIES;   PER_ATTEMPT_MS = MEDIUM_TIMEOUT_MS;
+      BACKOFF = [0, 2000, 5000];
     } else {
-      MAX = QUICK_RETRIES;
-      PER_ATTEMPT_MS = QUICK_TIMEOUT_MS;
-      BACKOFF = IS_MOBILE ? [0, 800, 2000, 5000] : [0, 500, 1500, 4000, 8000];
+      MAX = QUICK_RETRIES;    PER_ATTEMPT_MS = QUICK_TIMEOUT_MS;
+      BACKOFF = IS_MOBILE ? [0, 1500, 4000] : [0, 800, 2000, 5000];
     }
 
     return new Promise(function (resolve, reject) {
-      var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-      var globalName = '__gasResponse_' + cb;
+      var payload = Object.assign({}, params || {});
+      payload.action = action;
+      payload._nocache = Date.now();
 
-      var p = Object.assign({}, params || {});
-      p.action = action;
-      p.callback = cb;
-
-      // Cache-buster — defeats mobile carrier proxies + browser cache
-      p._nocache = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-
-      // Auto-inject admin password for admin actions
-      if (!p.password && !p.adminPassword && isAdminAction(action) && hasAdminSession()) {
-        p.password = getAdminPassword();
+      if (!payload.password && !payload.adminPassword && isAdminAction(action) && hasAdminSession()) {
+        payload.password = getAdminPassword();
       }
 
-      var qs = Object.keys(p)
-        .filter(function (k) { return p[k] !== undefined && p[k] !== null; })
-        .map(function (k) {
-          return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]);
-        })
-        .join('&');
+      var formBody = new URLSearchParams();
+      Object.keys(payload).forEach(function (k) {
+        if (payload[k] !== undefined && payload[k] !== null) {
+          formBody.append(k, String(payload[k]));
+        }
+      });
 
-      var s = document.createElement('script');
-      s.src = GAS_URL + '?' + qs;
-      var settled = false;
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function () { controller.abort(); }, PER_ATTEMPT_MS);
 
-      function cleanup() {
-        try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
-        if (s.parentNode) s.parentNode.removeChild(s);
-      }
-      function attemptFailed(reason) {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        if (attempt < MAX) {
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+        },
+        body: formBody.toString(),
+        redirect: 'follow',
+        signal: controller.signal,
+        credentials: 'omit',
+        cache: 'no-store'
+      })
+      .then(function (response) {
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.text();
+      })
+      .then(function (text) {
+        var data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          var m = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+          if (!m) throw new Error('Invalid response from server');
+          data = JSON.parse(m[0]);
+        }
+        if (data && data.error) throw new Error(data.error);
+        resolve(data);
+      })
+      .catch(function (err) {
+        clearTimeout(timeoutId);
+
+        var msg = (err && err.message) || '';
+        var retryable =
+          err.name === 'AbortError' ||
+          msg.indexOf('Failed to fetch') !== -1 ||
+          msg.indexOf('NetworkError') !== -1 ||
+          msg.indexOf('HTTP 5') !== -1 ||
+          msg.indexOf('timeout') !== -1;
+
+        if (retryable && attempt < MAX) {
           setTimeout(function () {
             callGAS(action, params, attempt + 1).then(resolve, reject);
           }, BACKOFF[attempt] || 0);
         } else {
-          reject(new Error(reason));
+          reject(err);
         }
-      }
-
-      var timeoutId = setTimeout(function () {
-        attemptFailed('Request timeout after ' + Math.round(PER_ATTEMPT_MS / 1000) + 's');
-      }, PER_ATTEMPT_MS);
-
-      s.onload = function () {
-        setTimeout(function () {
-          if (settled) return;
-          var hasProp = Object.prototype.hasOwnProperty.call(window, globalName);
-          var resp = hasProp ? window[globalName] : undefined;
-
-          if (!hasProp || resp === undefined || resp === null) {
-            clearTimeout(timeoutId);
-            attemptFailed('No response from server');
-            return;
-          }
-          clearTimeout(timeoutId);
-          settled = true;
-          cleanup();
-
-          if (resp && resp.error) reject(new Error(resp.error));
-          else resolve(resp);
-        }, 30);
-      };
-      s.onerror = function () {
-        clearTimeout(timeoutId);
-        attemptFailed('Network error');
-      };
-      document.head.appendChild(s);
+      });
     });
   }
 
@@ -174,7 +159,7 @@
   }
 
   // ============================================================
-  // Legacy nav renderers (kept for backward compat)
+  // Navigation renderers (unchanged, kept for other pages)
   // ============================================================
   var PUBLIC_LINKS = [
     { href: 'index.html',     label: '🏠 Home',      key: 'home' },
@@ -204,39 +189,15 @@
         'font-family:"Segoe UI",Roboto,Arial,sans-serif;' +
         'font-size:13.5px;position:relative;z-index:100;' +
       '}' +
-      '#lssAdminNav{border-color:rgba(139,92,246,0.35);' +
-        'background:rgba(30,20,55,0.85);' +
-      '}' +
-      '.lssNavBrand{' +
-        'font-weight:800;font-size:14px;color:#fbbf24;' +
-        'letter-spacing:0.4px;margin-right:8px;white-space:nowrap;' +
-      '}' +
+      '#lssAdminNav{border-color:rgba(139,92,246,0.35);background:rgba(30,20,55,0.85);}' +
+      '.lssNavBrand{font-weight:800;font-size:14px;color:#fbbf24;letter-spacing:0.4px;margin-right:8px;white-space:nowrap;}' +
       '#lssAdminNav .lssNavBrand{color:#c4b5fd;}' +
-      '.lssNavLink{' +
-        'padding:7px 12px;border-radius:9px;color:#cbd5e1;' +
-        'text-decoration:none;font-weight:600;font-size:13px;' +
-        'transition:0.15s;white-space:nowrap;border:1px solid transparent;' +
-      '}' +
-      '.lssNavLink:hover{' +
-        'background:rgba(255,255,255,0.06);color:#fff;' +
-        'border-color:rgba(255,255,255,0.08);' +
-      '}' +
-      '.lssNavLink.active{' +
-        'background:rgba(251,191,36,0.18);color:#fbbf24;' +
-        'border-color:rgba(251,191,36,0.35);' +
-      '}' +
-      '#lssAdminNav .lssNavLink.active{' +
-        'background:rgba(139,92,246,0.28);color:#e9d5ff;' +
-        'border-color:rgba(139,92,246,0.5);' +
-      '}' +
+      '.lssNavLink{padding:7px 12px;border-radius:9px;color:#cbd5e1;text-decoration:none;font-weight:600;font-size:13px;transition:0.15s;white-space:nowrap;border:1px solid transparent;}' +
+      '.lssNavLink:hover{background:rgba(255,255,255,0.06);color:#fff;border-color:rgba(255,255,255,0.08);}' +
+      '.lssNavLink.active{background:rgba(251,191,36,0.18);color:#fbbf24;border-color:rgba(251,191,36,0.35);}' +
+      '#lssAdminNav .lssNavLink.active{background:rgba(139,92,246,0.28);color:#e9d5ff;border-color:rgba(139,92,246,0.5);}' +
       '.lssNavSpacer{flex:1;}' +
-      '.lssNavBtn{' +
-        'padding:7px 12px;border-radius:9px;border:1px solid transparent;' +
-        'background:rgba(139,92,246,0.35);color:#e9d5ff;' +
-        'font-weight:700;font-size:12.5px;cursor:pointer;' +
-        'text-decoration:none;font-family:inherit;transition:0.15s;' +
-        'white-space:nowrap;' +
-      '}' +
+      '.lssNavBtn{padding:7px 12px;border-radius:9px;border:1px solid transparent;background:rgba(139,92,246,0.35);color:#e9d5ff;font-weight:700;font-size:12.5px;cursor:pointer;text-decoration:none;font-family:inherit;transition:0.15s;white-space:nowrap;}' +
       '.lssNavBtn:hover{background:rgba(139,92,246,0.6);color:#fff;}' +
       '.lssNavBtn.logout{background:rgba(220,38,38,0.35);color:#fecaca;}' +
       '.lssNavBtn.logout:hover{background:rgba(220,38,38,0.6);color:#fff;}' +
@@ -260,11 +221,9 @@
            (l.key === activeKey ? ' active' : '') + '">' + l.label + '</a>';
     });
     h += '<span class="lssNavSpacer"></span>';
-    if (hasAdminSession()) {
-      h += '<a href="admin.html" class="lssNavBtn">🔧 Admin Tools</a>';
-    } else {
-      h += '<a href="admin.html" class="lssNavBtn">🔧 Admin</a>';
-    }
+    h += hasAdminSession()
+      ? '<a href="admin.html" class="lssNavBtn">🔧 Admin Tools</a>'
+      : '<a href="admin.html" class="lssNavBtn">🔧 Admin</a>';
     return h;
   }
 
@@ -286,8 +245,7 @@
     if (!host) {
       host = document.createElement('div');
       host.id = 'lssPublicNav';
-      var body = document.body;
-      body.insertBefore(host, body.firstChild);
+      document.body.insertBefore(host, document.body.firstChild);
     }
     host.innerHTML = buildPublicNavHTML(activeKey || '');
     return host;
@@ -299,8 +257,7 @@
     if (!host) {
       host = document.createElement('div');
       host.id = 'lssAdminNav';
-      var body = document.body;
-      body.insertBefore(host, body.firstChild);
+      document.body.insertBefore(host, document.body.firstChild);
     }
     host.innerHTML = buildAdminNavHTML(activeKey || '');
     return host;
@@ -313,9 +270,6 @@
     location.href = 'index.html';
   }
 
-  // ============================================================
-  // Export
-  // ============================================================
   global.LSS = {
     GAS_URL: GAS_URL,
     getAdminPassword: getAdminPassword,
@@ -329,7 +283,6 @@
     logout: logout
   };
 
-  // Legacy convenience
   global.gasCall = global.gasCall || callGAS;
 
 })(window);
