@@ -10,8 +10,12 @@
 
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
   var PW_KEY = 'lss_admin_pw';
-  var BASE = ''; // pages live at repo root — no base needed
+  var BASE = '';
 
+  // Mobile detection — mobile networks need longer timeouts + slower backoff
+  var IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile|Opera Mini/i.test(navigator.userAgent);
+
+  // Actions classified by expected duration
   var LONG_ACTIONS = {
     generateClassPDF: true,
     generateNoticeBoardPDF: true,
@@ -19,8 +23,20 @@
     generatePDF: true,
     generatePDFAdmin: true
   };
-  var QUICK_TIMEOUT_MS = 20000;
-  var LONG_TIMEOUT_MS  = 300000;
+  var MEDIUM_ACTIONS = {
+    getAvailableTerms: true,
+    getStudentNames: true,
+    getFeeReport: true,
+    getFeeReportAdmin: true
+  };
+
+  // Timeout + retry tiers
+  var QUICK_TIMEOUT_MS  = IS_MOBILE ? 45000 : 25000;
+  var MEDIUM_TIMEOUT_MS = IS_MOBILE ? 90000 : 60000;
+  var LONG_TIMEOUT_MS   = 300000;
+  var QUICK_RETRIES     = IS_MOBILE ? 4 : 5;
+  var MEDIUM_RETRIES    = 3;
+  var LONG_RETRIES      = 1;
 
   // ============================================================
   // Auth helpers
@@ -37,13 +53,8 @@
   }
   function hasAdminSession() { return !!getAdminPassword(); }
 
-  /**
-   * Redirect to admin.html if no admin session exists.
-   * Call this at the very top of any admin-only page.
-   */
   function requireAdmin() {
     if (hasAdminSession()) return true;
-    // preserve intended destination
     try {
       sessionStorage.setItem('lss_after_login',
         location.pathname.split('/').pop() + location.search);
@@ -53,24 +64,42 @@
   }
 
   // ============================================================
-  // JSONP caller
+  // JSONP caller — cache-busting + mobile-safe retries
   // ============================================================
   function callGAS(action, params, attempt) {
     attempt = attempt || 1;
 
-    var isLong = LONG_ACTIONS[action] === true;
-    var MAX = isLong ? 1 : 5;
-    var PER_ATTEMPT_MS = isLong ? LONG_TIMEOUT_MS : QUICK_TIMEOUT_MS;
-    var BACKOFF = isLong ? [0] : [0, 500, 1500, 4000, 8000];
+    var isLong   = LONG_ACTIONS[action] === true;
+    var isMedium = MEDIUM_ACTIONS[action] === true;
+
+    var MAX, PER_ATTEMPT_MS, BACKOFF;
+
+    if (isLong) {
+      MAX = LONG_RETRIES;
+      PER_ATTEMPT_MS = LONG_TIMEOUT_MS;
+      BACKOFF = [0];
+    } else if (isMedium) {
+      MAX = MEDIUM_RETRIES;
+      PER_ATTEMPT_MS = MEDIUM_TIMEOUT_MS;
+      BACKOFF = [0, 1500, 4000];
+    } else {
+      MAX = QUICK_RETRIES;
+      PER_ATTEMPT_MS = QUICK_TIMEOUT_MS;
+      BACKOFF = IS_MOBILE ? [0, 800, 2000, 5000] : [0, 500, 1500, 4000, 8000];
+    }
 
     return new Promise(function (resolve, reject) {
       var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
       var globalName = '__gasResponse_' + cb;
+
       var p = Object.assign({}, params || {});
       p.action = action;
       p.callback = cb;
 
-      // auto-inject admin password for admin actions
+      // Cache-buster — defeats mobile carrier proxies + browser cache
+      p._nocache = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+
+      // Auto-inject admin password for admin actions
       if (!p.password && !p.adminPassword && isAdminAction(action) && hasAdminSession()) {
         p.password = getAdminPassword();
       }
@@ -145,15 +174,15 @@
   }
 
   // ============================================================
-  // Navigation renderers
+  // Legacy nav renderers (kept for backward compat)
   // ============================================================
- var PUBLIC_LINKS = [
-  { href: 'index.html',     label: '🏠 Home',      key: 'home' },
-  { href: 'results.html',   label: '🎓 Results',   key: 'results' },
-  { href: 'Subscribe.html', label: '📬 Subscribe', key: 'subscribe' },
-  { href: 'https://lunzusec.github.io/bursar', label: '💳 Fee Portal', key: 'fee', external: true },
-  { href: 'teachers.html',  label: '👨‍🏫 Teacher Login', key: 'teachers' }
-];
+  var PUBLIC_LINKS = [
+    { href: 'index.html',     label: '🏠 Home',      key: 'home' },
+    { href: 'results.html',   label: '🎓 Results',   key: 'results' },
+    { href: 'Subscribe.html', label: '📬 Subscribe', key: 'subscribe' },
+    { href: 'https://lunzusec.github.io/bursar', label: '💳 Fee Portal', key: 'fee', external: true },
+    { href: 'teachers.html',  label: '👨‍🏫 Teacher Login', key: 'teachers' }
+  ];
 
   var ADMIN_LINKS = [
     { href: 'admin.html',          label: '🔧 Hub',      key: 'hub' },
@@ -300,7 +329,7 @@
     logout: logout
   };
 
-  // Convenience: expose gasCall for legacy pages
+  // Legacy convenience
   global.gasCall = global.gasCall || callGAS;
 
 })(window);
