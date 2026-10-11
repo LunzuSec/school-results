@@ -6,7 +6,7 @@
 (function (global) {
   'use strict';
 
-  var GAS_URL = 'https://script.google.com/macros/s/AKfycbwSe_HeUAigVjBiN-rmcq0FPiJRKsLBBtw2VGGhLWlMCrIvT3WeQ0MpjdMdI4HDGnkbZQ/exec';
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbzPTJy5s3rMYgqFtcBENVaUZU_Ij238-YOzztXdtrc1NCJc_Lsd1JeJcqs-u9rhUznYSA/exec';
   var PW_KEY = 'lss_admin_pw';
 
   var IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile|Opera Mini/i.test(navigator.userAgent);
