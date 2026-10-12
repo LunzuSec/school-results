@@ -3,15 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Result Alerts Manager</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<link rel="icon" href="data:,">
+<title>Result Alerts Manager — Lunzu Secondary School</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="nav.js?v=10"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
+
+  /* ============================================================
+     BODY — dual mode
+     If NOT in iframe: dark gradient background (standalone page)
+     If in iframe: transparent (parent handles background)
+     ============================================================ */
   body {
     font-family:'Segoe UI', Roboto, Arial, sans-serif;
-    background: transparent;
+    background: #0a1f2e;
+    background-image:
+      radial-gradient(ellipse at top left, rgba(30,58,95,0.6) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(0,61,92,0.5) 0%, transparent 55%),
+      linear-gradient(135deg, #0a1f2e 0%, #0d2941 100%);
     color:#fff;
-    padding: 8px;
+    padding: 24px 16px;
+    min-height: 100vh;
   }
+  body.in-iframe {
+    background: transparent !important;
+    background-image: none !important;
+    padding: 8px;
+    min-height: auto;
+  }
+
   .am-wrap {
     background: rgba(20, 35, 55, 0.98);
     border: 1px solid rgba(139, 92, 246, 0.35);
@@ -22,10 +44,13 @@
     margin: 0 auto;
     box-shadow: 0 25px 50px rgba(0,0,0,0.6);
     overflow: hidden;
-    max-height: calc(100vh - 30px);
     display: flex;
     flex-direction: column;
   }
+  body.in-iframe .am-wrap {
+    max-height: calc(100vh - 30px);
+  }
+
   .am-header {
     background: rgba(139, 92, 246, 0.18);
     border-bottom: 1px solid rgba(139, 92, 246, 0.3);
@@ -288,6 +313,163 @@
   }
 
   .hidden { display: none !important; }
+
+  /* ============================================================
+     FLOATING MENU (only visible in standalone mode)
+     ============================================================ */
+  body.in-iframe .rsp-menu { display: none !important; }
+
+  .rsp-menu {
+    position: fixed !important;
+    top: 16px !important;
+    right: 16px !important;
+    z-index: 2147483000 !important;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+  .rsp-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 215, 0, 0.4);
+    background: rgba(10, 30, 50, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fbbf24;
+    font-size: 17px;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.1);
+    transition: 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .rsp-menu-btn:hover {
+    background: rgba(20, 45, 70, 1);
+    border-color: rgba(255, 215, 0, 0.7);
+    transform: translateY(-1px);
+  }
+  .rsp-menu.open .rsp-menu-btn {
+    background: rgba(20, 45, 70, 1);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+  .rsp-menu-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 280px;
+    background: rgba(15, 32, 52, 0.98);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    padding: 6px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.98);
+    transform-origin: top right;
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+    overflow: hidden;
+  }
+  .rsp-menu.open .rsp-menu-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+  .rsp-menu-header {
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 6px;
+  }
+  .rsp-menu-brand {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+  .rsp-menu-page {
+    color: #fbbf24;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 3px;
+    letter-spacing: 0.3px;
+  }
+  .rsp-menu-links { display: flex; flex-direction: column; gap: 1px; }
+  .rsp-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rsp-menu-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .rsp-menu-link.active {
+    background: rgba(251,191,36,0.12);
+    color: #fef3c7;
+  }
+  .rsp-menu-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+  .rsp-menu-link.active .rsp-menu-icon { color: #fbbf24; opacity: 1; }
+  .rsp-menu-label { flex: 1; }
+  .rsp-menu-check { color: #fbbf24; font-size: 10px; margin-left: auto; }
+  .rsp-menu-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 6px 0;
+  }
+  .rsp-menu-account {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px 6px;
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+  .rsp-menu-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16,185,129,0.8);
+    flex-shrink: 0;
+  }
+  .rsp-menu-link.logout { color: #fca5a5; }
+  .rsp-menu-link.logout:hover { background: rgba(220,38,38,0.12); color: #fee2e2; }
+
+  @media (max-width: 768px) {
+    .rsp-menu {
+      top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+      right: calc(12px + env(safe-area-inset-right, 0px)) !important;
+    }
+    .rsp-menu-btn { width: 46px; height: 46px; font-size: 16px; }
+    .rsp-menu-panel {
+      width: calc(100vw - 24px);
+      max-width: 320px;
+      top: calc(100% + 8px);
+    }
+    .rsp-menu-link { padding: 12px 14px; font-size: 14px; }
+  }
+  @media print { .rsp-menu { display: none !important; } }
 </style>
 </head>
 <body>
@@ -431,32 +613,163 @@
   </div>
 </div>
 
-<script src="nav.js"></script>
+<!-- Global footer (standalone only) -->
+<footer id="appFooter"></footer>
+
 <script>
   // ============================================================
-  // Context detection + auth + nav
+  // Context detection
   // ============================================================
   var IS_IFRAME = (window.parent && window.parent !== window);
   var IS_STANDALONE = !IS_IFRAME;
 
+  if (IS_IFRAME) {
+    document.body.classList.add('in-iframe');
+    // Hide the close button in standalone (iframe needs it to signal parent)
+    // In iframe: show close button. In standalone: hide.
+    // NOTE: the reverse of what the comment above says — the CSS handles visibility
+  }
+
+  // ============================================================
+  // Standalone: auth guard + floating menu + footer + logo
+  // ============================================================
   if (IS_STANDALONE && typeof LSS !== 'undefined') {
     if (!LSS.requireAdmin()) {
       // redirect in progress
     } else {
-      // render admin nav bar
-      document.addEventListener('DOMContentLoaded', function () {
-        LSS.renderAdminNav('alerts');
-      });
-      if (document.readyState !== 'loading') LSS.renderAdminNav('alerts');
+      // Render everything on DOM ready
+      const bootStandalone = function() {
+        renderAdminMenu();
+        if (typeof LSS.renderFooter === 'function') {
+          LSS.renderFooter('#appFooter');
+        }
+      };
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootStandalone);
+      } else {
+        bootStandalone();
+      }
+    }
+  }
+
+  // In standalone, hide the close × button (nothing to close)
+  if (IS_STANDALONE) {
+    const hideCloseBtn = function() {
+      var btn = document.getElementById('amCloseBtn');
+      if (btn) btn.style.display = 'none';
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', hideCloseBtn);
+    } else {
+      hideCloseBtn();
     }
   }
 
   // ============================================================
-  // JSONP caller — works both as iframe (uses parent.gasCall) and
-  // standalone (uses LSS.callGAS)
+  // FLOATING MENU (standalone only)
+  // ============================================================
+  function renderAdminMenu() {
+    if (IS_IFRAME) return; // never in iframe
+    const MENU_ID = 'rspMenu';
+    const existing = document.getElementById(MENU_ID);
+    if (existing) existing.remove();
+
+    const isAdmin = (typeof LSS !== 'undefined') && LSS.hasAdminSession();
+
+    const root = document.createElement('div');
+    root.id = MENU_ID;
+    root.className = 'rsp-menu';
+
+    let linksHtml = '';
+
+    linksHtml += '<a href="admin.html" class="rsp-menu-link">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-hammer"></i></span>'
+              +  '<span class="rsp-menu-label">Admin Hub</span>'
+              +  '</a>';
+
+    linksHtml += '<a href="admin-reports.html" class="rsp-menu-link">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-chart-bar"></i></span>'
+              +  '<span class="rsp-menu-label">Reports</span>'
+              +  '</a>';
+
+    linksHtml += '<a href="admin-teachers.html" class="rsp-menu-link">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-users"></i></span>'
+              +  '<span class="rsp-menu-label">Teachers</span>'
+              +  '</a>';
+
+    linksHtml += '<a href="AdminAlerts.html" class="rsp-menu-link active">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-envelope-open-text"></i></span>'
+              +  '<span class="rsp-menu-label">Alerts</span>'
+              +  '<i class="fas fa-check rsp-menu-check"></i>'
+              +  '</a>';
+
+    linksHtml += '<div class="rsp-menu-divider"></div>';
+
+    linksHtml += '<a href="index.html" class="rsp-menu-link">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-home"></i></span>'
+              +  '<span class="rsp-menu-label">Public Site</span>'
+              +  '</a>';
+
+    let accountHtml = '';
+    if (isAdmin) {
+      accountHtml += '<div class="rsp-menu-account">'
+                  +  '<span class="rsp-menu-dot"></span>'
+                  +  '<span>Signed in as Admin</span>'
+                  +  '</div>';
+      accountHtml += '<button type="button" class="rsp-menu-link logout" '
+                  +  'onclick="LSS.logout();">'
+                  +  '<span class="rsp-menu-icon"><i class="fas fa-sign-out-alt"></i></span>'
+                  +  '<span class="rsp-menu-label">Sign out</span>'
+                  +  '</button>';
+    }
+
+    root.innerHTML =
+      '<button type="button" class="rsp-menu-btn" aria-label="Menu" aria-expanded="false">'
+      +   '<i class="fas fa-bars"></i>'
+      + '</button>'
+      + '<div class="rsp-menu-panel">'
+      +   '<div class="rsp-menu-header">'
+      +     '<div class="rsp-menu-brand">LUNZU SEC. SCHOOL</div>'
+      +     '<div class="rsp-menu-page">Result Alerts</div>'
+      +   '</div>'
+      +   '<div class="rsp-menu-links">' + linksHtml + '</div>'
+      +   accountHtml
+      + '</div>';
+
+    (document.documentElement || document.body).appendChild(root);
+
+    const btn = root.querySelector('.rsp-menu-btn');
+    function open() { root.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+    function close() { root.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      root.classList.contains('open') ? close() : open();
+    });
+    document.addEventListener('click', function (e) {
+      if (!root.contains(e.target)) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+  }
+
+  // ============================================================
+  // Close handler
+  // ============================================================
+  function closeAlertsManager() {
+    if (IS_IFRAME) {
+      window.parent.postMessage({ type: 'closeAdminAlerts' }, '*');
+    } else {
+      // Standalone: navigate back to admin hub
+      location.href = 'admin.html';
+    }
+  }
+
+  // ============================================================
+  // API bridge — parent.gasCall (iframe) or LSS.callGAS (standalone)
   // ============================================================
   function gasCall(action, params) {
-    // Prefer parent's bridge (avoids duplicate JSONP on shared origin)
     if (IS_IFRAME && window.parent && typeof window.parent.gasCall === 'function') {
       return window.parent.gasCall(action, params || {});
     }
@@ -464,24 +777,6 @@
       return LSS.callGAS(action, params || {});
     }
     return Promise.reject(new Error('No API bridge available.'));
-  }
-
-  // Standalone pages: hide the close × button
-  if (IS_STANDALONE) {
-    document.addEventListener('DOMContentLoaded', function () {
-      var btn = document.getElementById('amCloseBtn');
-      if (btn) btn.style.display = 'none';
-    });
-    if (document.readyState !== 'loading') {
-      var b = document.getElementById('amCloseBtn');
-      if (b) b.style.display = 'none';
-    }
-  }
-
-  function closeAlertsManager() {
-    if (IS_IFRAME) {
-      window.parent.postMessage({ type: 'closeAdminAlerts' }, '*');
-    }
   }
 
   // ============================================================
@@ -536,7 +831,7 @@
   }
 
   // ============================================================
-  // Term selects + handshake
+  // Terms + iframe handshake
   // ============================================================
   function populateAmTerms(terms) {
     amTerms = terms || [];
