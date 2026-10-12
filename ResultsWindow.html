@@ -3,67 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Results - Lunzu Secondary School</title>
-
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <link rel="icon" href="data:,">
+    <title>Student Results — Lunzu Secondary School</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="nav.js?v=10"></script>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        /* ============================================================
+           FLOATING MENU
+           ============================================================ */
+        .rsp-menu {
+            position: fixed !important;
+            top: 16px !important;
+            right: 16px !important;
+            z-index: 2147483000 !important;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        .rsp-menu-btn {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 215, 0, 0.4);
+            background: rgba(10, 30, 50, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #fbbf24;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .rsp-menu-btn:hover {
+            background: rgba(20, 45, 70, 1);
+            border-color: rgba(255, 215, 0, 0.7);
+            transform: translateY(-1px);
+        }
+        .rsp-menu.open .rsp-menu-btn {
+            background: rgba(20, 45, 70, 1);
+            border-color: rgba(255, 215, 0, 0.8);
+        }
+        .rsp-menu-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 280px;
+            background: rgba(15, 32, 52, 0.98);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            padding: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.98);
+            transform-origin: top right;
+            transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+            overflow: hidden;
+        }
+        .rsp-menu.open .rsp-menu-panel {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        .rsp-menu-header {
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 6px;
+        }
+        .rsp-menu-brand {
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        .rsp-menu-page {
+            color: #fbbf24;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 3px;
+            letter-spacing: 0.3px;
+        }
+        .rsp-menu-links { display: flex; flex-direction: column; gap: 1px; }
+        .rsp-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .rsp-menu-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+        .rsp-menu-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.85;
+            flex-shrink: 0;
+        }
+        .rsp-menu-label { flex: 1; }
+        .rsp-menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 6px 0;
+        }
+        .rsp-menu-account {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px 6px;
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .rsp-menu-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+            flex-shrink: 0;
+        }
+        .rsp-menu-link.logout { color: #fca5a5; }
+        .rsp-menu-link.logout:hover {
+            background: rgba(220, 38, 38, 0.12);
+            color: #fee2e2;
+        }
+
+        @media (max-width: 768px) {
+            .rsp-menu {
+                top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+                right: calc(12px + env(safe-area-inset-right, 0px)) !important;
+            }
+            .rsp-menu-btn { width: 46px; height: 46px; font-size: 16px; }
+            .rsp-menu-panel {
+                width: calc(100vw - 24px);
+                max-width: 320px;
+                top: calc(100% + 8px);
+            }
+        }
+        @media print { .rsp-menu { display: none !important; } }
+
+        /* ============================================================
+           PAGE STYLES
+           ============================================================ */
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            padding: 10px;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #0a1f2e;
+            background-image:
+                radial-gradient(ellipse at top left, rgba(30, 58, 95, 0.6) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(0, 61, 92, 0.5) 0%, transparent 55%),
+                linear-gradient(135deg, #0a1f2e 0%, #0d2941 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .results-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            width: 100%;
+            max-width: 900px;
+            background: #fff;
+            color: #333;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
         }
+        .results-container.show { display: block; }
 
         .school-header {
             text-align: center;
-            margin-bottom: 20px;
+            padding: 20px 20px 15px;
             border-bottom: 2px solid #003366;
-            padding-bottom: 15px;
+            background: #f8f9fa;
         }
-
         .school-logo {
-            height: 70px;
-            margin-bottom: 10px;
-            max-width: 100%;
+            height: 60px;
+            margin-bottom: 8px;
             object-fit: contain;
         }
-
         .school-title {
             font-family: Georgia, 'Times New Roman', serif;
             color: #003366;
             font-weight: 700;
-            font-size: 1.5rem;
-            margin-bottom: 5px;
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+        }
+        .school-subtitle {
+            font-family: Georgia, 'Times New Roman', serif;
+            color: #00509e;
+            font-weight: 600;
+            font-size: 1rem;
         }
 
         .student-info {
             background-color: #f0f4f8;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
+            padding: 14px 20px;
             border-left: 4px solid #003366;
+            font-size: 0.9rem;
         }
-
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px 20px;
+            gap: 6px 20px;
         }
         @media (max-width: 600px) {
             .info-grid { grid-template-columns: 1fr; }
         }
-
         .info-label {
             font-weight: 600;
             color: #003366;
@@ -72,40 +241,41 @@
         .section-title {
             color: #003366;
             font-size: 1.05rem;
-            margin-bottom: 10px;
+            margin: 16px 20px 10px;
             border-bottom: 2px solid #ffd700;
             padding-bottom: 5px;
             display: inline-block;
         }
 
+        .table-wrap {
+            padding: 0 20px;
+            overflow-x: auto;
+        }
         .results-table {
             width: 100%;
             margin-bottom: 20px;
             font-size: 0.85rem;
             border-collapse: collapse;
+            min-width: 600px;
         }
-
         .results-table th {
             background-color: #003366;
-            color: white;
+            color: #fff;
             font-weight: 600;
             padding: 8px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
             border: 1px solid #002a52;
         }
-
         .results-table td {
             padding: 8px;
             text-align: center;
             border: 1px solid #dee2e6;
         }
-
         .results-table td:first-child {
             text-align: left;
             font-weight: 600;
         }
-
         .results-table tr:nth-child(even) td {
             background-color: #f9f9f9;
         }
@@ -122,7 +292,7 @@
         .grade-B { background-color: #d1ecf1; color: #0c5460; }
         .grade-C, .grade-4, .grade-5 { background-color: #fff3cd; color: #856404; }
         .grade-D, .grade-6, .grade-7, .grade-8 { background-color: #f8d7da; color: #721c24; }
-        .grade-F, .grade-9 { background-color: #dc3545; color: white; }
+        .grade-F, .grade-9 { background-color: #dc3545; color: #fff; }
 
         .total-row td {
             background-color: #e9ecef !important;
@@ -131,13 +301,12 @@
 
         .remarks-section {
             background-color: #f8f9fa;
-            padding: 15px;
+            padding: 14px 20px;
+            margin: 0 20px 20px;
             border-radius: 8px;
-            margin-bottom: 20px;
             border-left: 4px solid #003366;
             font-size: 0.9rem;
         }
-
         .remarks-section h4 {
             color: #003366;
             margin-bottom: 6px;
@@ -146,12 +315,11 @@
 
         .footer-section {
             background-color: #f0f4f8;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 14px 20px;
             font-size: 0.85rem;
             border-top: 3px solid #003366;
+            margin-top: 10px;
         }
-
         .footer-title {
             font-weight: 600;
             color: #003366;
@@ -160,23 +328,23 @@
             margin-top: 12px;
         }
         .footer-title:first-child { margin-top: 0; }
-
         .footer-section p {
             margin-bottom: 4px;
             line-height: 1.5;
         }
 
         .action-buttons {
-            margin-top: 20px;
+            padding: 18px 20px;
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
             flex-wrap: wrap;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
         }
-
         .btn-action {
             padding: 10px 20px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 600;
             border: none;
             cursor: pointer;
@@ -184,160 +352,381 @@
             font-family: inherit;
             transition: 0.2s;
             min-width: 140px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .btn-print { background-color: #003366; color: white; }
+        .btn-print { background-color: #003366; color: #fff; }
         .btn-print:hover { background-color: #00509e; }
-        .btn-close { background-color: #6c757d; color: white; }
+        .btn-close { background-color: #6c757d; color: #fff; }
         .btn-close:hover { background-color: #5a6268; }
+
+        /* ============================================================
+           BOOT / ERROR
+           ============================================================ */
+        .boot-loader {
+            position: fixed;
+            inset: 0;
+            background: #0a1f2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: #e2e8f0;
+            padding: 24px;
+            text-align: center;
+        }
+        .boot-loader.hidden { display: none; }
+        .spinner-lg {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #fbbf24;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 18px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .boot-loader p { font-size: 14px; color: #cbd5e1; margin-bottom: 18px; }
+        .boot-loader .retry {
+            padding: 10px 22px;
+            background: #fbbf24;
+            color: #0a1f2e;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            display: none;
+        }
+        .boot-loader .retry.show { display: inline-block; }
+
+        .portal-footer {
+            width: 100%;
+            max-width: 900px;
+            margin-top: 20px;
+            padding: 16px 24px 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            line-height: 1.7;
+        }
+        .portal-footer a { color: #fbbf24; text-decoration: none; }
+        .portal-footer a:hover { text-decoration: underline; }
 
         @media print {
             @page { size: A4; margin: 10mm; }
             body {
-                background-color: white;
-                font-size: 10pt;
-                line-height: 1.3;
+                background: #fff !important;
                 padding: 0;
+                display: block;
+            }
+            .rsp-menu, .action-buttons, .boot-loader, #appFooter {
+                display: none !important;
             }
             .results-container {
-                max-width: 100%;
-                padding: 0;
                 box-shadow: none;
-                margin: 0;
                 border-radius: 0;
+                max-width: 100%;
             }
-            .school-header { margin-bottom: 10px; padding-bottom: 10px; }
-            .school-logo { height: 60px; }
-            .school-title { font-size: 1.3rem; }
-            .student-info,
-            .remarks-section,
-            .footer-section { padding: 10px; margin-bottom: 10px; }
-            .results-table { font-size: 8pt; margin-bottom: 10px; }
-            .results-table th,
-            .results-table td { padding: 5px; }
-            .action-buttons { display: none !important; }
-            table { page-break-inside: auto; }
-            tr { page-break-inside: avoid; page-break-after: auto; }
-            .section-title { font-size: 1rem; }
+            .section-title { margin: 12px 0 8px; }
+            .table-wrap { padding: 0; }
+            .remarks-section { margin: 0 0 12px; }
+            .results-table { font-size: 9pt; }
+            .results-table th, .results-table td { padding: 5px; }
+            tr { page-break-inside: avoid; }
         }
     </style>
 </head>
 <body>
-    <div class="results-container">
 
-        <div class="school-header">
-            <img src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png" alt="School Logo" class="school-logo">
-            <h1 class="school-title"><?= getSchoolName(results.studentClass) ?></h1>
-            <h2 class="school-title"><?= getAcademicHeader(results.studentClass) ?></h2>
-        </div>
-
-        <div class="student-info">
-            <div class="info-grid">
-                <p><span class="info-label">STUDENT NAME:</span> <?= results.name ?></p>
-                <p><span class="info-label">CLASS:</span> <?= results.studentClass ?></p>
-                <p><span class="info-label">DATE OF BIRTH:</span> <?= results.dob ?></p>
-                <p><span class="info-label">NUMBER OF STUDENTS:</span> <?= results.studentCount ?></p>
-                <p><span class="info-label">NUMBER SAT FOR EXAMS:</span> <?= results.examSitters ?></p>
-                <p><span class="info-label">OVERALL POSITION:</span> <?= results.additionalInfo.overallPosition ?></p>
-            </div>
-        </div>
-
-        <h3 class="section-title">📖 SUBJECT PERFORMANCE</h3>
-
-        <div class="table-responsive">
-            <table class="results-table">
-                <thead>
-                    <tr>
-                        <th>SUBJECT</th>
-                        <th>SCORE</th>
-                        <th>GRADE</th>
-                        <th>POSITION</th>
-                        <th>AVERAGE</th>
-                        <th>COMMENT</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <? results.subjects.forEach(subject => { ?>
-                        <?
-                          const score = subject.score !== null && subject.score !== undefined && subject.score !== "" ?
-                            Math.round(subject.score) : "";
-                          const gradeAndComment = score !== "" ?
-                            getGradeAndComment(parseFloat(score), results.studentClass) :
-                            { grade: "", comment: "" };
-                          const grade = gradeAndComment.grade;
-                          const comment = gradeAndComment.comment;
-                          const position = score !== "" ? subject.position : "";
-                          const average = score !== "" ?
-                            (subject.average !== null && subject.average !== undefined ?
-                            Math.round(subject.average) : "") : "";
-                          const gradeClass = grade ? ('grade-' + grade) : '';
-                        ?>
-                        <tr>
-                            <td><?= subject.name ?></td>
-                            <td><?= score ?></td>
-                            <td><? if (grade) { ?><span class="grade-badge <?= gradeClass ?>"><?= grade ?></span><? } ?></td>
-                            <td><?= position ?></td>
-                            <td><?= average ?></td>
-                            <td><?= comment ?></td>
-                        </tr>
-                    <? }); ?>
-
-                    <? if (results.additionalInfo.totalMarks) { ?>
-                        <tr class="total-row">
-                            <td>TOTAL MARKS</td>
-                            <td colspan="5" style="text-align:left; padding-left:20px;"><?= results.additionalInfo.totalMarks ?></td>
-                        </tr>
-                    <? } else if (results.additionalInfo.totalPoints) { ?>
-                        <tr class="total-row">
-                            <td>TOTAL POINTS</td>
-                            <td colspan="5" style="text-align:left; padding-left:20px;"><?= results.additionalInfo.totalPoints ?></td>
-                        </tr>
-                    <? } ?>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="remarks-section">
-            <h4>💬 REMARKS</h4>
-            <p><?= results.additionalInfo.remarks ?></p>
-        </div>
-
-        <div class="footer-section">
-            <? const contactInfo = getContactInfo(results.studentClass); ?>
-
-            <h5 class="footer-title">💰 SCHOOL FEES REQUIREMENT</h5>
-            <p><?= contactInfo.fees ?></p>
-            <p>SCHOOL ACC NO.: <?= contactInfo.accountNumber ?></p>
-            <p><?= getSystemConfig().bankInfo ?></p>
-
-            <h5 class="footer-title">ℹ️ GOVERNMENT POLICY</h5>
-            <p><?= getSystemConfig().governmentPolicy ?></p>
-
-            <h5 class="footer-title">📅 IMPORTANT DATES</h5>
-            <p><strong>Next Term Starts On:</strong> <?= getSystemConfig().nextTermStart ?></p>
-
-            <h5 class="footer-title">📍 SCHOOL ADDRESS</h5>
-            <p><?= getSystemConfig().schoolAddress ?></p>
-        </div>
-
-        <div class="action-buttons">
-            <button onclick="window.print()" class="btn-action btn-print">
-                🖨 Print Results
-            </button>
-            <button onclick="window.close()" class="btn-action btn-close">
-                ✖ Close Window
-            </button>
-        </div>
+    <!-- Boot loader -->
+    <div id="bootLoader" class="boot-loader">
+        <div class="spinner-lg"></div>
+        <p id="bootLoaderText">Loading student results…</p>
+        <button id="bootRetryBtn" class="retry" onclick="location.reload()">Retry</button>
     </div>
 
+    <!-- Results container (rendered by JS) -->
+    <div id="resultsContainer" class="results-container"></div>
+
+    <!-- Global footer -->
+    <footer id="appFooter"></footer>
+
     <script>
-        // Ensure Print works even if the button is clicked before page fully settles
-        var printBtn = document.querySelector('.btn-print');
-        if (printBtn) {
-            printBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                setTimeout(function () { window.print(); }, 200);
-            });
+        // ============================================================
+        // URL params
+        // ============================================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentName = urlParams.get('name') || urlParams.get('studentName');
+        const studentClass = urlParams.get('class') || urlParams.get('studentClass');
+        const dateOfBirth = urlParams.get('dob') || urlParams.get('dateOfBirth');
+        const termKey = urlParams.get('term') || urlParams.get('termKey');
+        const adminParam = urlParams.get('admin');
+        const isAdminMode = adminParam === 'true' ||
+                            (typeof LSS !== 'undefined' && LSS.hasAdminSession());
+
+        // ============================================================
+        // BOOT
+        // ============================================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Global footer
+            if (typeof LSS !== 'undefined' && LSS.renderFooter) {
+                LSS.renderFooter('#appFooter');
+            }
+
+            if (!studentName || !studentClass) {
+                bootFail('Missing student information.');
+                return;
+            }
+
+            try {
+                let result;
+                if (isAdminMode) {
+                    result = await LSS.callGAS('getStudentResultsAdmin', {
+                        studentName: studentName,
+                        studentClass: studentClass,
+                        term: termKey
+                    });
+                } else {
+                    if (!dateOfBirth) throw new Error('Date of Birth is required.');
+                    result = await LSS.callGAS('getStudentResults', {
+                        studentName: studentName,
+                        studentClass: studentClass,
+                        dateOfBirth: dateOfBirth,
+                        term: termKey,
+                        isAdmin: false
+                    });
+                }
+
+                if (!result) throw new Error('Empty response from server.');
+                if (result.error) throw new Error(result.error);
+                if (!result.success) throw new Error(result.message || 'Failed to load results.');
+
+                renderResults(result);
+
+                document.getElementById('bootLoader').classList.add('hidden');
+                document.getElementById('resultsContainer').classList.add('show');
+            } catch (err) {
+                console.error('Load failed:', err);
+                bootFail(err.message || 'Unable to load results.');
+            }
+        });
+
+        function bootFail(message) {
+            document.getElementById('bootLoaderText').textContent = message;
+            document.getElementById('bootRetryBtn').classList.add('show');
         }
+
+        // ============================================================
+        // RENDER
+        // ============================================================
+        function renderResults(r) {
+            const container = document.getElementById('resultsContainer');
+
+            const schoolName = getSchoolName(r);
+            const academicHeader = getAcademicHeader(r);
+            const termConfig = r.termConfig || {};
+            const additional = r.additionalInfo || {};
+            const contactInfo = getContactInfo(r);
+            const systemConfig = r.termConfig || {};
+
+            // Build subject rows
+            let subjectRowsHtml = '';
+            (r.subjects || []).forEach(function (subj) {
+                const hasScore = subj.score !== null && subj.score !== undefined && subj.score !== '';
+                const score = hasScore ? Math.round(Number(subj.score)) : '';
+                const gradeAndComment = hasScore
+                    ? getGradeAndComment(score, r.studentClass)
+                    : { grade: '', comment: '' };
+                const grade = gradeAndComment.grade || '';
+                const comment = gradeAndComment.comment || '';
+                const position = hasScore ? (subj.position || '') : '';
+                const average = hasScore && subj.average !== null && subj.average !== undefined && subj.average !== ''
+                    ? Math.round(Number(subj.average))
+                    : '';
+                const gradeClass = grade ? ('grade-' + grade) : '';
+
+                subjectRowsHtml +=
+                    '<tr>' +
+                        '<td>' + escapeHtml(subj.name || '-') + '</td>' +
+                        '<td>' + (score !== '' ? score : '-') + '</td>' +
+                        '<td>' + (grade ? '<span class="grade-badge ' + gradeClass + '">' + escapeHtml(grade) + '</span>' : '-') + '</td>' +
+                        '<td>' + (position !== '' ? escapeHtml(String(position)) : '-') + '</td>' +
+                        '<td>' + (average !== '' ? average : '-') + '</td>' +
+                        '<td>' + (comment ? escapeHtml(comment) : '-') + '</td>' +
+                    '</tr>';
+            });
+
+            // Total row
+            let totalRowHtml = '';
+            if (additional.totalMarks) {
+                totalRowHtml =
+                    '<tr class="total-row">' +
+                        '<td>TOTAL MARKS</td>' +
+                        '<td colspan="5" style="text-align:left; padding-left:20px;">' +
+                            escapeHtml(String(additional.totalMarks)) +
+                        '</td>' +
+                    '</tr>';
+            } else if (additional.totalPoints) {
+                totalRowHtml =
+                    '<tr class="total-row">' +
+                        '<td>TOTAL POINTS</td>' +
+                        '<td colspan="5" style="text-align:left; padding-left:20px;">' +
+                            escapeHtml(String(additional.totalPoints)) +
+                        '</td>' +
+                    '</tr>';
+            }
+
+            const remarksText = additional.remarks || 'No remarks available.';
+
+            container.innerHTML =
+                '<div class="school-header">' +
+                    '<img src="' + (typeof LSS !== 'undefined' && LSS.SCHOOL_LOGO ? LSS.SCHOOL_LOGO : 'https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png') + '" alt="School Logo" class="school-logo">' +
+                    '<h1 class="school-title">' + escapeHtml(schoolName) + '</h1>' +
+                    '<h2 class="school-subtitle">' + escapeHtml(academicHeader) + '</h2>' +
+                '</div>' +
+
+                '<div class="student-info">' +
+                    '<div class="info-grid">' +
+                        '<p><span class="info-label">STUDENT NAME:</span> ' + escapeHtml(r.name || '-') + '</p>' +
+                        '<p><span class="info-label">CLASS:</span> ' + escapeHtml(r.studentClass || '-') + '</p>' +
+                        '<p><span class="info-label">DATE OF BIRTH:</span> ' + escapeHtml(r.dob || '-') + '</p>' +
+                        '<p><span class="info-label">NUMBER OF STUDENTS:</span> ' + escapeHtml(String(r.studentCount || '-')) + '</p>' +
+                        '<p><span class="info-label">NUMBER SAT FOR EXAMS:</span> ' + escapeHtml(String(r.examSitters || '-')) + '</p>' +
+                        '<p><span class="info-label">OVERALL POSITION:</span> ' + escapeHtml(String(additional.overallPosition || '-')) + '</p>' +
+                    '</div>' +
+                '</div>' +
+
+                '<h3 class="section-title">📖 SUBJECT PERFORMANCE</h3>' +
+                '<div class="table-wrap">' +
+                    '<table class="results-table">' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th>SUBJECT</th>' +
+                                '<th>SCORE</th>' +
+                                '<th>GRADE</th>' +
+                                '<th>POSITION</th>' +
+                                '<th>AVERAGE</th>' +
+                                '<th>COMMENT</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>' +
+                            subjectRowsHtml +
+                            totalRowHtml +
+                        '</tbody>' +
+                    '</table>' +
+                '</div>' +
+
+                '<div class="remarks-section">' +
+                    '<h4>💬 REMARKS</h4>' +
+                    '<p>' + escapeHtml(remarksText) + '</p>' +
+                '</div>' +
+
+                '<div class="footer-section">' +
+                    '<h5 class="footer-title">💰 SCHOOL FEES REQUIREMENT</h5>' +
+                    '<p>' + escapeHtml(contactInfo.fees || '') + '</p>' +
+                    '<p>SCHOOL ACC NO.: ' + escapeHtml(contactInfo.accountNumber || '') + '</p>' +
+                    (systemConfig.bankInfo ? '<p>' + escapeHtml(systemConfig.bankInfo) + '</p>' : '') +
+
+                    '<h5 class="footer-title">ℹ️ GOVERNMENT POLICY</h5>' +
+                    '<p>' + escapeHtml(systemConfig.governmentPolicy || '') + '</p>' +
+
+                    '<h5 class="footer-title">📅 IMPORTANT DATES</h5>' +
+                    '<p><strong>Next Term Starts On:</strong> ' + escapeHtml(systemConfig.nextTermStart || 'Contact school administration') + '</p>' +
+
+                    '<h5 class="footer-title">📍 SCHOOL ADDRESS</h5>' +
+                    '<p>' + escapeHtml(systemConfig.schoolAddress || 'Private bag 130, Lunzu') + '</p>' +
+                '</div>' +
+
+                '<div class="action-buttons">' +
+                    '<button onclick="window.print()" class="btn-action btn-print">' +
+                        '<i class="fas fa-print"></i> Print Results' +
+                    '</button>' +
+                    '<button onclick="closeWindow()" class="btn-action btn-close">' +
+                        '<i class="fas fa-times"></i> Close Window' +
+                    '</button>' +
+                '</div>';
+
+            document.title = (r.name || 'Student') + ' — ' + academicHeader;
+        }
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
+        function getSchoolName(r) {
+            const isODL = r.studentClass && r.studentClass.indexOf('ODL') !== -1;
+            const config = r.termConfig || {};
+            if (isODL) return config.schoolNameODL || 'LUNZU OPEN SECONDARY SCHOOL';
+            return config.schoolName || 'LUNZU SECONDARY SCHOOL';
+        }
+
+        function getAcademicHeader(r) {
+            const config = r.termConfig || {};
+            return (config.academicYear || r.academicYear || '') + ' ' +
+                   (config.term || r.term || '') + ' ' +
+                   (config.examType || 'RESULTS');
+        }
+
+        function getContactInfo(r) {
+            const isODL = r.studentClass && r.studentClass.indexOf('ODL') !== -1;
+            const config = r.termConfig || {};
+            const contacts = config.contacts || {};
+            return isODL ? (contacts.odl || {}) : (contacts.regular || {});
+        }
+
+        function getGradeAndComment(score, studentClass) {
+            if (score === null || score === undefined || score === '' || isNaN(score)) {
+                return { grade: '', comment: '' };
+            }
+            const roundedScore = Math.round(Number(score));
+            const isLower = ['Form 1', 'Form 2', 'Form 1 ODL', 'Form 2 ODL'].indexOf(studentClass) !== -1;
+
+            if (isLower) {
+                if (roundedScore >= 85) return { grade: 'A', comment: 'EXCELLENT' };
+                if (roundedScore >= 70) return { grade: 'B', comment: 'VERY GOOD' };
+                if (roundedScore >= 60) return { grade: 'C', comment: 'GOOD' };
+                if (roundedScore >= 50) return { grade: 'D', comment: 'PASS' };
+                return { grade: 'F', comment: 'FAIL' };
+            } else {
+                if (roundedScore >= 90) return { grade: '1', comment: 'DISTINCTION' };
+                if (roundedScore >= 80) return { grade: '2', comment: 'DISTINCTION' };
+                if (roundedScore >= 75) return { grade: '3', comment: 'GOOD' };
+                if (roundedScore >= 70) return { grade: '4', comment: 'STRONG CREDIT' };
+                if (roundedScore >= 65) return { grade: '5', comment: 'PASS' };
+                if (roundedScore >= 60) return { grade: '6', comment: 'WEAK CREDIT' };
+                if (roundedScore >= 55) return { grade: '7', comment: 'PASS' };
+                if (roundedScore >= 50) return { grade: '8', comment: 'PASS' };
+                return { grade: '9', comment: 'FAIL' };
+            }
+        }
+
+        function escapeHtml(s) {
+            if (s === null || s === undefined) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function closeWindow() {
+            if (window.history.length > 1) window.history.back();
+            else window.close();
+        }
+
+        // Keyboard: Ctrl/Cmd+P → print
+        document.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+        });
     </script>
 </body>
 </html>
