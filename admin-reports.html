@@ -1,673 +1,1050 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="data:,">
-<title>Reports & Notice Boards — Lunzu Secondary School</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family:'Segoe UI', Roboto, Arial, sans-serif;
-    min-height:100vh;
-    padding: 20px;
-    background:#0a1628;
-    position:relative;
-    overflow-x:hidden;
-  }
-  #bg-canvas-container {
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    z-index:0; pointer-events:none;
-  }
-  #bg-canvas-container canvas {
-    display:block; width:100%; height:100%; object-fit:cover;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <link rel="icon" href="data:,">
+    <title>Reports & Notice Boards — Lunzu Secondary School</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="nav.js?v=7"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  .container {
-    position:relative;
-    z-index:1;
-    max-width:900px;
-    margin: 0 auto;
-  }
+        /* ============================================================
+           FLOATING MENU — Admin area
+           ============================================================ */
+        .rsp-menu {
+            position: fixed !important;
+            top: 16px !important;
+            right: 16px !important;
+            z-index: 2147483000 !important;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        .rsp-menu-btn {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 215, 0, 0.4);
+            background: rgba(10, 30, 50, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #fbbf24;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .rsp-menu-btn:hover {
+            background: rgba(20, 45, 70, 1);
+            border-color: rgba(255, 215, 0, 0.7);
+            transform: translateY(-1px);
+        }
+        .rsp-menu.open .rsp-menu-btn {
+            background: rgba(20, 45, 70, 1);
+            border-color: rgba(255, 215, 0, 0.8);
+        }
+        .rsp-menu-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 280px;
+            background: rgba(15, 32, 52, 0.98);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            padding: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.98);
+            transform-origin: top right;
+            transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+            overflow: hidden;
+        }
+        .rsp-menu.open .rsp-menu-panel {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        .rsp-menu-header {
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 6px;
+        }
+        .rsp-menu-brand {
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        .rsp-menu-page {
+            color: #fbbf24;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 3px;
+            letter-spacing: 0.3px;
+        }
+        .rsp-menu-links { display: flex; flex-direction: column; gap: 1px; }
+        .rsp-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .rsp-menu-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+        .rsp-menu-link.active {
+            background: rgba(251, 191, 36, 0.12);
+            color: #fef3c7;
+        }
+        .rsp-menu-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.85;
+            flex-shrink: 0;
+        }
+        .rsp-menu-link.active .rsp-menu-icon { color: #fbbf24; opacity: 1; }
+        .rsp-menu-label { flex: 1; }
+        .rsp-menu-check {
+            color: #fbbf24;
+            font-size: 10px;
+            margin-left: auto;
+        }
+        .rsp-menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 6px 0;
+        }
+        .rsp-menu-account {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px 6px;
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+        .rsp-menu-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+            flex-shrink: 0;
+        }
+        .rsp-menu-link.logout { color: #fca5a5; }
+        .rsp-menu-link.logout:hover {
+            background: rgba(220, 38, 38, 0.12);
+            color: #fee2e2;
+        }
 
-  .page-header {
-    background: rgba(10,30,50,0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,215,0,0.2);
-    border-radius: 20px;
-    padding: 22px 26px;
-    margin-bottom: 16px;
-    text-align: center;
-  }
-  .page-header h1 {
-    color: #fff;
-    font-size: 22px;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-  }
-  .page-header .sub {
-    color: #94a3b8;
-    font-size: 13px;
-  }
-  .page-header .sub strong { color: #fbbf24; }
+        @media (max-width: 768px) {
+            .rsp-menu {
+                top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+                right: calc(12px + env(safe-area-inset-right, 0px)) !important;
+            }
+            .rsp-menu-btn { width: 46px; height: 46px; font-size: 16px; }
+            .rsp-menu-panel {
+                width: calc(100vw - 24px);
+                max-width: 320px;
+                top: calc(100% + 8px);
+            }
+            .rsp-menu-link { padding: 12px 14px; font-size: 14px; }
+        }
+        @media print { .rsp-menu { display: none !important; } }
 
-  .card {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 18px;
-    padding: 22px;
-    margin-bottom: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  }
-  .card h2 {
-    font-size: 15px;
-    color: #fbbf24;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    font-weight: 700;
-  }
-  .card .hint {
-    color: #94a3b8;
-    font-size: 12.5px;
-    margin-bottom: 16px;
-    line-height: 1.55;
-  }
+        /* ============================================================
+           PAGE STYLES
+           ============================================================ */
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            min-height: 100vh;
+            padding: 24px 16px;
+            background: #0a1f2e;
+            background-image:
+                radial-gradient(ellipse at top left, rgba(30, 58, 95, 0.6) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(0, 61, 92, 0.5) 0%, transparent 55%),
+                linear-gradient(135deg, #0a1f2e 0%, #0d2941 100%);
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-  .field { margin-bottom: 14px; }
-  .field label {
-    display:block;
-    font-size: 12.5px;
-    color: #e2e8f0;
-    font-weight: 600;
-    margin-bottom: 5px;
-  }
-  .field select, .field input {
-    width: 100%;
-    padding: 11px 14px;
-    border-radius: 12px;
-    border: 1.5px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.08);
-    color: #fff;
-    font-size: 13.5px;
-    font-family: inherit;
-  }
-  .field select option { background:#1a2a3a; color:#fff; }
-  .field select:focus, .field input:focus {
-    outline: none;
-    border-color: #fbbf24;
-    background: rgba(255,255,255,0.14);
-  }
+        .portal {
+            width: 100%;
+            max-width: 720px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 215, 0, 0.18);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            margin-bottom: 20px;
+        }
 
-  .row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  @media (max-width: 620px) {
-    .row { grid-template-columns: 1fr; }
-  }
+        .portal-header {
+            background: rgba(10, 30, 50, 0.7);
+            padding: 28px 24px 22px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+        }
+        .portal-header .crest {
+            width: 56px;
+            height: 56px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .portal-header h1 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+        .portal-header h2 {
+            font-size: 12px;
+            font-weight: 400;
+            color: #fcd34d;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
 
-  .btn {
-    padding: 12px 16px;
-    border: none;
-    border-radius: 12px;
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: 0.15s;
-    color: #fff;
-    width: 100%;
-  }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn.primary { background: rgba(37,99,235,0.85); }
-  .btn.primary:hover:not(:disabled) { background: rgba(37,99,235,1); }
-  .btn.amber { background: rgba(245,158,11,0.85); color: #1e293b; }
-  .btn.amber:hover:not(:disabled) { background: rgba(245,158,11,1); }
-  .btn.green { background: rgba(22,163,74,0.85); }
-  .btn.green:hover:not(:disabled) { background: rgba(22,163,74,1); }
-  .btn.gray { background: rgba(100,116,139,0.6); }
-  .btn.gray:hover:not(:disabled) { background: rgba(100,116,139,0.9); }
-  .btn .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid rgba(255,255,255,0.35);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    display: none;
-  }
-  .btn.loading .spinner { display: inline-block; }
-  .btn.loading .label { opacity: 0.6; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+        .portal-body { padding: 26px 24px 22px; }
 
-  .class-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-  }
+        .field { margin-bottom: 18px; }
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 6px;
+        }
+        .field .req { color: #fbbf24; margin-left: 2px; }
 
-  .combined-section {
-    background: rgba(251,191,36,0.10);
-    border: 1px solid rgba(251,191,36,0.35);
-    border-left: 4px solid #fbbf24;
-    border-radius: 14px;
-    padding: 16px;
-    margin-top: 14px;
-  }
-  .combined-section .note {
-    margin-top: 10px;
-    font-size: 12px;
-    color: #fef3c7;
-    line-height: 1.55;
-  }
-  .combined-section .note strong { color: #fbbf24; }
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            transition: border-color 0.15s, background 0.15s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .field select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 38px;
+        }
+        .field select option { background: #1e2f3f; color: #fff; }
 
-  .status {
-    margin-top: 16px;
-    padding: 13px 16px;
-    border-radius: 12px;
-    font-size: 13px;
-    display: none;
-    align-items: center;
-    gap: 10px;
-    line-height: 1.5;
-  }
-  .status.show { display: flex; }
-  .status.loading { background: rgba(59,130,246,0.15); border-left: 4px solid #3b82f6; color:#dbeafe; }
-  .status.error   { background: rgba(220,38,38,0.15);  border-left: 4px solid #ef4444; color:#fecaca; }
-  .status.success { background: rgba(34,197,94,0.15);  border-left: 4px solid #10b981; color:#dcfce7; }
-  .status.info    { background: rgba(139,92,246,0.15); border-left: 4px solid #8b5cf6; color:#e9d5ff; }
+        .field input:focus,
+        .field select:focus {
+            outline: none;
+            border-color: rgba(251, 191, 36, 0.7);
+            background: rgba(255, 255, 255, 0.09);
+        }
+        .field input:disabled,
+        .field select:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .field .hint {
+            display: block;
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
 
-  .status .mini-spin {
-    width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.2);
-    border-top-color: #fbbf24;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    display: inline-block;
-    flex-shrink: 0;
-  }
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        @media (max-width: 620px) {
+            .row-2 { grid-template-columns: 1fr; }
+        }
 
-  .footer {
-    text-align: center;
-    padding: 16px;
-    color: #64748b;
-    font-size: 12px;
-  }
-  .footer a { color:#fbbf24; text-decoration:none; }
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-desc {
+            font-size: 12px;
+            color: #94a3b8;
+            line-height: 1.55;
+            margin-bottom: 18px;
+        }
 
-  .hidden { display:none !important; }
-</style>
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+            margin: 22px 0;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.15s;
+            border: none;
+            width: 100%;
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #0a1f2e;
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.25);
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(251, 191, 36, 0.35);
+        }
+
+        .btn-amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            font-size: 13px;
+            padding: 11px 14px;
+        }
+        .btn-amber:hover:not(:disabled) {
+            background: rgba(245, 158, 11, 0.28);
+            border-color: rgba(245, 158, 11, 0.6);
+            color: #fef3c7;
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+        }
+        .btn-green:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(16, 185, 129, 0.35);
+        }
+
+        /* Spinner inside buttons */
+        .btn-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+            flex-shrink: 0;
+        }
+        .btn.loading .btn-spinner { display: inline-block; }
+        .btn.loading .btn-label { opacity: 0.65; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Class grid */
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        /* Combined section */
+        .combined-section {
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.25);
+            border-left: 4px solid #fbbf24;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 18px;
+        }
+        .combined-section .note {
+            margin-top: 10px;
+            font-size: 11.5px;
+            color: #fef3c7;
+            line-height: 1.55;
+        }
+        .combined-section .note strong { color: #fbbf24; }
+
+        /* Status */
+        .status {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            line-height: 1.5;
+        }
+        .status.show { display: flex; }
+        .status.loading {
+            background: rgba(59, 130, 246, 0.12);
+            border-left: 4px solid #3b82f6;
+            color: #dbeafe;
+        }
+        .status.error {
+            background: rgba(220, 38, 38, 0.12);
+            border-left: 4px solid #ef4444;
+            color: #fecaca;
+        }
+        .status.success {
+            background: rgba(16, 185, 129, 0.12);
+            border-left: 4px solid #10b981;
+            color: #a7f3d0;
+        }
+        .status .mini-spin {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fbbf24;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .status strong { color: #fbbf24; }
+
+        /* Footer */
+        .portal-footer {
+            padding: 16px 24px 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            line-height: 1.7;
+        }
+        .portal-footer a { color: #fbbf24; text-decoration: none; }
+        .portal-footer a:hover { text-decoration: underline; }
+
+        /* Boot loader */
+        .boot-loader {
+            position: fixed;
+            inset: 0;
+            background: #0a1f2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: #e2e8f0;
+            padding: 24px;
+            text-align: center;
+        }
+        .boot-loader.hidden { display: none; }
+        .boot-loader .spinner-lg {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #fbbf24;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 18px;
+        }
+        .boot-loader p { font-size: 14px; color: #cbd5e1; margin-bottom: 18px; }
+        .boot-loader .retry {
+            padding: 10px 22px;
+            background: #fbbf24;
+            color: #0a1f2e;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            display: none;
+        }
+        .boot-loader .retry.show { display: inline-block; }
+
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .portal-header { padding: 22px 18px 18px; }
+            .portal-body { padding: 22px 18px 16px; }
+        }
+    </style>
 </head>
 <body>
 
-<div id="lssAdminNav"></div>
-
-<div id="bg-canvas-container">
-  <canvas id="bgCanvas"></canvas>
-</div>
-
-<div class="container">
-
-  <div class="page-header">
-    <h1>📊 Reports & Notice Boards</h1>
-    <div class="sub">
-      Term: <strong id="currentTermDisplay">Loading...</strong>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>📄 Detailed Class Reports</h2>
-    <div class="hint">
-      Comprehensive PDF for one class: all subjects, scores, positions, grades,
-      class average, pass rate, and subject-level pass rates.
+    <!-- Boot loader -->
+    <div id="bootLoader" class="boot-loader">
+        <div class="spinner-lg"></div>
+        <p id="bootLoaderText">Connecting to server…</p>
+        <button id="bootRetryBtn" class="retry" onclick="retryBoot()">Retry</button>
     </div>
 
-    <div class="row">
-      <div class="field">
-        <label for="reportClass">Class:</label>
-        <select id="reportClass"></select>
-      </div>
-      <div class="field">
-        <label for="reportTerm">Term:</label>
-        <select id="reportTerm" onchange="onTermChange()"></select>
-      </div>
-    </div>
+    <!-- Main card -->
+    <main class="portal" id="portalCard" style="display:none;">
 
-    <button id="generateBtn" class="btn primary" onclick="generateClassReport()">
-      <span class="spinner"></span>
-      <span class="label">Generate Detailed Class Report</span>
-    </button>
+        <header class="portal-header">
+            <img
+                src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png"
+                alt="School crest"
+                class="crest"
+            >
+            <h1>Reports &amp; Notice Boards</h1>
+            <h2 id="currentTermDisplay">Loading…</h2>
+        </header>
 
-    <div id="reportStatus" class="status"></div>
-  </div>
+        <section class="portal-body">
 
-  <div class="card">
-    <h2>📋 Notice Board Lists</h2>
-    <div class="hint">
-      Simplified print-ready lists — name, position, total, remarks. A4 portrait.
-    </div>
+            <!-- ============================================================
+                 SECTION 1 — Detailed Class Reports
+                 ============================================================ -->
+            <div class="section-title">
+                <i class="fas fa-file-alt"></i>
+                Detailed Class Report
+            </div>
+            <div class="section-desc">
+                Comprehensive PDF for one class — all subjects, scores, positions, grades, class average, pass rate, and subject-level pass rates.
+            </div>
 
-    <div class="row">
-      <div class="field">
-        <label for="noticeTerm">Term:</label>
-        <select id="noticeTerm" onchange="onTermChange()"></select>
-      </div>
-      <div class="field">
-        <label>&nbsp;</label>
-        <button class="btn gray" onclick="onTermChange()">
-          <span class="spinner"></span>
-          <span class="label">🔄 Reload Classes</span>
-        </button>
-      </div>
-    </div>
+            <div class="row-2">
+                <div class="field">
+                    <label for="reportClass">Class <span class="req">*</span></label>
+                    <select id="reportClass"></select>
+                </div>
+                <div class="field">
+                    <label for="reportTerm">Term <span class="req">*</span></label>
+                    <select id="reportTerm" onchange="onTermChange()"></select>
+                </div>
+            </div>
 
-    <div id="noticeGrid" class="class-grid"></div>
-    <div id="noticeStatus" class="status"></div>
+            <button id="generateBtn" class="btn btn-primary" onclick="generateClassReport()">
+                <span class="btn-spinner"></span>
+                <span class="btn-label">
+                    <i class="fas fa-download"></i>
+                    Generate Detailed Class Report
+                </span>
+            </button>
 
-    <div class="combined-section">
-      <button class="btn green" id="allNoticeBtn" onclick="generateAllNoticeBoard()">
-        <span class="spinner"></span>
-        <span class="label">🏆 Generate ALL Classes Notice Board</span>
-      </button>
-      <div class="note">
-        <strong>Note:</strong> One combined PDF containing every student from every class in the selected term.
-      </div>
-    </div>
-  </div>
+            <div id="reportStatus" class="status"></div>
 
-  <div class="footer">
-    Lunzu Secondary School · Reports &amp; Notice Boards
-  </div>
+            <div class="section-divider"></div>
 
-</div>
+            <!-- ============================================================
+                 SECTION 2 — Notice Board Lists
+                 ============================================================ -->
+            <div class="section-title">
+                <i class="fas fa-clipboard-list"></i>
+                Notice Board Lists
+            </div>
+            <div class="section-desc">
+                Simplified print-ready lists — name, position, total, remarks. A4 portrait.
+            </div>
 
-<script src="nav.js"></script>
-<script>
-// ============================================================
-// Auth guard + nav bar
-// ============================================================
-if (LSS.requireAdmin()) {
-  document.addEventListener('DOMContentLoaded', function () {
-    LSS.renderAdminNav('reports');
-  });
-  // in case DOMContentLoaded already fired
-  if (document.readyState !== 'loading') LSS.renderAdminNav('reports');
-}
+            <div class="field">
+                <label for="noticeTerm">Term <span class="req">*</span></label>
+                <select id="noticeTerm" onchange="onTermChange()"></select>
+            </div>
 
-// ============================================================
-// Config
-// ============================================================
-var GAS_URL = LSS.GAS_URL;
-var state = { terms: [], activeTerm: null };
-var SANDBOX_MODE = (new URLSearchParams(location.search).get('sandbox') === 'true');
+            <div id="noticeGrid" class="class-grid"></div>
+            <div id="noticeStatus" class="status"></div>
 
-var LONG_ACTIONS = {
-  generateClassPDF: true,
-  generateNoticeBoardPDF: true,
-  generateAllNoticeBoardPDF: true
-};
-var QUICK_TIMEOUT_MS = 20000;
-var LONG_TIMEOUT_MS  = 300000;
+            <div class="combined-section">
+                <button class="btn btn-green" id="allNoticeBtn" onclick="generateAllNoticeBoard()">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-label">
+                        <i class="fas fa-trophy"></i>
+                        Generate ALL Classes Notice Board
+                    </span>
+                </button>
+                <div class="note">
+                    <strong>Note:</strong> One combined PDF containing every student from every class in the selected term.
+                </div>
+            </div>
 
-// ============================================================
-// JSONP caller
-// ============================================================
-function callGAS(action, params, attempt) {
-  attempt = attempt || 1;
-  var isLong = LONG_ACTIONS[action] === true;
-  var MAX = isLong ? 1 : 5;
-  var PER_ATTEMPT_MS = isLong ? LONG_TIMEOUT_MS : QUICK_TIMEOUT_MS;
-  var BACKOFF = isLong ? [0] : [0, 500, 1500, 4000, 8000];
+        </section>
 
-  return new Promise(function (resolve, reject) {
-    var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    var globalName = '__gasResponse_' + cb;
-    var p = Object.assign({}, params || {});
-    p.action = action;
-    p.callback = cb;
+        <footer class="portal-footer">
+            Examination Department<br>
+            <a href="https://wa.me/265996099740" target="_blank">WhatsApp +265 996 099 740</a><br>
+            © <span id="currentYear"></span> Lunzu Secondary School
+        </footer>
 
-    var qs = Object.keys(p)
-      .filter(function (k) { return p[k] !== undefined && p[k] !== null; })
-      .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]); })
-      .join('&');
+    </main>
 
-    var s = document.createElement('script');
-    s.src = GAS_URL + '?' + qs;
-    var settled = false;
-
-    function cleanup() {
-      try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
-      if (s.parentNode) s.parentNode.removeChild(s);
-    }
-    function attemptFailed(reason) {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      if (attempt < MAX) {
-        setTimeout(function () {
-          callGAS(action, params, attempt + 1).then(resolve, reject);
-        }, BACKOFF[attempt] || 0);
-      } else {
-        reject(new Error(reason));
-      }
-    }
-
-    var timeoutId = setTimeout(function () {
-      attemptFailed('Request timeout after ' + Math.round(PER_ATTEMPT_MS / 1000) + 's');
-    }, PER_ATTEMPT_MS);
-
-    s.onload = function () {
-      setTimeout(function () {
-        if (settled) return;
-        var hasProp = Object.prototype.hasOwnProperty.call(window, globalName);
-        var resp = hasProp ? window[globalName] : undefined;
-
-        if (!hasProp || resp === undefined || resp === null) {
-          clearTimeout(timeoutId);
-          attemptFailed('No response from server');
-          return;
+    <script>
+        // ============================================================
+        // AUTH GUARD
+        // ============================================================
+        if (typeof LSS === 'undefined') {
+            alert('Configuration missing. Please reload.');
+            location.replace('admin.html');
         }
-        clearTimeout(timeoutId);
-        settled = true;
-        cleanup();
+        if (!LSS.requireAdmin()) {
+            // requireAdmin already redirected
+        }
 
-        if (resp && resp.error) reject(new Error(resp.error));
-        else resolve(resp);
-      }, 30);
-    };
-    s.onerror = function () {
-      clearTimeout(timeoutId);
-      attemptFailed('Network error');
-    };
-    document.head.appendChild(s);
-  });
-}
+        // ============================================================
+        // STATE
+        // ============================================================
+        let state = { terms: [], activeTerm: null };
+        const SANDBOX_MODE = (new URLSearchParams(location.search).get('sandbox') === 'true');
 
-// ============================================================
-// Status helpers
-// ============================================================
-function showStatus(id, type, html) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  el.className = 'status show ' + type;
-  el.innerHTML = html;
-}
-function hideStatus(id) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  el.className = 'status';
-  el.innerHTML = '';
-}
-function setBtnLoading(id, on) {
-  var b = document.getElementById(id);
-  if (!b) return;
-  b.classList.toggle('loading', on);
-  b.disabled = on;
-}
+        // ============================================================
+        // FLOATING MENU
+        // ============================================================
+        function renderAdminMenu() {
+            const MENU_ID = 'rspMenu';
+            const existing = document.getElementById(MENU_ID);
+            if (existing) existing.remove();
 
-function makeElapsedTicker(statusId, messagePrefix) {
-  var startTime = Date.now();
-  var timerId = setInterval(function () {
-    var elapsed = Math.round((Date.now() - startTime) / 1000);
-    showStatus(statusId, 'loading',
-      '<span class="mini-spin"></span> ' + messagePrefix +
-      ' <strong>(' + elapsed + 's — first run may take 1–3 min)</strong>');
-  }, 1000);
-  return { stop: function () { clearInterval(timerId); return Math.round((Date.now() - startTime) / 1000); } };
-}
+            const isAdmin = (typeof LSS !== 'undefined') && LSS.hasAdminSession();
 
-// ============================================================
-// Term dropdowns
-// ============================================================
-function populateTermSelects() {
-  ['reportTerm', 'noticeTerm'].forEach(function (id) {
-    var sel = document.getElementById(id);
-    if (!sel) return;
-    sel.innerHTML = '';
-    state.terms.forEach(function (t) {
-      var o = document.createElement('option');
-      o.value = t.key;
-      o.textContent = t.display + (t.isActive ? '  (active)' : '');
-      if (t.isActive) o.selected = true;
-      sel.appendChild(o);
-    });
-  });
-}
+            const root = document.createElement('div');
+            root.id = MENU_ID;
+            root.className = 'rsp-menu';
 
-function getSelectedTerm(selId) {
-  var sel = document.getElementById(selId);
-  return sel ? sel.value : null;
-}
+            let linksHtml = '';
 
-function getClassesForTerm(termKey) {
-  var t = state.terms.find(function (x) { return x.key === termKey; });
-  return t && t.classes ? t.classes : [];
-}
+            linksHtml += '<a href="admin.html" class="rsp-menu-link">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-hammer"></i></span>'
+                      +  '<span class="rsp-menu-label">Admin Hub</span>'
+                      +  '</a>';
 
-function populateReportClassDropdown() {
-  var sel = document.getElementById('reportClass');
-  var term = getSelectedTerm('reportTerm');
-  var classes = getClassesForTerm(term);
-  var current = sel.value;
-  sel.innerHTML = '';
-  if (!classes.length) {
-    var o = document.createElement('option');
-    o.value = '';
-    o.textContent = '-- No classes for this term --';
-    o.disabled = true;
-    o.selected = true;
-    sel.appendChild(o);
-    return;
-  }
-  classes.forEach(function (c) {
-    var o = document.createElement('option');
-    o.value = c; o.textContent = c;
-    sel.appendChild(o);
-  });
-  if (current && classes.indexOf(current) !== -1) sel.value = current;
-}
+            linksHtml += '<a href="admin-reports.html" class="rsp-menu-link active">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-chart-bar"></i></span>'
+                      +  '<span class="rsp-menu-label">Reports</span>'
+                      +  '<i class="fas fa-check rsp-menu-check"></i>'
+                      +  '</a>';
 
-function populateNoticeGrid() {
-  var term = getSelectedTerm('noticeTerm');
-  var classes = getClassesForTerm(term);
-  var grid = document.getElementById('noticeGrid');
-  grid.innerHTML = '';
-  if (!classes.length) {
-    grid.innerHTML = '<div style="color:#94a3b8;font-size:12.5px;font-style:italic;padding:8px;">No classes available for this term.</div>';
-    return;
-  }
-  classes.forEach(function (c) {
-    var btn = document.createElement('button');
-    btn.className = 'btn amber';
-    btn.innerHTML = '<span class="spinner"></span><span class="label">' + c + ' Notice Board</span>';
-    btn.addEventListener('click', function () { generateNoticeBoard(c); });
-    grid.appendChild(btn);
-  });
-}
+            linksHtml += '<a href="admin-teachers.html" class="rsp-menu-link">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-users"></i></span>'
+                      +  '<span class="rsp-menu-label">Teachers</span>'
+                      +  '</a>';
 
-function onTermChange() {
-  populateReportClassDropdown();
-  populateNoticeGrid();
-}
+            linksHtml += '<a href="AdminAlerts.html" class="rsp-menu-link">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-envelope-open-text"></i></span>'
+                      +  '<span class="rsp-menu-label">Alerts</span>'
+                      +  '</a>';
 
-// ============================================================
-// PDF download (base64)
-// ============================================================
-function downloadPDF(base64, fileName) {
-  var byteCharacters = atob(base64);
-  var byteNumbers = new Array(byteCharacters.length);
-  for (var i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
-  var byteArray = new Uint8Array(byteNumbers);
-  var blob = new Blob([byteArray], { type: 'application/pdf' });
-  var url = URL.createObjectURL(blob);
-  var link = document.createElement('a');
-  link.href = url;
-  link.download = fileName + '.pdf';
-  document.body.appendChild(link);
-  link.click();
-  setTimeout(function () {
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, 200);
-}
+            linksHtml += '<div class="rsp-menu-divider"></div>';
 
-// ============================================================
-// Generate class report
-// ============================================================
-async function generateClassReport() {
-  var studentClass = document.getElementById('reportClass').value;
-  var term = getSelectedTerm('reportTerm');
-  if (!studentClass || !term) {
-    showStatus('reportStatus', 'error', '❌ Please select a class and term.');
-    return;
-  }
+            linksHtml += '<a href="index.html" class="rsp-menu-link">'
+                      +  '<span class="rsp-menu-icon"><i class="fas fa-home"></i></span>'
+                      +  '<span class="rsp-menu-label">Public Site</span>'
+                      +  '</a>';
 
-  setBtnLoading('generateBtn', true);
-  var ticker = makeElapsedTicker('reportStatus',
-    'Generating detailed report for <strong>' + studentClass + '</strong>…');
+            let accountHtml = '';
+            if (isAdmin) {
+                accountHtml += '<div class="rsp-menu-account">'
+                            +  '<span class="rsp-menu-dot"></span>'
+                            +  '<span>Signed in as Admin</span>'
+                            +  '</div>';
+                accountHtml += '<button type="button" class="rsp-menu-link logout" '
+                            +  'onclick="LSS.logout();">'
+                            +  '<span class="rsp-menu-icon"><i class="fas fa-sign-out-alt"></i></span>'
+                            +  '<span class="rsp-menu-label">Sign out</span>'
+                            +  '</button>';
+            }
 
-  try {
-    var pdfBase64 = await callGAS('generateClassPDF', { studentClass: studentClass, term: term });
-    var elapsed = ticker.stop();
-    if (!pdfBase64 || typeof pdfBase64 !== 'string') throw new Error('Empty PDF response');
-    downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Detailed_Report');
-    showStatus('reportStatus', 'success', '✅ PDF downloaded in ' + elapsed + 's.');
-    setTimeout(function () { hideStatus('reportStatus'); }, 5000);
-  } catch (e) {
-    ticker.stop();
-    showStatus('reportStatus', 'error', '❌ ' + e.message);
-  } finally {
-    setBtnLoading('generateBtn', false);
-  }
-}
+            root.innerHTML =
+                '<button type="button" class="rsp-menu-btn" aria-label="Menu" aria-expanded="false">'
+                +   '<i class="fas fa-bars"></i>'
+                + '</button>'
+                + '<div class="rsp-menu-panel">'
+                +   '<div class="rsp-menu-header">'
+                +     '<div class="rsp-menu-brand">LUNZU SEC. SCHOOL</div>'
+                +     '<div class="rsp-menu-page">Reports &amp; Notice Boards</div>'
+                +   '</div>'
+                +   '<div class="rsp-menu-links">' + linksHtml + '</div>'
+                +   accountHtml
+                + '</div>';
 
-// ============================================================
-// Generate single notice board
-// ============================================================
-async function generateNoticeBoard(studentClass) {
-  var term = getSelectedTerm('noticeTerm');
-  if (!term) {
-    showStatus('noticeStatus', 'error', '❌ Please select a term.');
-    return;
-  }
-  var ticker = makeElapsedTicker('noticeStatus',
-    'Generating notice board for <strong>' + studentClass + '</strong>…');
+            (document.documentElement || document.body).appendChild(root);
 
-  try {
-    var pdfBase64 = await callGAS('generateNoticeBoardPDF', { studentClass: studentClass, term: term });
-    var elapsed = ticker.stop();
-    if (!pdfBase64 || typeof pdfBase64 !== 'string') throw new Error('Empty PDF response');
-    downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Notice_Board');
-    showStatus('noticeStatus', 'success', '✅ Notice board downloaded in ' + elapsed + 's.');
-    setTimeout(function () { hideStatus('noticeStatus'); }, 5000);
-  } catch (e) {
-    ticker.stop();
-    showStatus('noticeStatus', 'error', '❌ ' + e.message);
-  }
-}
+            const btn = root.querySelector('.rsp-menu-btn');
 
-// ============================================================
-// Generate all notice board
-// ============================================================
-async function generateAllNoticeBoard() {
-  var term = getSelectedTerm('noticeTerm');
-  if (!term) {
-    showStatus('noticeStatus', 'error', '❌ Please select a term.');
-    return;
-  }
-  setBtnLoading('allNoticeBtn', true);
-  var ticker = makeElapsedTicker('noticeStatus', 'Generating combined notice board for all classes…');
+            function open() {
+                root.classList.add('open');
+                btn.setAttribute('aria-expanded', 'true');
+            }
+            function close() {
+                root.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
+            }
 
-  try {
-    var pdfBase64 = await callGAS('generateAllNoticeBoardPDF', { term: term });
-    var elapsed = ticker.stop();
-    if (!pdfBase64 || typeof pdfBase64 !== 'string') throw new Error('Empty PDF response');
-    downloadPDF(pdfBase64, 'All_Classes_Notice_Board');
-    showStatus('noticeStatus', 'success', '✅ Combined notice board downloaded in ' + elapsed + 's.');
-    setTimeout(function () { hideStatus('noticeStatus'); }, 5000);
-  } catch (e) {
-    ticker.stop();
-    showStatus('noticeStatus', 'error', '❌ ' + e.message);
-  } finally {
-    setBtnLoading('allNoticeBtn', false);
-  }
-}
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                root.classList.contains('open') ? close() : open();
+            });
+            document.addEventListener('click', function (e) {
+                if (!root.contains(e.target)) close();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') close();
+            });
+        }
 
-// ============================================================
-// Init
-// ============================================================
-async function initializePage() {
-  try { callGAS('test', {}).catch(function () {}); } catch (e) {}
+        // ============================================================
+        // STATUS HELPERS
+        // ============================================================
+        function showStatus(id, type, html) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.className = 'status show ' + type;
+            el.innerHTML = html;
+        }
+        function hideStatus(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.className = 'status';
+            el.innerHTML = '';
+        }
+        function setBtnLoading(id, on) {
+            const b = document.getElementById(id);
+            if (!b) return;
+            b.classList.toggle('loading', on);
+            b.disabled = on;
+        }
 
-  try {
-    var raw = await callGAS('getAvailableTerms', SANDBOX_MODE ? { sandbox: 'true' } : {});
-    console.log('[admin-reports] getAvailableTerms raw:', raw);
+        function makeElapsedTicker(statusId, messagePrefix) {
+            const startTime = Date.now();
+            const timerId = setInterval(() => {
+                const elapsed = Math.round((Date.now() - startTime) / 1000);
+                showStatus(statusId, 'loading',
+                    '<span class="mini-spin"></span> ' + messagePrefix +
+                    ' <strong>(' + elapsed + 's — first run may take 1–3 min)</strong>');
+            }, 1000);
+            return {
+                stop: function () {
+                    clearInterval(timerId);
+                    return Math.round((Date.now() - startTime) / 1000);
+                }
+            };
+        }
 
-    var terms = null;
-    if (Array.isArray(raw)) terms = raw;
-    else if (raw && Array.isArray(raw.terms)) terms = raw.terms;
-    else if (raw && Array.isArray(raw.data)) terms = raw.data;
-    else if (raw && Array.isArray(raw.result)) terms = raw.result;
-    else if (raw && raw.error) throw new Error(raw.error);
-    else if (typeof raw === 'string') {
-      try { var parsed = JSON.parse(raw); if (Array.isArray(parsed)) terms = parsed; } catch (e) {}
-    }
+        // ============================================================
+        // TERM DROPDOWNS
+        // ============================================================
+        function populateTermSelects() {
+            ['reportTerm', 'noticeTerm'].forEach(function (id) {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                sel.innerHTML = '';
+                state.terms.forEach(function (t) {
+                    const o = document.createElement('option');
+                    o.value = t.key;
+                    o.textContent = t.display + (t.isActive ? '  (active)' : '');
+                    if (t.isActive) o.selected = true;
+                    sel.appendChild(o);
+                });
+            });
+        }
 
-    if (!terms || !terms.length) {
-      var preview;
-      if (raw === undefined) preview = 'undefined';
-      else if (raw === null) preview = 'null';
-      else if (typeof raw === 'string') preview = raw.slice(0, 200);
-      else {
-        try { preview = JSON.stringify(raw).slice(0, 200); }
-        catch (err) { preview = String(raw).slice(0, 200); }
-      }
-      throw new Error('Unexpected response (' + typeof raw + '): ' + preview);
-    }
+        function getSelectedTerm(selId) {
+            const sel = document.getElementById(selId);
+            return sel ? sel.value : null;
+        }
 
-    if (!SANDBOX_MODE) {
-      terms = terms.filter(function (t) { return t.isSandbox !== true; });
-    }
+        function getClassesForTerm(termKey) {
+            const t = state.terms.find(x => x.key === termKey);
+            return t && t.classes ? t.classes : [];
+        }
 
-    state.terms = terms;
-    var active = state.terms.find(function (t) { return t.isActive; });
-    state.activeTerm = active ? active.key : (state.terms[0] && state.terms[0].key);
+        function populateReportClassDropdown() {
+            const sel = document.getElementById('reportClass');
+            const term = getSelectedTerm('reportTerm');
+            const classes = getClassesForTerm(term);
+            const current = sel.value;
+            sel.innerHTML = '';
 
-    document.getElementById('currentTermDisplay').textContent =
-      active ? active.display : (state.terms[0] ? state.terms[0].display : '—');
+            if (!classes.length) {
+                const o = document.createElement('option');
+                o.value = '';
+                o.textContent = 'No classes for this term';
+                o.disabled = true;
+                o.selected = true;
+                sel.appendChild(o);
+                return;
+            }
 
-    populateTermSelects();
-    onTermChange();
+            classes.forEach(function (c) {
+                const o = document.createElement('option');
+                o.value = c;
+                o.textContent = c;
+                sel.appendChild(o);
+            });
+            if (current && classes.indexOf(current) !== -1) sel.value = current;
+        }
 
-  } catch (e) {
-    console.error('[admin-reports] Failed to load terms:', e);
-    document.getElementById('currentTermDisplay').textContent = 'Error loading terms';
-    showStatus('reportStatus', 'error', '❌ Failed to load terms: ' + e.message);
-  }
+        function populateNoticeGrid() {
+            const term = getSelectedTerm('noticeTerm');
+            const classes = getClassesForTerm(term);
+            const grid = document.getElementById('noticeGrid');
+            grid.innerHTML = '';
 
-  document.addEventListener('keydown', function (ev) {
-    if (ev.ctrlKey && ev.key === 'Enter') generateClassReport();
-    if (ev.key === 'Escape') { hideStatus('reportStatus'); hideStatus('noticeStatus'); }
-  });
-}
+            if (!classes.length) {
+                grid.innerHTML = '<div style="color:#94a3b8;font-size:12px;font-style:italic;padding:8px;">No classes available for this term.</div>';
+                return;
+            }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializePage);
-} else {
-  setTimeout(initializePage, 0);
-}
-</script>
+            classes.forEach(function (c) {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-amber';
+                btn.innerHTML = '<span class="btn-spinner"></span>'
+                              + '<span class="btn-label"><i class="fas fa-file-pdf"></i> '
+                              + c + '</span>';
+                btn.addEventListener('click', function () { generateNoticeBoard(c, btn); });
+                grid.appendChild(btn);
+            });
+        }
 
+        function onTermChange() {
+            populateReportClassDropdown();
+            populateNoticeGrid();
+        }
+
+        // ============================================================
+        // PDF DOWNLOAD
+        // ============================================================
+        function downloadPDF(base64, fileName) {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName + '.pdf';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(function () {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 200);
+        }
+
+        // ============================================================
+        // GENERATE — Detailed Class Report
+        // ============================================================
+        async function generateClassReport() {
+            const studentClass = document.getElementById('reportClass').value;
+            const term = getSelectedTerm('reportTerm');
+
+            if (!studentClass || !term) {
+                showStatus('reportStatus', 'error', '❌ Please select a class and term.');
+                return;
+            }
+
+            setBtnLoading('generateBtn', true);
+            const ticker = makeElapsedTicker('reportStatus',
+                'Generating detailed report for <strong>' + studentClass + '</strong>…');
+
+            try {
+                const pdfBase64 = await LSS.callGAS('generateClassPDF', {
+                    studentClass: studentClass,
+                    term: term
+                });
+                const elapsed = ticker.stop();
+
+                if (!pdfBase64 || typeof pdfBase64 !== 'string') {
+                    throw new Error('Empty PDF response');
+                }
+
+                downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Detailed_Report');
+                showStatus('reportStatus', 'success', '✅ PDF downloaded in ' + elapsed + 's.');
+                setTimeout(() => hideStatus('reportStatus'), 5000);
+            } catch (e) {
+                ticker.stop();
+                showStatus('reportStatus', 'error', '❌ ' + e.message);
+            } finally {
+                setBtnLoading('generateBtn', false);
+            }
+        }
+
+        // ============================================================
+        // GENERATE — Single Notice Board
+        // ============================================================
+        async function generateNoticeBoard(studentClass, btnEl) {
+            const term = getSelectedTerm('noticeTerm');
+            if (!term) {
+                showStatus('noticeStatus', 'error', '❌ Please select a term.');
+                return;
+            }
+
+            if (btnEl) {
+                btnEl.classList.add('loading');
+                btnEl.disabled = true;
+            }
+
+            const ticker = makeElapsedTicker('noticeStatus',
+                'Generating notice board for <strong>' + studentClass + '</strong>…');
+
+            try {
+                const pdfBase64 = await LSS.callGAS('generateNoticeBoardPDF', {
+                    studentClass: studentClass,
+                    term: term
+                });
+                const elapsed = ticker.stop();
+
+                if (!pdfBase64 || typeof pdfBase64 !== 'string') {
+                    throw new Error('Empty PDF response');
+                }
+
+                downloadPDF(pdfBase64, studentClass.replace(/\s+/g, '_') + '_Notice_Board');
+                showStatus('noticeStatus', 'success', '✅ Notice board downloaded in ' + elapsed + 's.');
+                setTimeout(() => hideStatus('noticeStatus'), 5000);
+            } catch (e) {
+                ticker.stop();
+                showStatus('noticeStatus', 'error', '❌ ' + e.message);
+            } finally {
+                if (btnEl) {
+                    btnEl.classList.remove('loading');
+                    btnEl.disabled = false;
+                }
+            }
+        }
+
+        // ============================================================
+        // GENERATE — All Notice Boards
+        // ============================================================
+        async function generateAllNoticeBoard() {
+            const term = getSelectedTerm('noticeTerm');
+            if (!term) {
+                showStatus('noticeStatus', 'error', '❌ Please select a term.');
+                return;
+            }
+
+            setBtnLoading('allNoticeBtn', true);
+            const ticker = makeElapsedTicker('noticeStatus',
+                'Generating combined notice board for all classes…');
+
+            try {
+                const pdfBase64 = await LSS.callGAS('generateAllNoticeBoardPDF', { term: term });
+                const elapsed = ticker.stop();
+
+                if (!pdfBase64 || typeof pdfBase64 !== 'string') {
+                    throw new Error('Empty PDF response');
+                }
+
+                downloadPDF(pdfBase64, 'All_Classes_Notice_Board');
+                showStatus('noticeStatus', 'success', '✅ Combined notice board downloaded in ' + elapsed + 's.');
+                setTimeout(() => hideStatus('noticeStatus'), 5000);
+            } catch (e) {
+                ticker.stop();
+                showStatus('noticeStatus', 'error', '❌ ' + e.message);
+            } finally {
+                setBtnLoading('allNoticeBtn', false);
+            }
+        }
+
+        // ============================================================
+        // BOOT
+        // ============================================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+            renderAdminMenu();
+
+            try {
+                await loadTerms();
+                document.getElementById('bootLoader').classList.add('hidden');
+                document.getElementById('portalCard').style.display = 'block';
+            } catch (err) {
+                console.error('Boot failed:', err);
+                bootFail(err.message || 'Unable to connect to the server.');
+            }
+        });
+
+        function bootFail(message) {
+            document.getElementById('bootLoaderText').textContent = message;
+            document.getElementById('bootRetryBtn').classList.add('show');
+        }
+        function retryBoot() { window.location.reload(); }
+
+        async function loadTerms() {
+            try { LSS.callGAS('test', {}).catch(function () {}); } catch (e) {}
+
+            const raw = await LSS.callGAS('getAvailableTerms', SANDBOX_MODE ? { sandbox: 'true' } : {});
+
+            let terms = null;
+            if (Array.isArray(raw)) terms = raw;
+            else if (raw && Array.isArray(raw.terms)) terms = raw.terms;
+            else if (raw && Array.isArray(raw.data)) terms = raw.data;
+            else if (raw && Array.isArray(raw.result)) terms = raw.result;
+            else if (raw && raw.error) throw new Error(raw.error);
+
+            if (!terms || !terms.length) {
+                throw new Error('No academic terms available.');
+            }
+
+            if (!SANDBOX_MODE) {
+                terms = terms.filter(t => t.isSandbox !== true);
+            }
+
+            state.terms = terms;
+            const active = state.terms.find(t => t.isActive);
+            state.activeTerm = active ? active.key : (state.terms[0] && state.terms[0].key);
+
+            document.getElementById('currentTermDisplay').textContent =
+                active ? active.display : (state.terms[0] ? state.terms[0].display : '—');
+
+            populateTermSelects();
+            onTermChange();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function (ev) {
+            if (ev.ctrlKey && ev.key === 'Enter') generateClassReport();
+            if (ev.key === 'Escape') {
+                hideStatus('reportStatus');
+                hideStatus('noticeStatus');
+            }
+        });
+    </script>
 </body>
 </html>
