@@ -3,36 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <link rel="icon" href="data:,">
 <title>Manage Teachers — Lunzu Secondary School</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="nav.js?v=10"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
+
   body {
     font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-    background: #0a1628;
-    color: #fff;
+    background: #0a1f2e;
+    background-image:
+      radial-gradient(ellipse at top left, rgba(30,58,95,0.6) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(0,61,92,0.5) 0%, transparent 55%),
+      linear-gradient(135deg, #0a1f2e 0%, #0d2941 100%);
+    color: #e2e8f0;
     min-height: 100vh;
-    padding: 16px;
+    padding: 24px 16px;
   }
+
   .wrap { max-width: 1200px; margin: 0 auto; }
+
   .card {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 18px;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,215,0,0.18);
+    border-radius: 16px;
     padding: 22px;
     margin-bottom: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
   }
-  h1 { font-size: 21px; color: #fbbf24; margin-bottom: 5px; }
-  .sub { color: #94a3b8; font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+
+  .page-head {
+    text-align: center;
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid rgba(255,215,0,0.15);
+    margin-bottom: 20px;
+    background: rgba(10,30,50,0.55);
+    border-radius: 14px;
+  }
+  .page-head .crest {
+    width: 52px;
+    height: 52px;
+    padding: 4px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    object-fit: contain;
+  }
+  .page-head h1 {
+    font-size: 18px;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+  }
+  .page-head .sub {
+    color: #fcd34d;
+    font-size: 12px;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+
   h2 {
-    font-size: 13px; color: #a78bfa; margin-bottom: 12px;
+    font-size: 13px; color: #fbbf24; margin-bottom: 12px;
     text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
   }
+
   .tabs {
     display: flex; gap: 6px; margin-bottom: 18px;
-    background: rgba(0,0,0,0.15); padding: 6px; border-radius: 12px;
+    background: rgba(0,0,0,0.2); padding: 6px; border-radius: 12px;
     flex-wrap: wrap;
+    border: 1px solid rgba(255,255,255,0.05);
   }
   .tab {
     flex: 1; min-width: 110px;
@@ -40,26 +86,29 @@
     color: #cbd5e1; border-radius: 8px; cursor: pointer;
     border: none; background: transparent; font-family: inherit;
     transition: 0.15s;
+    -webkit-tap-highlight-color: transparent;
   }
   .tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
-  .tab.active { background: rgba(139,92,246,0.32); color: #fff; }
+  .tab.active { background: rgba(139,92,246,0.35); color: #fff; }
 
   .field { margin-bottom: 12px; }
   .field label {
-    display: block; font-size: 12px; color: #e2e8f0;
+    display: block; font-size: 12px; color: #cbd5e1;
     font-weight: 600; margin-bottom: 5px;
+    text-transform: uppercase; letter-spacing: 0.5px;
   }
   .field input, .field select {
-    width: 100%; padding: 10px 12px; border-radius: 10px;
-    border: 1.5px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.08);
+    width: 100%; padding: 11px 13px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
     color: #fff; font-size: 13.5px; font-family: inherit;
+    transition: border-color 0.15s, background 0.15s;
   }
   .field input:focus, .field select:focus {
-    outline: none; border-color: #a78bfa;
-    background: rgba(255,255,255,0.14);
+    outline: none; border-color: rgba(251,191,36,0.7);
+    background: rgba(255,255,255,0.09);
   }
-  .field select option { background:#1a2a3a; color:#fff; }
+  .field select option { background:#1e2f3f; color:#fff; }
 
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
@@ -75,14 +124,23 @@
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn.purple { background: rgba(139,92,246,0.85); }
   .btn.purple:hover:not(:disabled) { background: rgba(139,92,246,1); }
-  .btn.green { background: rgba(22,163,74,0.85); }
-  .btn.green:hover:not(:disabled) { background: rgba(22,163,74,1); }
+  .btn.green { background: linear-gradient(135deg,#10b981 0%,#059669 100%); }
+  .btn.green:hover:not(:disabled) { transform: translateY(-1px); }
   .btn.gray { background: rgba(100,116,139,0.6); }
   .btn.gray:hover:not(:disabled) { background: rgba(100,116,139,0.9); }
   .btn.red { background: rgba(220,38,38,0.75); }
   .btn.red:hover:not(:disabled) { background: rgba(220,38,38,1); }
   .btn.amber { background: rgba(245,158,11,0.85); color:#1e293b; }
   .btn.amber:hover:not(:disabled) { background: rgba(245,158,11,1); }
+  .btn.primary {
+    background: linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);
+    color: #0a1f2e;
+    box-shadow: 0 6px 20px rgba(251,191,36,0.25);
+  }
+  .btn.primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(251,191,36,0.35);
+  }
   .btn.sm { padding: 6px 11px; font-size: 12px; }
 
   .msg {
@@ -116,21 +174,22 @@
   }
   .badge.active { background: rgba(34,197,94,0.25); color: #86efac; }
   .badge.inactive { background: rgba(148,163,184,0.25); color: #cbd5e1; }
+
   .filter-bar {
     display: flex; gap: 10px; flex-wrap: wrap;
     align-items: center; margin-bottom: 12px;
   }
   .filter-bar input, .filter-bar select {
     padding: 9px 12px; border-radius: 10px;
-    border: 1.5px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
     color: #fff; font-size: 13px; font-family: inherit;
     min-width: 180px;
   }
   .filter-bar input:focus, .filter-bar select:focus {
-    outline: none; border-color: #a78bfa;
+    outline: none; border-color: rgba(251,191,36,0.7);
   }
-  .filter-bar select option { background:#1a2a3a; color:#fff; }
+  .filter-bar select option { background:#1e2f3f; color:#fff; }
 
   .chips {
     display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
@@ -159,7 +218,7 @@
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 6px; margin-top: 6px;
     max-height: 260px; overflow-y: auto;
-    padding: 8px; background: rgba(0,0,0,0.15);
+    padding: 8px; background: rgba(0,0,0,0.2);
     border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.06);
   }
@@ -179,6 +238,7 @@
     color:#fff; font-family:inherit; font-size:12.5px;
   }
   .pc-input:focus { outline:none; border-color:#a78bfa; }
+
   .sandbox-badge {
     display:none;
     background: rgba(220,38,38,0.25);
@@ -232,7 +292,6 @@
     font-variant-numeric: tabular-nums; font-weight: 700;
   }
 
-  /* CA Setup specific */
   .ca-info-bar {
     padding: 10px 14px;
     background: rgba(139,92,246,0.12);
@@ -273,7 +332,7 @@
     border: 1px solid rgba(255,255,255,0.08);
     margin-bottom: 14px;
   }
-  .weight-row label { font-size: 12px; color: #e2e8f0; font-weight: 600; }
+  .weight-row label { font-size: 12px; color: #cbd5e1; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
   .weight-row input {
     width: 80px;
     padding: 6px 9px;
@@ -285,17 +344,180 @@
   .weight-row input:focus { outline: none; border-color: #a78bfa; }
 
   @media (max-width: 600px) {
-    body { padding: 10px; }
+    body { padding: 12px; }
     .card { padding: 16px; }
-    h1 { font-size: 17px; }
     .filter-bar input, .filter-bar select { min-width: 100%; }
   }
+
+  /* ============================================================
+     FLOATING MENU (matching other pages)
+     ============================================================ */
+  .rsp-menu {
+    position: fixed !important;
+    top: 16px !important;
+    right: 16px !important;
+    z-index: 2147483000 !important;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+  .rsp-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 215, 0, 0.4);
+    background: rgba(10, 30, 50, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fbbf24;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .rsp-menu-btn:hover {
+    background: rgba(20, 45, 70, 1);
+    border-color: rgba(255, 215, 0, 0.7);
+    transform: translateY(-1px);
+  }
+  .rsp-menu.open .rsp-menu-btn {
+    background: rgba(20, 45, 70, 1);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+  .rsp-menu-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 280px;
+    background: rgba(15, 32, 52, 0.98);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    padding: 6px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.98);
+    transform-origin: top right;
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+    overflow: hidden;
+  }
+  .rsp-menu.open .rsp-menu-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+  .rsp-menu-header {
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 6px;
+  }
+  .rsp-menu-brand {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+  .rsp-menu-page {
+    color: #fbbf24;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 3px;
+    letter-spacing: 0.3px;
+  }
+  .rsp-menu-links { display: flex; flex-direction: column; gap: 1px; }
+  .rsp-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rsp-menu-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+  .rsp-menu-link.active {
+    background: rgba(251, 191, 36, 0.12);
+    color: #fef3c7;
+  }
+  .rsp-menu-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+  .rsp-menu-link.active .rsp-menu-icon { color: #fbbf24; opacity: 1; }
+  .rsp-menu-label { flex: 1; }
+  .rsp-menu-check {
+    color: #fbbf24;
+    font-size: 10px;
+    margin-left: auto;
+  }
+  .rsp-menu-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 6px 0;
+  }
+  .rsp-menu-account {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px 6px;
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+  .rsp-menu-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+    flex-shrink: 0;
+  }
+  .rsp-menu-link.logout { color: #fca5a5; }
+  .rsp-menu-link.logout:hover {
+    background: rgba(220, 38, 38, 0.12);
+    color: #fee2e2;
+  }
+
+  @media (max-width: 768px) {
+    .rsp-menu {
+      top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+      right: calc(12px + env(safe-area-inset-right, 0px)) !important;
+    }
+    .rsp-menu-btn { width: 46px; height: 46px; font-size: 16px; }
+    .rsp-menu-panel {
+      width: calc(100vw - 24px);
+      max-width: 320px;
+      top: calc(100% + 8px);
+    }
+    .rsp-menu-link { padding: 12px 14px; font-size: 14px; }
+  }
+  @media print { .rsp-menu { display: none !important; } }
 </style>
 </head>
 <body>
 
-<div id="lssAdminNav"></div>
-
+<!-- Wait overlay -->
 <div id="waitOverlay" class="wait-overlay">
   <div class="wait-box">
     <div class="wait-spinner"></div>
@@ -307,12 +529,14 @@
 
 <div class="wrap">
 
-  <div class="card">
-    <h1>👨‍🏫 Manage Teachers <span id="sandboxBadge" class="sandbox-badge">SANDBOX MODE</span></h1>
-    <div class="sub">
-      Add teachers, assign them classes and subjects, review the audit log, and configure paper structures.
-    </div>
+  <!-- Page header with crest -->
+  <div class="card page-head">
+    <img id="schoolCrest" alt="School crest" class="crest">
+    <h1>Manage Teachers <span id="sandboxBadge" class="sandbox-badge">SANDBOX MODE</span></h1>
+    <div class="sub">Add teachers, assign classes and subjects, configure papers, and review the audit log.</div>
+  </div>
 
+  <div class="card">
     <div class="tabs">
       <button class="tab active" data-tab="teachers" onclick="switchTab('teachers')">👤 Teachers</button>
       <button class="tab" data-tab="assign" onclick="switchTab('assign')">🎯 Assignments</button>
@@ -392,7 +616,7 @@
     <!-- ================= BULK ================= -->
     <div id="tab-bulk" class="hidden">
       <h2>Bulk Assign Subjects</h2>
-      <div class="sub" style="margin-bottom:12px;">
+      <div class="sub" style="margin-bottom:12px;color:#94a3b8;font-size:12.5px;line-height:1.5;">
         Assign multiple subjects to one teacher for one class in a single operation.
       </div>
 
@@ -437,7 +661,7 @@
     <!-- ================= PAPER CONFIG ================= -->
     <div id="tab-papers" class="hidden">
       <h2>Paper Configuration</h2>
-      <div class="sub" style="margin-bottom:12px;">
+      <div class="sub" style="margin-bottom:12px;color:#94a3b8;font-size:12.5px;line-height:1.5;">
         Configure how many papers each subject has, their names, and their max marks.
         The teacher portal uses this to build multi-paper input grids automatically.
       </div>
@@ -466,7 +690,7 @@
     <!-- ================= CA SETUP ================= -->
     <div id="tab-ca" class="hidden">
       <h2>Continuous Assessment Setup</h2>
-      <div class="sub" style="margin-bottom:12px;">
+      <div class="sub" style="margin-bottom:12px;color:#94a3b8;font-size:12.5px;line-height:1.5;">
         Define the CA items for each class+subject+term. Teachers enter scores against
         these items in the teacher portal. Weights apply when combining CA and exam scores.
       </div>
@@ -546,20 +770,22 @@
     </div>
 
   </div>
+
+  <!-- ✅ Global footer -->
+  <footer id="appFooter"></footer>
+
 </div>
 
-<script src="nav.js"></script>
 <script>
   // ============================================================
-  // Auth guard + nav
+  // Auth guard
   // ============================================================
+  if (typeof LSS === 'undefined') {
+    alert('Configuration missing. Please reload.');
+    location.replace('admin.html');
+  }
   if (!LSS.requireAdmin()) {
     // redirect in progress
-  } else {
-    document.addEventListener('DOMContentLoaded', function () {
-      LSS.renderAdminNav('teachers');
-    });
-    if (document.readyState !== 'loading') LSS.renderAdminNav('teachers');
   }
 
   function el(id) { return document.getElementById(id); }
@@ -586,6 +812,94 @@
     sandbox: SANDBOX_MODE,
     busy: false
   };
+
+  // ============================================================
+  // FLOATING MENU
+  // ============================================================
+  function renderAdminMenu() {
+    const MENU_ID = 'rspMenu';
+    const existing = document.getElementById(MENU_ID);
+    if (existing) existing.remove();
+
+    const isAdmin = (typeof LSS !== 'undefined') && LSS.hasAdminSession();
+
+    const root = document.createElement('div');
+    root.id = MENU_ID;
+    root.className = 'rsp-menu';
+
+    let linksHtml = '';
+
+    linksHtml += '<a href="admin.html" class="rsp-menu-link">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-hammer"></i></span>'
+              +  '<span class="rsp-menu-label">Admin Hub</span>'
+              +  '</a>';
+
+    linksHtml += '<a href="admin-reports.html" class="rsp-menu-link">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-chart-bar"></i></span>'
+              +  '<span class="rsp-menu-label">Reports</span>'
+              +  '</a>';
+
+    linksHtml += '<a href="admin-teachers.html" class="rsp-menu-link active">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-users"></i></span>'
+              +  '<span class="rsp-menu-label">Teachers</span>'
+              +  '<i class="fas fa-check rsp-menu-check"></i>'
+              +  '</a>';
+
+    linksHtml += '<a href="AdminAlerts.html" class="rsp-menu-link">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-envelope-open-text"></i></span>'
+              +  '<span class="rsp-menu-label">Alerts</span>'
+              +  '</a>';
+
+    linksHtml += '<div class="rsp-menu-divider"></div>';
+
+    linksHtml += '<a href="index.html" class="rsp-menu-link">'
+              +  '<span class="rsp-menu-icon"><i class="fas fa-home"></i></span>'
+              +  '<span class="rsp-menu-label">Public Site</span>'
+              +  '</a>';
+
+    let accountHtml = '';
+    if (isAdmin) {
+      accountHtml += '<div class="rsp-menu-account">'
+                  +  '<span class="rsp-menu-dot"></span>'
+                  +  '<span>Signed in as Admin</span>'
+                  +  '</div>';
+      accountHtml += '<button type="button" class="rsp-menu-link logout" '
+                  +  'onclick="LSS.logout();">'
+                  +  '<span class="rsp-menu-icon"><i class="fas fa-sign-out-alt"></i></span>'
+                  +  '<span class="rsp-menu-label">Sign out</span>'
+                  +  '</button>';
+    }
+
+    root.innerHTML =
+      '<button type="button" class="rsp-menu-btn" aria-label="Menu" aria-expanded="false">'
+      +   '<i class="fas fa-bars"></i>'
+      + '</button>'
+      + '<div class="rsp-menu-panel">'
+      +   '<div class="rsp-menu-header">'
+      +     '<div class="rsp-menu-brand">LUNZU SEC. SCHOOL</div>'
+      +     '<div class="rsp-menu-page">Manage Teachers</div>'
+      +   '</div>'
+      +   '<div class="rsp-menu-links">' + linksHtml + '</div>'
+      +   accountHtml
+      + '</div>';
+
+    (document.documentElement || document.body).appendChild(root);
+
+    const btn = root.querySelector('.rsp-menu-btn');
+    function open() { root.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+    function close() { root.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      root.classList.contains('open') ? close() : open();
+    });
+    document.addEventListener('click', function (e) {
+      if (!root.contains(e.target)) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+  }
 
   // ============================================================
   // Universal busy overlay
@@ -625,139 +939,14 @@
   }
 
   // ============================================================
-  // JSONP caller with retry + cache fallback
+  // Delegate to LSS.callGAS (POST, mobile-safe)
   // ============================================================
-  function hashParams(action, params) {
-    try {
-      var p = Object.assign({}, params || {});
-      delete p.callback;
-      var keys = Object.keys(p).sort();
-      var parts = [action];
-      for (var i = 0; i < keys.length; i++) {
-        var k = keys[i];
-        var v = p[k];
-        if (v === undefined || v === null || k === 'password' || k === 'token') continue;
-        parts.push(k + '=' + String(v).substring(0, 60));
-      }
-      return parts.join('|');
-    } catch (e) { return action; }
-  }
-
-  function cacheGet(action, params) {
-    try {
-      var key = 'gas_cache_' + hashParams(action, params);
-      var raw = localStorage.getItem(key);
-      if (!raw) return null;
-      var obj = JSON.parse(raw);
-      if (Date.now() - (obj.at || 0) > CACHE_TTL_MS) return null;
-      return obj.data || null;
-    } catch (e) { return null; }
-  }
-
-  function cacheSet(action, params, data) {
-    try {
-      var key = 'gas_cache_' + hashParams(action, params);
-      localStorage.setItem(key, JSON.stringify({ at: Date.now(), data: data }));
-    } catch (e) {}
-  }
-
-  function callGAS(action, params, attempt) {
-    attempt = attempt || 1;
-    const MAX_ATTEMPTS = 5;
-    const PER_ATTEMPT_MS = 15000;
-    const BACKOFF = [0, 500, 1500, 4000, 8000];
-
-    return new Promise(function (resolve, reject) {
-      const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-      const globalName = '__gasResponse_' + cb;
-      const p = Object.assign({}, params || {});
-      p.action = action;
-      p.callback = cb;
-
-      const url = LSS.GAS_URL + '?' + Object.keys(p)
-        .filter(function (k) { return p[k] !== undefined && p[k] !== null; })
-        .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]); })
-        .join('&');
-
-      const script = document.createElement('script');
-      script.src = url;
-      let settled = false;
-
-      function cleanup() {
-        try { delete window[globalName]; } catch (e) { window[globalName] = undefined; }
-        if (script.parentNode) script.parentNode.removeChild(script);
-      }
-
-      function attemptFailed(reason) {
-        if (settled) return;
-        settled = true;
-        cleanup();
-
-        if (attempt < MAX_ATTEMPTS) {
-          setTimeout(function () {
-            callGAS(action, params, attempt + 1).then(resolve, reject);
-          }, BACKOFF[attempt]);
-        } else {
-          var cached = cacheGet(action, params);
-          if (cached) {
-            console.warn('callGAS: using cache for ' + action + ' after ' + attempt + ' attempts. Reason: ' + reason);
-            resolve(cached);
-          } else {
-            reject(new Error(reason + ' (after ' + attempt + ' attempts)'));
-          }
-        }
-      }
-
-      const timeoutId = setTimeout(function () {
-        attemptFailed('Request timeout');
-      }, PER_ATTEMPT_MS);
-
-      script.onload = function () {
-        setTimeout(function () {
-          if (settled) return;
-          if (window[globalName] !== undefined) {
-            const response = window[globalName];
-            clearTimeout(timeoutId);
-            settled = true;
-            cleanup();
-
-            if (response && !response.error) {
-              cacheSet(action, params, response);
-              resolve(response);
-            } else if (response && response.error) {
-              var isRead = action.indexOf('adminGet') === 0 ||
-                           action.indexOf('adminList') === 0 ||
-                           action.indexOf('get') === 0 ||
-                           action.indexOf('list') === 0;
-              if (isRead) {
-                var cached = cacheGet(action, params);
-                if (cached) {
-                  console.warn('callGAS: server error for ' + action + ', using cache.');
-                  resolve(cached);
-                  return;
-                }
-              }
-              reject(new Error(response.error));
-            } else {
-              resolve(response);
-            }
-          } else {
-            attemptFailed('No response (callback stripped or script empty)');
-          }
-        }, 30);
-      };
-
-      script.onerror = function () {
-        clearTimeout(timeoutId);
-        attemptFailed('Network error');
-      };
-
-      document.head.appendChild(script);
-    });
+  function callGAS(action, params) {
+    return LSS.callGAS(action, params || {});
   }
 
   function warmServer() {
-    try { callGAS('test', {}).catch(function () {}); } catch (e) {}
+    try { LSS.callGAS('test', {}).catch(function () {}); } catch (e) {}
   }
 
   // ============================================================
@@ -1443,7 +1632,6 @@
   }
 
   async function onCaClassChange() {
-    // Populate the subject dropdown based on the selected class + term
     var cls = getVal('caClass');
     var term = getVal('caTerm');
     var realTerm = term === 'ALL'
@@ -1489,7 +1677,6 @@
   }
 
   function onCaTermChange() {
-    // Reset subject, then reload
     var subjSel = el('caSubject');
     if (subjSel) subjSel.innerHTML = '<option value="">-- Select Class first --</option>';
     onCaClassChange();
@@ -1527,7 +1714,6 @@
         });
         state.caOriginalItems = JSON.parse(JSON.stringify(state.caItems));
 
-        // Reflect weights in the inputs
         if (res.weights) {
           var caPct = Math.round((res.weights.ca || 0.4) * 100);
           var exPct = Math.round((res.weights.exam || 0.6) * 100);
@@ -1586,7 +1772,6 @@
     var name = state.caItems[i].itemName;
     if (!confirm('Remove CA item "' + name + '"? Any scores entered for it will also be removed when you save.')) return;
     state.caItems.splice(i, 1);
-    // Re-number the orders sequentially
     state.caItems.forEach(function (it, idx) { it.order = idx + 1; });
     renderCATable();
   }
@@ -1595,7 +1780,6 @@
     var nextOrder = state.caItems.length + 1;
     state.caItems.push({ itemName: '', maxScore: 20, order: nextOrder });
     renderCATable();
-    // Focus the new item name input
     setTimeout(function () {
       var inputs = document.querySelectorAll('.ca-table input[type="text"]');
       if (inputs.length) inputs[inputs.length - 1].focus();
@@ -1657,7 +1841,6 @@
       return;
     }
 
-    // Client-side validation
     var seen = {};
     for (var i = 0; i < state.caItems.length; i++) {
       var it = state.caItems[i];
@@ -1669,11 +1852,6 @@
     }
 
     var removedCount = 0;
-    var orig = {};
-    state.caOriginalItems.forEach(function (it) { orig[it.itemName.toUpperCase()] = true; });
-    state.caItems.forEach(function (it) {
-      if (!orig[it.itemName.toUpperCase()]) return;
-    });
     state.caOriginalItems.forEach(function (it) {
       var stillThere = state.caItems.some(function (x) {
         return x.itemName.toUpperCase() === it.itemName.toUpperCase();
@@ -1846,6 +2024,20 @@
   // Init
   // ============================================================
   async function initializeAdminPage() {
+    // ✅ Global logo
+    const crestEl = el('schoolCrest');
+    if (crestEl && typeof LSS !== 'undefined' && LSS.SCHOOL_LOGO) {
+      crestEl.src = LSS.SCHOOL_LOGO;
+    }
+
+    // ✅ Global footer
+    if (typeof LSS !== 'undefined' && LSS.renderFooter) {
+      LSS.renderFooter('#appFooter');
+    }
+
+    // ✅ Floating menu
+    renderAdminMenu();
+
     if (state.sandbox) {
       var badge = el('sandboxBadge');
       if (badge) badge.classList.add('show');
