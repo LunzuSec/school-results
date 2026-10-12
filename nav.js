@@ -9,6 +9,15 @@
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbzPTJy5s3rMYgqFtcBENVaUZU_Ij238-YOzztXdtrc1NCJc_Lsd1JeJcqs-u9rhUznYSA/exec';
   var PW_KEY = 'lss_admin_pw';
 
+  // ============================================================
+  // GLOBAL CONTACT INFO — single source of truth
+  // Change these once and every page picks them up.
+  // ============================================================
+  var WHATSAPP_NUMBER  = '265996099740';        // international format, no + or spaces
+  var WHATSAPP_DISPLAY = '+265 996 099 740';     // human-readable
+  var DEPARTMENT_NAME  = 'Examination Department';
+  var SCHOOL_NAME      = 'Lunzu Secondary School';
+
   var IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile|Opera Mini/i.test(navigator.userAgent);
 
   var LONG_ACTIONS = {
@@ -159,7 +168,53 @@
   }
 
   // ============================================================
-  // Navigation renderers (unchanged, kept for other pages)
+  // GLOBAL FOOTER — single implementation, every page uses it
+  // ============================================================
+  function injectFooterStyles() {
+    if (document.getElementById('lss-footer-styles')) return;
+    var css =
+      '.lss-global-footer{' +
+        'width:100%;max-width:720px;margin:24px auto 0;padding:16px 20px 20px;' +
+        'text-align:center;font-size:11px;color:#94a3b8;' +
+        'border-top:1px solid rgba(255,255,255,0.06);line-height:1.7;' +
+        'font-family:"Segoe UI",Roboto,Arial,sans-serif;' +
+      '}' +
+      '.lss-global-footer a{color:#fbbf24;text-decoration:none;}' +
+      '.lss-global-footer a:hover{text-decoration:underline;}';
+    var style = document.createElement('style');
+    style.id = 'lss-footer-styles';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function renderFooter(targetSelector) {
+    injectFooterStyles();
+
+    var host = null;
+    if (targetSelector) host = document.querySelector(targetSelector);
+
+    if (!host) {
+      host = document.createElement('footer');
+      host.className = 'lss-global-footer';
+      document.body.appendChild(host);
+    } else {
+      host.classList.add('lss-global-footer');
+    }
+
+    var wa = 'https://wa.me/' + WHATSAPP_NUMBER;
+    host.innerHTML =
+        DEPARTMENT_NAME + '<br>'
+        + '<a href="' + wa + '" target="_blank" rel="noopener">WhatsApp ' + WHATSAPP_DISPLAY + '</a><br>'
+        + '© <span class="lss-footer-year"></span> ' + SCHOOL_NAME;
+
+    var yearEl = host.querySelector('.lss-footer-year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+    return host;
+  }
+
+  // ============================================================
+  // Navigation renderers
   // ============================================================
   var PUBLIC_LINKS = [
     { href: 'index.html',     label: '🏠 Home',      key: 'home' },
@@ -272,15 +327,32 @@
 
   global.LSS = {
     GAS_URL: GAS_URL,
+
+    // Auth
     getAdminPassword: getAdminPassword,
     setAdminPassword: setAdminPassword,
     clearAdminPassword: clearAdminPassword,
     hasAdminSession: hasAdminSession,
     requireAdmin: requireAdmin,
+
+    // API
     callGAS: callGAS,
+
+    // Navigation
     renderPublicNav: renderPublicNav,
     renderAdminNav: renderAdminNav,
-    logout: logout
+
+    // Footer
+    renderFooter: renderFooter,
+
+    // Auth flow
+    logout: logout,
+
+    // Global config (read-only from outside)
+    WHATSAPP_NUMBER: WHATSAPP_NUMBER,
+    WHATSAPP_DISPLAY: WHATSAPP_DISPLAY,
+    SCHOOL_NAME: SCHOOL_NAME,
+    DEPARTMENT_NAME: DEPARTMENT_NAME
   };
 
   global.gasCall = global.gasCall || callGAS;
