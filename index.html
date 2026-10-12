@@ -7,7 +7,7 @@
     <link rel="icon" href="data:,">
     <title>Results Portal — Lunzu Secondary School</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="nav.js?v=7"></script>
+    <script src="nav.js?v=8"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -307,7 +307,7 @@
         .field.dob-field.hidden { display: none; }
 
         /* ============================================================
-           FUZZY SEARCH BAR (below Student dropdown)
+           FUZZY SEARCH BAR
            ============================================================ */
         .search-wrap { position: relative; }
 
@@ -570,17 +570,6 @@
         }
         .boot-loader .retry.show { display: inline-block; }
 
-        .portal-footer {
-            padding: 16px 24px 20px;
-            text-align: center;
-            font-size: 11px;
-            color: #94a3b8;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            line-height: 1.7;
-        }
-        .portal-footer a { color: #fbbf24; text-decoration: none; }
-        .portal-footer a:hover { text-decoration: underline; }
-
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -741,7 +730,6 @@
                 </select>
             </div>
 
-            <!-- Student dropdown -->
             <div class="field">
                 <label for="studentName">Student <span class="req">*</span></label>
                 <select id="studentName" disabled onchange="handleStudentDropdownChange()">
@@ -749,12 +737,10 @@
                 </select>
             </div>
 
-            <!-- Fuzzy search bar — directly under Student -->
             <div class="field">
                 <label for="studentSearch">
                     Search Student
-                    <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;font-size:11px;">
-                    </span>
+                    <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;font-size:11px;"></span>
                 </label>
                 <div class="search-wrap">
                     <i class="fas fa-search search-icon"></i>
@@ -805,11 +791,8 @@
 
         </section>
 
-        <footer class="portal-footer">
-            Examination Department<br>
-            <a href="https://wa.me/265996099740" target="_blank">WhatsApp +265 996 099 740</a><br>
-            © <span id="currentYear"></span> Lunzu Secondary School
-        </footer>
+        <!-- ✅ Global footer — populated by LSS.renderFooter() -->
+        <footer id="appFooter"></footer>
 
     </main>
 
@@ -834,11 +817,6 @@
         // ============================================================
         // FUZZY SEARCH — Levenshtein + prefix + substring scoring
         // ============================================================
-
-        /**
-         * Levenshtein distance between two strings.
-         * Standard dynamic programming with two-row optimization.
-         */
         function levenshtein(a, b) {
             if (a === b) return 0;
             const al = a.length, bl = b.length;
@@ -855,9 +833,9 @@
                 for (let j = 1; j <= bl; j++) {
                     const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
                     curr[j] = Math.min(
-                        prev[j] + 1,      // deletion
-                        curr[j - 1] + 1,  // insertion
-                        prev[j - 1] + cost // substitution
+                        prev[j] + 1,
+                        curr[j - 1] + 1,
+                        prev[j - 1] + cost
                     );
                 }
                 [prev, curr] = [curr, prev];
@@ -865,36 +843,21 @@
             return prev[bl];
         }
 
-        /**
-         * Score how well a query matches a target string.
-         * Higher = better. Returns 0 if no reasonable match.
-         *
-         * Signals:
-         *   - exact match       → 1000
-         *   - prefix match      → 800 - (length diff)
-         *   - substring match   → 600 - position penalty
-         *   - word-prefix match → 500 per matched word
-         *   - fuzzy (levenshtein) → 300 - (distance × 30)
-         *   - initials match    → 200
-         */
         function scoreMatch(query, target) {
             const q = query.toLowerCase().trim();
             const t = target.toLowerCase().trim();
             if (!q) return 0;
             if (q === t) return 1000;
 
-            // Prefix match
             if (t.startsWith(q)) {
                 return 800 - (t.length - q.length);
             }
 
-            // Substring match (contiguous)
             const substrIdx = t.indexOf(q);
             if (substrIdx !== -1) {
                 return 600 - substrIdx;
             }
 
-            // Multi-word: split query into tokens, score each token against target words
             const qTokens = q.split(/\s+/).filter(Boolean);
             const tWords = t.split(/\s+/).filter(Boolean);
 
@@ -917,7 +880,6 @@
                 }
             }
 
-            // Single token vs whole string, or vs each word
             let bestSingle = scoreSingleToken(q, t);
             for (const tWord of tWords) {
                 const s = scoreSingleToken(q, tWord);
@@ -927,9 +889,6 @@
             return bestSingle;
         }
 
-        /**
-         * Score a single token against a single word.
-         */
         function scoreSingleToken(queryToken, targetWord) {
             const q = queryToken.toLowerCase();
             const w = targetWord.toLowerCase();
@@ -938,15 +897,10 @@
             if (w.startsWith(q)) return 800 - (w.length - q.length);
             if (w.indexOf(q) !== -1) return 600;
 
-            // Fuzzy: only allow if query length is meaningful
             if (q.length < 3) return 0;
 
             const dist = levenshtein(q, w);
 
-            // Threshold scales with query length:
-            //   3-4 chars → allow up to 1 typo
-            //   5-7 chars → allow up to 2 typos
-            //   8+ chars  → allow up to 3 typos
             let maxDist;
             if (q.length <= 4) maxDist = 1;
             else if (q.length <= 7) maxDist = 2;
@@ -954,31 +908,24 @@
 
             if (dist > maxDist) return 0;
 
-            // Score drops 30 points per edit distance
             return 300 - (dist * 30);
         }
 
-        /**
-         * Fuzzy-find student names matching a query.
-         * Returns array of { name, score, kind } sorted by score desc.
-         * kind = 'exact' | 'fuzzy'
-         */
         function fuzzyFindStudents(query, names) {
             if (!query || !query.trim()) return [];
             const scored = [];
-            const MIN_SCORE = 100;  // filter weak matches
+            const MIN_SCORE = 100;
 
             for (const name of names) {
                 const score = scoreMatch(query, name);
                 if (score >= MIN_SCORE) {
-                    // Classify: exact-ish if score >= 500, else fuzzy
                     const kind = score >= 500 ? 'exact' : 'fuzzy';
                     scored.push({ name, score, kind });
                 }
             }
 
             scored.sort((a, b) => b.score - a.score);
-            return scored.slice(0, 12);  // top 12
+            return scored.slice(0, 12);
         }
 
         // ============================================================
@@ -1181,7 +1128,8 @@
         // BOOT
         // ============================================================
         window.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            // ✅ Global footer — single source of truth
+            LSS.renderFooter('#appFooter');
 
             renderResultsMenu();
             applyBypassUI();
@@ -1402,8 +1350,6 @@
             const clearBtn = document.getElementById('searchClearBtn');
             clearBtn.classList.toggle('show', !!q);
 
-            // Live-sync: if the typed value exactly equals a student name,
-            // auto-select it in the dropdown (seamless coordination).
             const exact = allStudentNames.find(
                 n => n.toLowerCase() === q.toLowerCase()
             );
@@ -1473,11 +1419,9 @@
             const match = currentSearchMatches[idx];
             if (!match) return;
 
-            // Sync both fields: set dropdown value AND set search text
             document.getElementById('studentName').value = match.name;
             document.getElementById('studentSearch').value = match.name;
 
-            // Close the results panel
             const box = document.getElementById('searchResults');
             box.classList.remove('show');
             box.innerHTML = '';
@@ -1549,7 +1493,6 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // Sync dropdown → search input
         function handleStudentDropdownChange() {
             const name = document.getElementById('studentName').value;
             const searchInput = document.getElementById('studentSearch');
@@ -1559,7 +1502,6 @@
                 searchInput.value = name;
                 clearBtn.classList.add('show');
             }
-            // Close search results if open
             const box = document.getElementById('searchResults');
             box.classList.remove('show');
             box.innerHTML = '';
@@ -1569,7 +1511,6 @@
             updateSubmitState();
         }
 
-        // Close search dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const wrap = document.querySelector('.search-wrap');
             if (!wrap) return;
