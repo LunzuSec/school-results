@@ -1,352 +1,722 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="data:,">
-<title>Admin Tools — Lunzu Secondary School</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family:'Segoe UI', Roboto, Arial, sans-serif;
-    min-height:100vh;
-    padding:20px;
-    background:#0a1628;
-    position:relative;
-    overflow-x:hidden;
-  }
-  #bg-canvas-container {
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    z-index:0; pointer-events:none;
-  }
-  #bg-canvas-container canvas {
-    display:block; width:100%; height:100%; object-fit:cover;
-  }
-  .container {
-    position:relative; z-index:1; max-width:900px; margin:0 auto;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <link rel="icon" href="data:,">
+    <title>Admin Tools — Lunzu Secondary School</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="nav.js?v=7"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* Login card */
-  .login-card {
-    background: rgba(20,35,55,0.85);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(139,92,246,0.35);
-    border-radius: 22px;
-    padding: 34px 30px;
-    max-width: 460px;
-    margin: 60px auto 0;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.55);
-    text-align: center;
-  }
-  .login-card h1 {
-    color:#e9d5ff; font-size:22px; font-weight:700;
-    margin-bottom: 8px;
-  }
-  .login-card .sub {
-    color:#94a3b8; font-size:13px; margin-bottom: 22px;
-    line-height:1.55;
-  }
-  .login-card input {
-    width:100%;
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 1.5px solid rgba(255,255,255,0.18);
-    background: rgba(255,255,255,0.08);
-    color:#fff; font-size:15px; font-family:inherit;
-    text-align:center; letter-spacing:2px;
-    margin-bottom: 14px;
-  }
-  .login-card input:focus {
-    outline:none; border-color:#a78bfa;
-    background: rgba(255,255,255,0.14);
-  }
-  .login-card .btn-confirm {
-    width:100%; padding: 14px;
-    border:none; border-radius:12px;
-    background: rgba(139,92,246,0.85); color:#fff;
-    font-size:15px; font-weight:700; cursor:pointer;
-    font-family:inherit; transition:0.2s;
-  }
-  .login-card .btn-confirm:hover:not(:disabled) {
-    background: rgba(139,92,246,1);
-    transform: translateY(-1px);
-  }
-  .login-card .btn-confirm:disabled {
-    opacity:0.5; cursor:not-allowed;
-  }
-  .login-card .err {
-    color:#fca5a5; font-size:13px;
-    min-height:18px; margin-bottom:10px;
-    line-height:1.4;
-  }
-  .login-card .hint {
-    color:#94a3b8; font-size:11.5px; margin-top:18px;
-    line-height:1.55;
-  }
+        /* ============================================================
+           FLOATING MENU — Admin area
+           ============================================================ */
+        .rsp-menu {
+            position: fixed !important;
+            top: 16px !important;
+            right: 16px !important;
+            z-index: 2147483000 !important;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        .rsp-menu-btn {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 215, 0, 0.4);
+            background: rgba(10, 30, 50, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #fbbf24;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .rsp-menu-btn:hover {
+            background: rgba(20, 45, 70, 1);
+            border-color: rgba(255, 215, 0, 0.7);
+            transform: translateY(-1px);
+        }
+        .rsp-menu.open .rsp-menu-btn {
+            background: rgba(20, 45, 70, 1);
+            border-color: rgba(255, 215, 0, 0.8);
+        }
+        .rsp-menu-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 280px;
+            background: rgba(15, 32, 52, 0.98);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            padding: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.98);
+            transform-origin: top right;
+            transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+            overflow: hidden;
+        }
+        .rsp-menu.open .rsp-menu-panel {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        .rsp-menu-header {
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 6px;
+        }
+        .rsp-menu-brand {
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        .rsp-menu-page {
+            color: #fbbf24;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 3px;
+            letter-spacing: 0.3px;
+        }
+        .rsp-menu-links { display: flex; flex-direction: column; gap: 1px; }
+        .rsp-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .rsp-menu-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+        .rsp-menu-link.active {
+            background: rgba(251, 191, 36, 0.12);
+            color: #fef3c7;
+        }
+        .rsp-menu-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.85;
+            flex-shrink: 0;
+        }
+        .rsp-menu-link.active .rsp-menu-icon { color: #fbbf24; opacity: 1; }
+        .rsp-menu-label { flex: 1; }
+        .rsp-menu-check {
+            color: #fbbf24;
+            font-size: 10px;
+            margin-left: auto;
+        }
+        .rsp-menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 6px 0;
+        }
+        .rsp-menu-account {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px 6px;
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+        .rsp-menu-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+            flex-shrink: 0;
+        }
+        .rsp-menu-link.logout { color: #fca5a5; }
+        .rsp-menu-link.logout:hover {
+            background: rgba(220, 38, 38, 0.12);
+            color: #fee2e2;
+        }
 
-  /* Tools grid */
-  .tools-header {
-    text-align:center;
-    margin-bottom: 22px;
-  }
-  .tools-header h1 {
-    color:#fff; font-size:22px; font-weight:700;
-    letter-spacing:0.4px; margin-bottom:6px;
-  }
-  .tools-header .sub {
-    color:#94a3b8; font-size:13px;
-  }
-  .tools-header .sub strong { color:#fbbf24; }
+        @media (max-width: 768px) {
+            .rsp-menu {
+                top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+                right: calc(12px + env(safe-area-inset-right, 0px)) !important;
+            }
+            .rsp-menu-btn { width: 46px; height: 46px; font-size: 16px; }
+            .rsp-menu-panel {
+                width: calc(100vw - 24px);
+                max-width: 320px;
+                top: calc(100% + 8px);
+            }
+            .rsp-menu-link { padding: 12px 14px; font-size: 14px; }
+        }
+        @media print { .rsp-menu { display: none !important; } }
 
-  .tools-grid {
-    display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 14px;
-  }
-  .tool-card {
-    display:block;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 18px;
-    padding: 22px 20px;
-    text-decoration:none;
-    color:#fff;
-    transition:0.18s;
-    cursor:pointer;
-  }
-  .tool-card:hover {
-    transform: translateY(-3px);
-    background: rgba(255,255,255,0.09);
-    border-color: rgba(251,191,36,0.35);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
-  }
-  .tool-card .icon {
-    font-size: 34px; margin-bottom: 12px;
-    display:block; line-height:1;
-  }
-  .tool-card h2 {
-    font-size: 15px; color:#fbbf24;
-    text-transform: uppercase; letter-spacing:0.7px;
-    font-weight: 700; margin-bottom: 6px;
-  }
-  .tool-card p {
-    color:#94a3b8; font-size:12.5px;
-    line-height: 1.55;
-  }
-  .tool-card.reports   .icon { color:#60a5fa; }
-  .tool-card.teachers  .icon { color:#34d399; }
-  .tool-card.alerts    .icon { color:#f472b6; }
+        /* ============================================================
+           PAGE STYLES
+           ============================================================ */
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            min-height: 100vh;
+            padding: 24px 16px;
+            background: #0a1f2e;
+            background-image:
+                radial-gradient(ellipse at top left, rgba(30, 58, 95, 0.6) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(0, 61, 92, 0.5) 0%, transparent 55%),
+                linear-gradient(135deg, #0a1f2e 0%, #0d2941 100%);
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
 
-  .sandbox-badge {
-    display:none;
-    background: rgba(220,38,38,0.25);
-    border:1px solid rgba(220,38,38,0.5);
-    color:#fecaca;
-    padding:3px 10px;
-    border-radius:8px;
-    font-size:11px;
-    font-weight:700;
-    letter-spacing:0.5px;
-    margin-left:8px;
-    vertical-align:middle;
-  }
-  .sandbox-badge.show { display:inline-block; }
+        /* Login card */
+        .login-card {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 16px;
+            padding: 32px 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            text-align: center;
+            margin-top: 40px;
+        }
+        .login-card .crest {
+            width: 56px;
+            height: 56px;
+            margin-bottom: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .login-card h1 {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .login-card .sub {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 22px;
+            line-height: 1.55;
+            letter-spacing: 0.4px;
+        }
+        .login-card .sub strong { color: #fbbf24; }
 
-  .hidden { display:none !important; }
-</style>
+        .login-card .field {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+        .login-card .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 6px;
+        }
+        .login-card input[type="password"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            text-align: left;
+            letter-spacing: 2px;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .login-card input[type="password"]:focus {
+            outline: none;
+            border-color: rgba(251, 191, 36, 0.7);
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 13px 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #0a1f2e;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            letter-spacing: 0.3px;
+        }
+        .btn-login:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(251, 191, 36, 0.35);
+        }
+        .btn-login:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-card .err {
+            color: #fca5a5;
+            font-size: 12.5px;
+            min-height: 18px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            text-align: center;
+        }
+        .login-card .hint {
+            color: #64748b;
+            font-size: 11px;
+            margin-top: 18px;
+            line-height: 1.55;
+            text-align: center;
+        }
+        .login-card .hint strong { color: #94a3b8; }
+
+        /* Tools hub */
+        .hub {
+            width: 100%;
+            max-width: 720px;
+            margin-top: 40px;
+        }
+
+        .hub-header {
+            text-align: center;
+            margin-bottom: 26px;
+        }
+        .hub-header h1 {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .hub-header .sub {
+            color: #94a3b8;
+            font-size: 12px;
+            letter-spacing: 0.4px;
+        }
+        .hub-header .sub strong { color: #fbbf24; }
+
+        .sandbox-badge {
+            display: none;
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.5);
+            color: #fecaca;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            margin-left: 8px;
+            vertical-align: middle;
+            text-transform: uppercase;
+        }
+        .sandbox-badge.show { display: inline-block; }
+
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+        }
+
+        .hub-card {
+            display: block;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 22px 20px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.18s ease;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        .hub-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(251, 191, 36, 0.35);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        }
+        .hub-card .card-icon {
+            font-size: 22px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .hub-card h2 {
+            font-size: 13px;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .hub-card p {
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .hub-card.reports .card-icon { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .hub-card.teachers .card-icon { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+        .hub-card.alerts .card-icon { background: rgba(244, 114, 182, 0.15); color: #f472b6; }
+
+        /* Footer */
+        .portal-footer {
+            margin-top: 40px;
+            padding: 16px 24px 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            line-height: 1.7;
+            width: 100%;
+            max-width: 720px;
+        }
+        .portal-footer a { color: #fbbf24; text-decoration: none; }
+        .portal-footer a:hover { text-decoration: underline; }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+
+        /* Mobile tweaks */
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .login-card { padding: 26px 20px; margin-top: 24px; }
+            .hub { margin-top: 24px; }
+        }
+    </style>
 </head>
 <body>
 
-<div id="bg-canvas-container"><canvas id="bgCanvas"></canvas></div>
+    <!-- ============================================================
+         LOGIN VIEW
+         ============================================================ -->
+    <div id="loginView" class="login-card hidden">
+        <img
+            src="https://i.ibb.co/LxSJnMj/MALAWI-GOVERNMENT-3.png"
+            alt="School crest"
+            class="crest"
+        >
+        <h1>Admin Access</h1>
+        <div class="sub">
+            Enter the admin password to open the <strong>Admin Tools</strong> hub.
+        </div>
 
-<div class="container">
+        <div id="loginErr" class="err"></div>
 
-  <!-- LOGIN -->
-  <div id="loginView" class="login-card hidden">
-    <h1>🔒 Admin Access</h1>
-    <div class="sub">
-      Enter the admin password to open the Admin Tools hub.
+        <div class="field">
+            <label for="pwInput">Password</label>
+            <input
+                type="password"
+                id="pwInput"
+                placeholder="Enter password"
+                maxlength="40"
+                autocomplete="current-password"
+            >
+        </div>
+
+        <button class="btn-login" id="loginBtn" onclick="submitLogin()">
+            <i class="fas fa-unlock"></i>
+            Unlock
+        </button>
+
+        <div class="hint">
+            Sessions last until you close the browser tab or click <strong>Sign out</strong>.
+        </div>
     </div>
-    <div id="loginErr" class="err"></div>
-    <input type="password" id="pwInput" placeholder="Enter password" maxlength="40" autocomplete="current-password">
-    <button class="btn-confirm" id="loginBtn" onclick="submitLogin()">Unlock</button>
-    <div class="hint">
-      Sessions last until you close the browser tab or click <strong>Log out</strong>.
+
+    <!-- ============================================================
+         HUB VIEW
+         ============================================================ -->
+    <div id="hubView" class="hub hidden">
+        <div class="hub-header">
+            <h1>Admin Tools <span id="sandboxBadge" class="sandbox-badge">Sandbox</span></h1>
+            <div class="sub">
+                Signed in as <strong>Admin</strong> — choose a tool below
+            </div>
+        </div>
+
+        <div class="hub-grid">
+
+            <a href="admin-reports.html" class="hub-card reports">
+                <div class="card-icon"><i class="fas fa-chart-bar"></i></div>
+                <h2>Reports &amp; Notice Boards</h2>
+                <p>Generate detailed class PDFs, single-class notice boards, and the combined all-classes notice board.</p>
+            </a>
+
+            <a href="admin-teachers.html" class="hub-card teachers">
+                <div class="card-icon"><i class="fas fa-users"></i></div>
+                <h2>Manage Teachers</h2>
+                <p>Add or deactivate teachers, assign subjects and classes, configure papers, and review the audit log.</p>
+            </a>
+
+            <a href="AdminAlerts.html" class="hub-card alerts">
+                <div class="card-icon"><i class="fas fa-envelope-open-text"></i></div>
+                <h2>Result Alerts</h2>
+                <p>Preview and send result-alert emails to parents, view active subscribers, and browse send history.</p>
+            </a>
+
+        </div>
     </div>
-  </div>
 
-  <!-- TOOLS HUB -->
-  <div id="hubView" class="hidden">
-    <div class="tools-header">
-      <h1>🔧 Admin Tools <span id="sandboxBadge" class="sandbox-badge">SANDBOX MODE</span></h1>
-      <div class="sub">
-        Signed in as <strong>Admin</strong>. Choose a tool below.
-      </div>
-    </div>
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="portal-footer">
+        Examination Department<br>
+        <a href="https://wa.me/265996099740" target="_blank">WhatsApp +265 996 099 740</a><br>
+        © <span id="currentYear"></span> Lunzu Secondary School
+    </footer>
 
-    <div class="tools-grid">
-      <a href="admin-reports.html" class="tool-card reports">
-        <span class="icon">📊</span>
-        <h2>Reports & Notice Boards</h2>
-        <p>Generate detailed class PDFs, single-class notice boards, and the combined all-classes notice board.</p>
-      </a>
+    <script>
+        (function () {
+            const SANDBOX_MODE = (new URLSearchParams(location.search).get('sandbox') === 'true');
 
-      <a href="admin-teachers.html" class="tool-card teachers">
-        <span class="icon">👥</span>
-        <h2>Manage Teachers</h2>
-        <p>Add or deactivate teachers, assign subjects and classes, configure papers, and review the audit log.</p>
-      </a>
+            // ============================================================
+            // FLOATING MENU
+            // ============================================================
+            function renderAdminMenu() {
+                const MENU_ID = 'rspMenu';
+                const existing = document.getElementById(MENU_ID);
+                if (existing) existing.remove();
 
-      <a href="AdminAlerts.html" class="tool-card alerts">
-        <span class="icon">📧</span>
-        <h2>Result Alerts</h2>
-        <p>Preview and send result-alert emails to parents, view active subscribers, and browse send history.</p>
-      </a>
-    </div>
-  </div>
+                const isAdmin = (typeof LSS !== 'undefined') && LSS.hasAdminSession();
 
-</div>
+                const root = document.createElement('div');
+                root.id = MENU_ID;
+                root.className = 'rsp-menu';
 
-<script src="nav.js"></script>
-<script>
-(function () {
-  var SANDBOX_MODE = (new URLSearchParams(location.search).get('sandbox') === 'true');
+                let linksHtml = '';
 
-  // Background canvas (very light, matches admin-reports aesthetic)
-  (function initBackground() {
-    var canvas = document.getElementById('bgCanvas');
-    var container = document.getElementById('bg-canvas-container');
-    if (!canvas || !container) return;
-    var ctx = canvas.getContext('2d');
-    var w, h, items = [];
-    var ITEM_COUNT = 18;
-    var symbols = ['🔧','🔒','📊','👥','📧','🎓','⚙️','📘'];
-    function resize() {
-      var r = container.getBoundingClientRect();
-      canvas.width = r.width || window.innerWidth;
-      canvas.height = r.height || window.innerHeight;
-      w = canvas.width; h = canvas.height;
-    }
-    function item() {
-      return {
-        x: Math.random()*w, y: Math.random()*h,
-        size: 30 + Math.random()*30,
-        vy: 0.10 + Math.random()*0.35,
-        vx: (Math.random()-0.5)*0.4,
-        rot: Math.random()*360, rs: (Math.random()-0.5)*0.02,
-        op: 0.15 + Math.random()*0.22,
-        sym: symbols[Math.floor(Math.random()*symbols.length)],
-        ph: Math.random()*100
-      };
-    }
-    function draw() {
-      ctx.clearRect(0,0,w,h);
-      var g = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*0.7);
-      g.addColorStop(0,'rgba(10,22,40,0.05)');
-      g.addColorStop(1,'rgba(10,22,40,0.40)');
-      ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-      items.forEach(function (it) {
-        ctx.save();
-        ctx.translate(it.x, it.y);
-        ctx.rotate(it.rot * Math.PI / 180);
-        ctx.globalAlpha = it.op;
-        ctx.font = it.size + 'px "Segoe UI Emoji","Apple Color Emoji",sans-serif';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillStyle='#a78bfa';
-        ctx.fillText(it.sym,0,0);
-        ctx.restore();
-        it.x += it.vx + Math.sin(it.ph + performance.now()*0.0002)*0.12;
-        it.y += it.vy*0.3 + Math.sin(it.ph + performance.now()*0.00035)*0.10;
-        it.rot += it.rs;
-        if (it.x > w+60) it.x = -60;
-        if (it.x < -60) it.x = w+60;
-        if (it.y > h+60) it.y = -60;
-        if (it.y < -60) it.y = h+60;
-      });
-      requestAnimationFrame(draw);
-    }
-    function start() { resize(); for (var i=0;i<ITEM_COUNT;i++) items.push(item()); draw(); }
-    window.addEventListener('resize', resize);
-    start();
-  })();
+                linksHtml += '<a href="admin.html" class="rsp-menu-link active">'
+                          +  '<span class="rsp-menu-icon"><i class="fas fa-hammer"></i></span>'
+                          +  '<span class="rsp-menu-label">Admin Hub</span>'
+                          +  '<i class="fas fa-check rsp-menu-check"></i>'
+                          +  '</a>';
 
-  function showView(name) {
-    document.getElementById('loginView').classList.toggle('hidden', name !== 'login');
-    document.getElementById('hubView').classList.toggle('hidden', name !== 'hub');
-    if (SANDBOX_MODE) {
-      var badge = document.getElementById('sandboxBadge');
-      if (badge) badge.classList.add('show');
-    }
-  }
+                linksHtml += '<a href="admin-reports.html" class="rsp-menu-link">'
+                          +  '<span class="rsp-menu-icon"><i class="fas fa-chart-bar"></i></span>'
+                          +  '<span class="rsp-menu-label">Reports</span>'
+                          +  '</a>';
 
-  async function submitLogin() {
-    var input = document.getElementById('pwInput');
-    var btn = document.getElementById('loginBtn');
-    var err = document.getElementById('loginErr');
-    var pw = (input.value || '').trim();
-    err.textContent = '';
+                linksHtml += '<a href="admin-teachers.html" class="rsp-menu-link">'
+                          +  '<span class="rsp-menu-icon"><i class="fas fa-users"></i></span>'
+                          +  '<span class="rsp-menu-label">Teachers</span>'
+                          +  '</a>';
 
-    if (!pw) { err.textContent = 'Please enter a password.'; input.focus(); return; }
+                linksHtml += '<a href="AdminAlerts.html" class="rsp-menu-link">'
+                          +  '<span class="rsp-menu-icon"><i class="fas fa-envelope-open-text"></i></span>'
+                          +  '<span class="rsp-menu-label">Alerts</span>'
+                          +  '</a>';
 
-    btn.disabled = true;
-    var originalLabel = btn.textContent;
-    btn.textContent = 'Verifying…';
+                linksHtml += '<div class="rsp-menu-divider"></div>';
 
-    try {
-      var res = await LSS.callGAS('verifyAdmin', { password: pw });
-      if (res && res.success) {
-        LSS.setAdminPassword(pw);
-        input.value = '';
-        // redirect to originally intended page, else hub
-        var dest = sessionStorage.getItem('lss_after_login');
-        if (dest && dest !== 'admin.html' && dest !== '') {
-          sessionStorage.removeItem('lss_after_login');
-          location.href = dest;
-          return;
-        }
-        showView('hub');
-        LSS.renderAdminNav('hub');
-      } else {
-        err.textContent = 'Incorrect password. Please try again.';
-        input.value = '';
-        input.focus();
-      }
-    } catch (e) {
-      err.textContent = 'Error: ' + e.message;
-    } finally {
-      btn.disabled = false;
-      btn.textContent = originalLabel;
-    }
-  }
+                linksHtml += '<a href="index.html" class="rsp-menu-link">'
+                          +  '<span class="rsp-menu-icon"><i class="fas fa-home"></i></span>'
+                          +  '<span class="rsp-menu-label">Public Site</span>'
+                          +  '</a>';
 
-  function init() {
-    if (LSS.hasAdminSession()) {
-      showView('hub');
-      LSS.renderAdminNav('hub');
-    } else {
-      showView('login');
-      LSS.renderPublicNav('admin');
-      setTimeout(function () {
-        var i = document.getElementById('pwInput');
-        if (i) {
-          i.focus();
-          i.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') submitLogin();
-          });
-        }
-      }, 100);
-    }
-  }
+                let accountHtml = '';
+                if (isAdmin) {
+                    accountHtml += '<div class="rsp-menu-account">'
+                                +  '<span class="rsp-menu-dot"></span>'
+                                +  '<span>Signed in as Admin</span>'
+                                +  '</div>';
+                    accountHtml += '<button type="button" class="rsp-menu-link logout" '
+                                +  'onclick="LSS.logout();">'
+                                +  '<span class="rsp-menu-icon"><i class="fas fa-sign-out-alt"></i></span>'
+                                +  '<span class="rsp-menu-label">Sign out</span>'
+                                +  '</button>';
+                }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    setTimeout(init, 0);
-  }
+                root.innerHTML =
+                    '<button type="button" class="rsp-menu-btn" aria-label="Menu" aria-expanded="false">'
+                    +   '<i class="fas fa-bars"></i>'
+                    + '</button>'
+                    + '<div class="rsp-menu-panel">'
+                    +   '<div class="rsp-menu-header">'
+                    +     '<div class="rsp-menu-brand">LUNZU SEC. SCHOOL</div>'
+                    +     '<div class="rsp-menu-page">Admin Tools</div>'
+                    +   '</div>'
+                    +   '<div class="rsp-menu-links">' + linksHtml + '</div>'
+                    +   accountHtml
+                    + '</div>';
 
-  // expose for inline handlers
-  window.submitLogin = submitLogin;
-})();
-</script>
+                (document.documentElement || document.body).appendChild(root);
+
+                const btn = root.querySelector('.rsp-menu-btn');
+
+                function open() {
+                    root.classList.add('open');
+                    btn.setAttribute('aria-expanded', 'true');
+                }
+                function close() {
+                    root.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    root.classList.contains('open') ? close() : open();
+                });
+                document.addEventListener('click', function (e) {
+                    if (!root.contains(e.target)) close();
+                });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') close();
+                });
+            }
+
+            // ============================================================
+            // VIEWS
+            // ============================================================
+            function showView(name) {
+                document.getElementById('loginView').classList.toggle('hidden', name !== 'login');
+                document.getElementById('hubView').classList.toggle('hidden', name !== 'hub');
+
+                if (SANDBOX_MODE) {
+                    const badge = document.getElementById('sandboxBadge');
+                    if (badge) badge.classList.add('show');
+                }
+            }
+
+            // ============================================================
+            // LOGIN
+            // ============================================================
+            async function submitLogin() {
+                const input = document.getElementById('pwInput');
+                const btn = document.getElementById('loginBtn');
+                const err = document.getElementById('loginErr');
+                const pw = (input.value || '').trim();
+
+                err.textContent = '';
+
+                if (!pw) {
+                    err.textContent = 'Please enter a password.';
+                    input.focus();
+                    return;
+                }
+
+                btn.disabled = true;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying…';
+
+                try {
+                    const res = await LSS.callGAS('verifyAdmin', { password: pw });
+                    if (res && res.success) {
+                        LSS.setAdminPassword(pw);
+                        input.value = '';
+
+                        // Redirect to originally intended page if any
+                        const dest = sessionStorage.getItem('lss_after_login');
+                        if (dest && dest !== 'admin.html' && dest !== '') {
+                            sessionStorage.removeItem('lss_after_login');
+                            location.href = dest;
+                            return;
+                        }
+
+                        // Otherwise show hub
+                        showView('hub');
+                        renderAdminMenu();
+                    } else {
+                        err.textContent = 'Incorrect password. Please try again.';
+                        input.value = '';
+                        input.focus();
+                    }
+                } catch (e) {
+                    err.textContent = 'Error: ' + e.message;
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            }
+
+            // ============================================================
+            // INIT
+            // ============================================================
+            function init() {
+                // Dynamic year in footer
+                const yearEl = document.getElementById('currentYear');
+                if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+                // Render menu immediately so it appears on login view too
+                renderAdminMenu();
+
+                if (LSS.hasAdminSession()) {
+                    showView('hub');
+                } else {
+                    showView('login');
+                    setTimeout(function () {
+                        const i = document.getElementById('pwInput');
+                        if (i) {
+                            i.focus();
+                            i.addEventListener('keydown', function (e) {
+                                if (e.key === 'Enter') submitLogin();
+                            });
+                        }
+                    }, 100);
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                setTimeout(init, 0);
+            }
+
+            // Expose for inline handlers
+            window.submitLogin = submitLogin;
+        })();
+    </script>
 </body>
 </html>
